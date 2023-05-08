@@ -40,6 +40,15 @@ namespace ViGo.Utilities.Configuration
         public static string ConnectionString(string connectionStringKey)
             => Configuration.GetConnectionString(connectionStringKey);
 
+        public static string ValidAudience
+            => Configuration.GetSection("JWT")["ValidAudience"];
+
+        public static string ValidIssuer
+            => Configuration.GetSection("JWT")["ValidIssuer"];
+
+        public static string Secret
+            => Configuration.GetSection("JWT")["Secret"];
+
         #endregion
     }
 }
