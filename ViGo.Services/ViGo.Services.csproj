@@ -8,7 +8,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
+    <ProjectReference Include="..\ViGo.DTOs\ViGo.DTOs.csproj" />
     <ProjectReference Include="..\ViGo.Repository\ViGo.Repository.csproj" />
+    <ProjectReference Include="..\ViGo.Utilities\ViGo.Utilities.csproj" />
   </ItemGroup>
 
 </Project>
