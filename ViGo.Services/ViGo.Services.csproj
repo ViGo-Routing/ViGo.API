@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
+    <ProjectReference Include="..\ViGo.Repository\ViGo.Repository.csproj" />
+  </ItemGroup>
+
 </Project>
