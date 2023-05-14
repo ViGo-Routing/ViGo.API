@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Domain;
 using ViGo.Domain.Core;
 
 namespace ViGo.Repository.Core
@@ -13,6 +15,16 @@ namespace ViGo.Repository.Core
     {
 
         #region Properties
+
+        /// <summary>
+        /// Database Context
+        /// </summary>
+        protected abstract ViGoDBContext Context { get; }
+
+        /// <summary>
+        /// Current table DbSet
+        /// </summary>
+        protected abstract DbSet<TEntity> Table { get; }
         #endregion
 
         #region Methods
@@ -32,6 +44,21 @@ namespace ViGo.Repository.Core
         /// </returns>
         public abstract Task<TEntity> GetAsync(
             Expression<Func<TEntity, bool>> predicate,
+            bool includeDeleted = false);
+
+        /// <summary>
+        /// Get the entity entry
+        /// </summary>
+        /// <param name="id">ID string value of the entity</param>
+        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
+        /// contain the soft-deleted entities
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation.
+        /// The task result contains the entity entry
+        /// </returns>
+        public abstract Task<TEntity> GetAsync(
+            string id,
             bool includeDeleted = false);
 
         /// <summary>

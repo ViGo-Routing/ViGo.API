@@ -30,6 +30,21 @@ namespace ViGo.Repository.Core
             bool includeDeleted = false);
 
         /// <summary>
+        /// Get the entity entry
+        /// </summary>
+        /// <param name="id">ID string value of the entity</param>
+        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
+        /// contain the soft-deleted entities
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation.
+        /// The task result contains the entity entry
+        /// </returns>
+        Task<TEntity> GetAsync(
+            string id,
+            bool includeDeleted = false);
+
+        /// <summary>
         /// Get all entity entries based on the query
         /// </summary>
         /// <param name="func">Function to select entries</param>
