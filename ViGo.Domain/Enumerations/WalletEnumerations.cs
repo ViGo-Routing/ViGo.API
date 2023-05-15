@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum WalletStatus
+    public enum WalletStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1
     }
 
-    public enum WalletType
+    public enum WalletType : short
     {
         PERSONAL = 1,
         SYSTEM = 2
     }
 
-    public enum WalletTransactionType
+    public enum WalletTransactionType : short
     {
         MOMO_TOPUP = 1,
         BOOKING_PAID = 2,
@@ -29,7 +29,7 @@ namespace ViGo.Domain.Enumerations
         PAY_FOR_DRIVER = 7
     }
 
-    public enum WalletTransactionStatus
+    public enum WalletTransactionStatus : short
     {
         PENDING = 0,
         SUCCESSFULL = 1,

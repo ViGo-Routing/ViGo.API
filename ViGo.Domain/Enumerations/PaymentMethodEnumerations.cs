@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum PaymentMethod
+    public enum PaymentMethod : short
     {
         MOMO = 1,
         CASH = 0,

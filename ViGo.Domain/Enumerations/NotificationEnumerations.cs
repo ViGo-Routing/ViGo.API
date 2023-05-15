@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum NotificationStatus
+    public enum NotificationStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1,
     }
 
-    public enum NotificationType
+    public enum NotificationType : short
     {
         SPECIFIC_USER = 0,
         BOOKER = 1,

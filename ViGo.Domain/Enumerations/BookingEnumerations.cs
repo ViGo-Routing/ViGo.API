@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum BookingStatus
+    public enum BookingStatus : short
     {
         UNPAID = -2,
         PENDING_MAPPING = -1,
@@ -17,7 +17,7 @@ namespace ViGo.Domain.Enumerations
         COMPLETED_REFUND = 4
     }
 
-    public enum BookingDetailStatus
+    public enum BookingDetailStatus : short
     {
         ASSIGNED = 0,
         ARRIVE_AT_PICKUP = 1,

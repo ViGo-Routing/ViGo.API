@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum EventType
+    public enum EventType : short
     {
         BOOKING_MAPPED = 0,
         BOOKING_PAID = 1,
@@ -32,7 +32,7 @@ namespace ViGo.Domain.Enumerations
         VERIFY_PHONE = 21
     }
 
-    public enum EventStatus
+    public enum EventStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1,

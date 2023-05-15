@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum UserRole
+    public enum UserRole : short
     {
         ADMIN = 0,
         CUSTOMER = 1,
         DRIVER = 2
     }
 
-    public enum UserStatus
+    public enum UserStatus : short
     {
         PENDING = 0,
         ACTIVE = 1,
@@ -22,7 +22,7 @@ namespace ViGo.Domain.Enumerations
         REJECTED = -2
     }
 
-    public enum UserLicenseType
+    public enum UserLicenseType : short
     {
         IDENTIFICATION = 1,
         DRIVER_LICENSE = 2,

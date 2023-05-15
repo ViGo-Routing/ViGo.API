@@ -6,25 +6,25 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum RouteStatus
+    public enum RouteStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1
     }
 
-    public enum RouteStationStatus
+    public enum RouteStationStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1,
     }
 
-    public enum StationStatus
+    public enum StationStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1,
     }
 
-    public enum RouteRoutineStatus
+    public enum RouteRoutineStatus : short
     {
         INACTIVE = -1,
         ACTIVE = 1,

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum PromotionStatus
+    public enum PromotionStatus : short
     {
         AVAILABLE = 1,
         UNAVAILABLE = 0

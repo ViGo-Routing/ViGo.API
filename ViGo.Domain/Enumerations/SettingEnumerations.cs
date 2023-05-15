@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Domain.Enumerations
 {
-    public enum SettingType
+    public enum SettingType : short
     {
         DEFAULT = 0,
         TRIP = 1,
@@ -15,7 +15,7 @@ namespace ViGo.Domain.Enumerations
         PRICING = 4
     }
 
-    public enum SettingDataType
+    public enum SettingDataType : short
     {
         DEFAULT = 0,
         INTEGER = 1,
@@ -23,7 +23,7 @@ namespace ViGo.Domain.Enumerations
         TIME = 3
     }
 
-    public enum SettingDataUnit
+    public enum SettingDataUnit : short
     {
         DEFAULT = 0,
         PERCENT = 1,
