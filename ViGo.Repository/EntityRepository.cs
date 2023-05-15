@@ -71,8 +71,8 @@ namespace ViGo.Repository
         /// Delete the entity entry
         /// </summary>
         /// <param name="entity">The entity entry to be deleted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSoftDelete">Boolean value which will determine whether or not 
+        /// the Delete action should be a soft delete or not
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation
@@ -117,8 +117,8 @@ namespace ViGo.Repository
         /// <param name="predicate">Predicate expression which will return a boolean value to determine the 
         /// single entry to get. If there are more than one entry, an exception will be thrown!
         /// </param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSoftDelete">Boolean value which will determine whether or not 
+        /// the Delete action should be a soft delete or not
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation
@@ -233,14 +233,18 @@ namespace ViGo.Repository
         /// Insert a new entity entry
         /// </summary>
         /// <param name="entity">Entity entry to be inserted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
+        /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
+        /// as entity's Id</param>
+        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entry
         /// </returns>
         public override async Task<TEntity> InsertAsync(TEntity entity,
+            bool isSelfCreatedEntity = false,
             bool isManuallyAssignDate = false)
         {
             if (entity == null)
@@ -249,6 +253,27 @@ namespace ViGo.Repository
             }
 
             entity.Id = Guid.NewGuid();
+            if (isSelfCreatedEntity)
+            {
+                if (entity is ITrackingCreated created)
+                {
+                    created.CreatedBy = entity.Id;
+                }
+                if (entity is ITrackingUpdated updated)
+                {
+                    updated.UpdatedBy = entity.Id;
+                }
+            } else
+            {
+                if (entity is ITrackingCreated created)
+                {
+                    created.CreatedBy = IdentityUtilities.GetCurrentUserId();
+                }
+                if (entity is ITrackingUpdated updated)
+                {
+                    updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                }
+            }
 
             if (!isManuallyAssignDate)
             {
@@ -257,12 +282,12 @@ namespace ViGo.Repository
                 if (entity is ITrackingCreated)
                 {
                     ((ITrackingCreated)entity).CreatedDate = vnNow;
-                    ((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
+                    //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
                 }
                 if (entity is ITrackingUpdated)
                 {
                     ((ITrackingUpdated)entity).UpdatedDate = vnNow;
-                    ((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                    //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                 }
             }
 
@@ -280,8 +305,12 @@ namespace ViGo.Repository
         /// Insert a number of entity entries
         /// </summary>
         /// <param name="entities">Entity entries to be inserted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
+        /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
+        /// as entity's Id
+        /// </param>
+        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
@@ -289,6 +318,7 @@ namespace ViGo.Repository
         /// </returns>
         public override async Task<IEnumerable<TEntity>> InsertAsync(
             IEnumerable<TEntity> entities,
+            bool isSelfCreatedEntity = false,
             bool isManuallyAssignDate = false)
         {
             if (entities == null)
@@ -303,18 +333,40 @@ namespace ViGo.Repository
                 foreach (TEntity entity in entities)
                 {
                     entity.Id = Guid.NewGuid();
+                    if (isSelfCreatedEntity)
+                    {
+                        if (entity is ITrackingCreated created)
+                        {
+                            created.CreatedBy = entity.Id;
+                        }
+                        if (entity is ITrackingUpdated updated)
+                        {
+                            updated.UpdatedBy = entity.Id;
+                        }
+                    }
+                    else
+                    {
+                        if (entity is ITrackingCreated created)
+                        {
+                            created.CreatedBy = IdentityUtilities.GetCurrentUserId();
+                        }
+                        if (entity is ITrackingUpdated updated)
+                        {
+                            updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                        }
+                    }
 
                     if (!isManuallyAssignDate)
                     {
                         if (entity is ITrackingCreated)
                         {
                             ((ITrackingCreated)entity).CreatedDate = vnNow;
-                            ((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
+                            //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
                         }
                         if (entity is ITrackingUpdated)
                         {
                             ((ITrackingUpdated)entity).UpdatedDate = vnNow;
-                            ((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                            //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                         }
                     }
 

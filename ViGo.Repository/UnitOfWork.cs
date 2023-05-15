@@ -10,6 +10,8 @@ namespace ViGo.Repository
 {
     public class UnitOfWork : IUnitOfWork
     {
+        private ViGoDBContext context;
+
         #region Repositories
         public IRepository<Booking> Bookings { get; }
         public IRepository<BookingDetail> BookingDetails { get; }
@@ -35,6 +37,7 @@ namespace ViGo.Repository
 
         #region Constructor
         public UnitOfWork(
+            ViGoDBContext context,
             IRepository<Booking> bookings, 
             IRepository<BookingDetail> bookingDetails, 
             IRepository<Event> events, 
@@ -55,6 +58,7 @@ namespace ViGo.Repository
             IRepository<Wallet> wallets, 
             IRepository<WalletTransaction> walletTransactions)
         {
+            this.context = context;
             Bookings = bookings;
             BookingDetails = bookingDetails;
             Events = events;
@@ -91,9 +95,9 @@ namespace ViGo.Repository
             }
         }
 
-        public Task<int> SaveChangesAsync()
+        public async Task<int> SaveChangesAsync()
         {
-            throw new NotImplementedException();
+            return await context.SaveChangesAsync();
         }
 
 
