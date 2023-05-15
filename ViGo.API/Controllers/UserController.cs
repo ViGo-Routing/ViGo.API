@@ -26,6 +26,11 @@ namespace ViGo.API.Controllers
             userServices = new UserServices(work);
         }
 
+        /// <summary>
+        /// Get List of Users
+        /// </summary>
+        /// <remarks>Authorization required</remarks>
+        /// <returns>List of current users</returns>
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsers()
@@ -45,6 +50,16 @@ namespace ViGo.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Generates JWT token for user
+        /// </summary>
+        /// <param name="loginUser">User login information</param>
+        /// <returns>
+        /// JWT token object { token: "" }
+        /// </returns>
+        /// <response code="401">Login failed</response>
+        /// <response code="200">Login successfully</response>
+        /// <response code="500">Server error</response>
         [HttpPost("Login")]
         [ProducesResponseType(401)]
         [ProducesResponseType(200)]

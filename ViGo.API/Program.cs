@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
+using System.Reflection;
 using System.Text;
 using ViGo.API.Middlewares;
 using ViGo.Utilities.Configuration;
@@ -64,6 +65,9 @@ namespace ViGo.API
                         new string[]{}
                     }
                 });
+
+                var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
             });
 
             // Authentication
