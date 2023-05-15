@@ -9,6 +9,7 @@ namespace ViGo.Domain.Core
     // Base Class for Entity
     public abstract class BaseEntity
     {
+        public abstract Guid Id { get; set; }
     }
 
     #region Interfaces
@@ -19,14 +20,14 @@ namespace ViGo.Domain.Core
 
     public interface ITrackingCreated
     {
-        string CreatedBy { get; set; }
-        DateTime CreatedDate { get; set; }
+        Guid CreatedBy { get; set; }
+        DateTimeOffset CreatedDate { get; set; }
     }
 
     public interface ITrackingUpdated
     {
-        string UpdatedBy { get; set; }
-        DateTime UpdatedDate { get; set; }
+        Guid UpdatedBy { get; set; }
+        DateTimeOffset UpdatedDate { get; set; }
     }
     #endregion
 }

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Converters;
 using System.Text;
+using ViGo.API.Middlewares;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.API
@@ -19,11 +21,17 @@ namespace ViGo.API
 
             builder.Services.AddControllers()
                 .AddNewtonsoftJson(options =>
+                {
+
                     options.SerializerSettings.ReferenceLoopHandling =
-                    Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+                    Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.Converters.Add(
+                        new StringEnumConverter());
+                }
+                    );
 
             // Dependency Injection
-            builder.Services.AddViGoDependencyInjection();
+            builder.Services.AddViGoDependencyInjection(builder.Environment);
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -111,6 +119,9 @@ namespace ViGo.API
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+
+            app.UseMiddleware<InitializeIdentityMiddleware>();
+
             app.UseAuthorization();
 
             app.UseCors("AllowAll");

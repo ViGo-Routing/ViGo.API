@@ -50,5 +50,25 @@ namespace ViGo.Utilities.Configuration
             => Configuration.GetSection("JWT")["Secret"];
 
         #endregion
+
+        #region Security Properties
+        public static string SecurityPassPhrase
+            => Configuration["Security:PassPhrase"];
+
+        public static string SecuritySalt
+            => Configuration["Security:Salt"];
+
+        public static string SecurityAlgorithm
+            => Configuration["Security:Algorithm"];
+
+        public static int SecurityPasswordIterations
+            => int.Parse(Configuration["Security:PasswordIterations"]);
+
+        public static string SecurityInitVector
+            => Configuration["Security:InitVector"];
+
+        public static int SecurityKeySize
+            => int.Parse(Configuration["Security:KeySize"]);
+        #endregion
     }
 }

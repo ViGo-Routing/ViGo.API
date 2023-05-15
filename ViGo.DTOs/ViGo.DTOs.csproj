@@ -10,4 +10,26 @@
     <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Bookings\" />
+    <Folder Include="BookingDetails\" />
+    <Folder Include="Events\" />
+    <Folder Include="Fares\" />
+    <Folder Include="FarePolicies\" />
+    <Folder Include="WalletTransactions\" />
+    <Folder Include="Wallets\" />
+    <Folder Include="VehicleTypes\" />
+    <Folder Include="Vehicles\" />
+    <Folder Include="UserLicenses\" />
+    <Folder Include="Users\" />
+    <Folder Include="Stations\" />
+    <Folder Include="Settings\" />
+    <Folder Include="RouteStations\" />
+    <Folder Include="RouteRoutines\" />
+    <Folder Include="Routes\" />
+    <Folder Include="Reports\" />
+    <Folder Include="Promotions\" />
+    <Folder Include="Notifications\" />
+  </ItemGroup>
+
 </Project>
