@@ -11,7 +11,7 @@ namespace ViGo.Domain
             Bookings = new HashSet<Booking>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Code { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;

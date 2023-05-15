@@ -13,7 +13,7 @@ namespace ViGo.Domain
             InverseNextRouteStation = new HashSet<RouteStation>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid RouteId { get; set; }
         public Guid StationId { get; set; }
         public int StationIndex { get; set; }

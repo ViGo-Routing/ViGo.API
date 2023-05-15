@@ -10,7 +10,7 @@ namespace ViGo.Domain
             FarePolicies = new HashSet<FarePolicy>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid VehicleTypeId { get; set; }
         public double BaseDistance { get; set; }
         public double BasePrice { get; set; }

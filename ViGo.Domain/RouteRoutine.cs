@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class RouteRoutine
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid RouteId { get; set; }
         public Guid UserId { get; set; }
         public DateTime StartDate { get; set; }

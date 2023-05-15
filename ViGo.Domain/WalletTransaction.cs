@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class WalletTransaction
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid WalletId { get; set; }
         public double Amount { get; set; }
         public Guid? BookingId { get; set; }

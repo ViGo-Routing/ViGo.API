@@ -13,7 +13,7 @@ namespace ViGo.Domain
             RouteStations = new HashSet<RouteStation>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public double Longtitude { get; set; }
         public double Latitude { get; set; }
         public string Name { get; set; } = null!;

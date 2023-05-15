@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class Report
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;

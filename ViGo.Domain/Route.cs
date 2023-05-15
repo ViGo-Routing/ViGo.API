@@ -14,7 +14,7 @@ namespace ViGo.Domain
             RouteStations = new HashSet<RouteStation>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string Name { get; set; } = null!;
         public Guid StartStationId { get; set; }

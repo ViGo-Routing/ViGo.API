@@ -11,7 +11,7 @@ namespace ViGo.Domain
             Notifications = new HashSet<Notification>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
         public EventType Type { get; set; }

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace ViGo.Domain.Core
 {
     // Base Class for Entity
-    public class BaseEntity
+    public abstract class BaseEntity
     {
-        public Guid Id { get; set; }
+        public abstract Guid Id { get; set; }
     }
 
     #region Interfaces

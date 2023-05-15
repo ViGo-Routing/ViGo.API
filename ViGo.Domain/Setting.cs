@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class Setting
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Key { get; set; } = null!;
         public string Value { get; set; } = null!;
         public SettingType Type { get; set; }

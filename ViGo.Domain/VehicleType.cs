@@ -14,7 +14,7 @@ namespace ViGo.Domain
             Vehicles = new HashSet<Vehicle>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public short Slot { get; set; }
         public VehicleSubType Type { get; set; }

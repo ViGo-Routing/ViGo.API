@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class UserLicense
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string? FrontSideFile { get; set; }
         public string? BackSideFile { get; set; }

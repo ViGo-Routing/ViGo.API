@@ -11,7 +11,7 @@ namespace ViGo.Domain
             WalletTransactions = new HashSet<WalletTransaction>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid UserId { get; set; }
         public double Balance { get; set; }
         public WalletType Type { get; set; }

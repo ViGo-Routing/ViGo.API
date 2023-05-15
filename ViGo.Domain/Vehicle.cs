@@ -5,7 +5,7 @@ namespace ViGo.Domain
 {
     public partial class Vehicle
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Name { get; set; } = null!;
         public string LicensePlate { get; set; } = null!;
         public Guid VehicleTypeId { get; set; }

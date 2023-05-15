@@ -12,7 +12,7 @@ namespace ViGo.Domain
             WalletTransactions = new HashSet<WalletTransaction>();
         }
 
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid BookingId { get; set; }
         public Guid? DriverId { get; set; }
         public Guid CustomerRouteId { get; set; }
@@ -28,7 +28,7 @@ namespace ViGo.Domain
         public DateTimeOffset? DropoffTime { get; set; }
         public short? Rate { get; set; }
         public string? Feedback { get; set; }
-        public BookingDetailStatus Status { get; set; }
+        public BookingDetailStatus  Status { get; set; }
         public DateTimeOffset CreatedDate { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTimeOffset UpdatedDate { get; set; }

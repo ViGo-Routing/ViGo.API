@@ -5,7 +5,7 @@ namespace ViGo.Domain
 {
     public partial class FarePolicy
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public Guid FareId { get; set; }
         public double? MinDistance { get; set; }
         public double? MaxDistance { get; set; }

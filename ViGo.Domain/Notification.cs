@@ -6,7 +6,7 @@ namespace ViGo.Domain
 {
     public partial class Notification
     {
-        public Guid Id { get; set; }
+        public override Guid Id { get; set; }
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public NotificationType Type { get; set; }
