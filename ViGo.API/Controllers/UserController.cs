@@ -70,7 +70,7 @@ namespace ViGo.API.Controllers
             try
             {
                 User user = await userServices.Login(
-                    loginUser.Email, loginUser.Password);
+                    loginUser.Phone, loginUser.Password);
 
                 if (user == null)
                 {
