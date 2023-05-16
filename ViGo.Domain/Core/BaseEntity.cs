@@ -21,13 +21,13 @@ namespace ViGo.Domain.Core
     public interface ITrackingCreated
     {
         Guid CreatedBy { get; set; }
-        DateTimeOffset CreatedDate { get; set; }
+        DateTime CreatedTime { get; set; }
     }
 
     public interface ITrackingUpdated
     {
         Guid UpdatedBy { get; set; }
-        DateTimeOffset UpdatedDate { get; set; }
+        DateTime UpdatedTime { get; set; }
     }
     #endregion
 }

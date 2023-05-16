@@ -11,14 +11,12 @@ namespace ViGo.Domain
         public string? FrontSideFile { get; set; }
         public string? BackSideFile { get; set; }
         public UserLicenseType LicenseType { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual User CreatedByNavigation { get; set; } = null!;
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual User User { get; set; } = null!;
     }
 }

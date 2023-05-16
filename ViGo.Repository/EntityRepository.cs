@@ -98,7 +98,7 @@ namespace ViGo.Repository
 
                         if (entity is ITrackingUpdated)
                         {
-                            ((ITrackingUpdated)entity).UpdatedDate = DateTimeUtilities.GetDateTimeVnNow();
+                            ((ITrackingUpdated)entity).UpdatedTime = DateTimeUtilities.GetDateTimeVnNow();
                             ((ITrackingUpdated)(entity)).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                         }
                         Table.Update(entity);
@@ -277,16 +277,16 @@ namespace ViGo.Repository
 
             if (!isManuallyAssignDate)
             {
-                DateTimeOffset vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
 
                 if (entity is ITrackingCreated)
                 {
-                    ((ITrackingCreated)entity).CreatedDate = vnNow;
+                    ((ITrackingCreated)entity).CreatedTime = vnNow;
                     //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
                 }
                 if (entity is ITrackingUpdated)
                 {
-                    ((ITrackingUpdated)entity).UpdatedDate = vnNow;
+                    ((ITrackingUpdated)entity).UpdatedTime = vnNow;
                     //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                 }
             }
@@ -328,7 +328,7 @@ namespace ViGo.Repository
 
             if (entities.Count() > 0)
             {
-                DateTimeOffset vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
 
                 foreach (TEntity entity in entities)
                 {
@@ -360,12 +360,12 @@ namespace ViGo.Repository
                     {
                         if (entity is ITrackingCreated)
                         {
-                            ((ITrackingCreated)entity).CreatedDate = vnNow;
+                            ((ITrackingCreated)entity).CreatedTime = vnNow;
                             //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
                         }
                         if (entity is ITrackingUpdated)
                         {
-                            ((ITrackingUpdated)entity).UpdatedDate = vnNow;
+                            ((ITrackingUpdated)entity).UpdatedTime = vnNow;
                             //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                         }
                     }
@@ -400,7 +400,7 @@ namespace ViGo.Repository
 
             if (entity is ITrackingUpdated)
             {
-                ((ITrackingUpdated)entity).UpdatedDate = DateTimeUtilities.GetDateTimeVnNow();
+                ((ITrackingUpdated)entity).UpdatedTime = DateTimeUtilities.GetDateTimeVnNow();
                 ((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
             }
 

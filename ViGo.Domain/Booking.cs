@@ -29,18 +29,16 @@ namespace ViGo.Domain
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public BookingStatus Status { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual User CreatedByNavigation { get; set; } = null!;
         public virtual User Customer { get; set; } = null!;
         public virtual RouteStation EndRouteStation { get; set; } = null!;
         public virtual Promotion? Promotion { get; set; }
         public virtual RouteStation StartRouteStation { get; set; } = null!;
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual VehicleType VehicleType { get; set; } = null!;
         public virtual ICollection<BookingDetail> BookingDetails { get; set; }
         public virtual ICollection<WalletTransaction> WalletTransactions { get; set; }

@@ -13,15 +13,13 @@ namespace ViGo.Domain
         public Guid? UserId { get; set; }
         public Guid? EventId { get; set; }
         public NotificationStatus Status { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual User CreatedByNavigation { get; set; } = null!;
         public virtual Event? Event { get; set; }
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual User? User { get; set; }
     }
 }

@@ -51,19 +51,18 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.DaysOfWeek).HasMaxLength(100);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.DaysOfWeek).HasMaxLength(50);
 
                 entity.Property(e => e.EndDate).HasColumnType("date");
 
                 entity.Property(e => e.StartDate).HasColumnType("date");
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.BookingCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Customer)
-                    .WithMany(p => p.BookingCustomers)
+                    .WithMany(p => p.Bookings)
                     .HasForeignKey(d => d.CustomerId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
 
@@ -84,11 +83,6 @@ namespace ViGo.Domain
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Booking_RouteStation_StartStation");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.BookingUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
                 entity.HasOne(d => d.VehicleType)
                     .WithMany(p => p.Bookings)
                     .HasForeignKey(d => d.VehicleTypeId)
@@ -102,9 +96,23 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.ArriveAtPickupTime).HasColumnType("datetime");
+
+                entity.Property(e => e.AssignedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.BeginTime).HasColumnType("datetime");
+
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.Date).HasColumnType("date");
 
+                entity.Property(e => e.DropoffTime).HasColumnType("datetime");
+
                 entity.Property(e => e.Feedback).HasMaxLength(500);
+
+                entity.Property(e => e.PickupTime).HasColumnType("datetime");
+
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Booking)
                     .WithMany(p => p.BookingDetails)
@@ -112,31 +120,10 @@ namespace ViGo.Domain
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BookingDetail_Booking");
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.BookingDetailCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.CustomerRoute)
-                    .WithMany(p => p.BookingDetailCustomerRoutes)
-                    .HasForeignKey(d => d.CustomerRouteId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_BookingDetail_Route_CustomerRoute");
-
                 entity.HasOne(d => d.Driver)
-                    .WithMany(p => p.BookingDetailDrivers)
+                    .WithMany(p => p.BookingDetails)
                     .HasForeignKey(d => d.DriverId)
                     .HasConstraintName("FK_BookingDetail_User_Driver");
-
-                entity.HasOne(d => d.DriverRoute)
-                    .WithMany(p => p.BookingDetailDriverRoutes)
-                    .HasForeignKey(d => d.DriverRouteId)
-                    .HasConstraintName("FK_BookingDetail_Route_DriverRoute");
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.BookingDetailUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             modelBuilder.Entity<Event>(entity =>
@@ -144,8 +131,6 @@ namespace ViGo.Domain
                 entity.ToTable("Event");
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
-
-                entity.Property(e => e.Content).HasMaxLength(2000);
 
                 entity.Property(e => e.Title).HasMaxLength(255);
             });
@@ -156,15 +141,9 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.FareCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.FareUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.VehicleType)
                     .WithMany(p => p.Fares)
@@ -179,21 +158,15 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.FarePolicyCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Fare)
                     .WithMany(p => p.FarePolicies)
                     .HasForeignKey(d => d.FareId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_FarePolicy_Fare");
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.FarePolicyUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             modelBuilder.Entity<Notification>(entity =>
@@ -202,27 +175,21 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Description).HasMaxLength(2000);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.Description).HasMaxLength(200);
 
                 entity.Property(e => e.Title).HasMaxLength(255);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.NotificationCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Event)
                     .WithMany(p => p.Notifications)
                     .HasForeignKey(d => d.EventId)
                     .HasConstraintName("FK_Notification_Event");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.NotificationUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.NotificationUsers)
+                    .WithMany(p => p.Notifications)
                     .HasForeignKey(d => d.UserId);
             });
 
@@ -234,23 +201,21 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Code).HasMaxLength(15);
 
-                entity.Property(e => e.Description).HasMaxLength(2000);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.Property(e => e.ExpireTime).HasColumnType("datetime");
 
                 entity.Property(e => e.IsPercentage)
                     .IsRequired()
                     .HasDefaultValueSql("((1))");
 
-                entity.Property(e => e.Name).HasMaxLength(255);
+                entity.Property(e => e.Name).HasMaxLength(50);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.PromotionCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.StartTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.PromotionUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.VehicleType)
                     .WithMany(p => p.Promotions)
@@ -265,28 +230,19 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Content).HasMaxLength(2000);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
                 entity.Property(e => e.Title).HasMaxLength(255);
+
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.BookingDetail)
                     .WithMany(p => p.Reports)
                     .HasForeignKey(d => d.BookingDetailId)
                     .HasConstraintName("FK_Report_BookingDetail");
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.ReportCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Report_Report_CreatedBy");
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.ReportUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.ReportUsers)
+                    .WithMany(p => p.Reports)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
@@ -297,12 +253,11 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.Name).HasMaxLength(255);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.RouteCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.EndStation)
                     .WithMany(p => p.RouteEndStations)
@@ -316,13 +271,8 @@ namespace ViGo.Domain
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Route_Station_Start");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.RouteUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.RouteUsers)
+                    .WithMany(p => p.Routes)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
@@ -333,30 +283,19 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.EndDate).HasColumnType("date");
 
                 entity.Property(e => e.StartDate).HasColumnType("date");
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.RouteRoutineCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Route)
                     .WithMany(p => p.RouteRoutines)
                     .HasForeignKey(d => d.RouteId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_RouteRoutine_Route");
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.RouteRoutineUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.User)
-                    .WithMany(p => p.RouteRoutineUsers)
-                    .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             modelBuilder.Entity<RouteStation>(entity =>
@@ -365,15 +304,9 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.RouteStationCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.NextRouteStation)
-                    .WithMany(p => p.InverseNextRouteStation)
-                    .HasForeignKey(d => d.NextRouteStationId)
-                    .HasConstraintName("FK_RouteStation_RouteStation_NextStation");
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.Route)
                     .WithMany(p => p.RouteStations)
@@ -386,11 +319,6 @@ namespace ViGo.Domain
                     .HasForeignKey(d => d.StationId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_RouteStation_Station");
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.RouteStationUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
             modelBuilder.Entity<Setting>(entity =>
@@ -399,9 +327,9 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Key).HasMaxLength(255);
+                entity.Property(e => e.Key).HasMaxLength(100);
 
-                entity.Property(e => e.Value).HasMaxLength(2000);
+                entity.Property(e => e.Value).HasMaxLength(255);
             });
 
             modelBuilder.Entity<Station>(entity =>
@@ -412,17 +340,11 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Address).HasMaxLength(500);
 
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.Name).HasMaxLength(255);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.StationCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.StationUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<User>(entity =>
@@ -431,29 +353,27 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.AvatarUrl).HasMaxLength(255);
+
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
 
-                entity.Property(e => e.Email).HasMaxLength(255);
+                entity.Property(e => e.Email).HasMaxLength(50);
 
                 entity.Property(e => e.Gender).HasDefaultValueSql("((0))");
 
-                entity.Property(e => e.Name).HasMaxLength(255);
+                entity.Property(e => e.LockedOutEnd).HasColumnType("datetime");
 
-                entity.Property(e => e.Password).HasMaxLength(255);
+                entity.Property(e => e.LockedOutStart).HasColumnType("datetime");
+
+                entity.Property(e => e.Name).HasMaxLength(50);
+
+                entity.Property(e => e.Password).HasMaxLength(25);
 
                 entity.Property(e => e.Phone).HasMaxLength(12);
 
-                entity.Property(e => e.Photo).HasMaxLength(255);
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.InverseCreatedByNavigation)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.InverseUpdatedByNavigation)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<UserLicense>(entity =>
@@ -464,20 +384,14 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.BackSideFile).HasMaxLength(255);
 
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
                 entity.Property(e => e.FrontSideFile).HasMaxLength(255);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.UserLicenseCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.UserLicenseUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.UserLicenseUsers)
+                    .WithMany(p => p.UserLicenses)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
@@ -488,22 +402,16 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.LicensePlate).HasMaxLength(255);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.Property(e => e.Name).HasMaxLength(100);
+                entity.Property(e => e.LicensePlate).HasMaxLength(20);
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.VehicleCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.Name).HasMaxLength(50);
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.VehicleUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.VehicleUsers)
+                    .WithMany(p => p.Vehicles)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
 
@@ -520,17 +428,11 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Name).HasMaxLength(100);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.VehicleTypeCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.Name).HasMaxLength(50);
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.VehicleTypeUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<Wallet>(entity =>
@@ -539,18 +441,12 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.WalletCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.WalletUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.WalletUsers)
+                    .WithMany(p => p.Wallets)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
@@ -561,6 +457,10 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
+
                 entity.HasOne(d => d.BookingDetail)
                     .WithMany(p => p.WalletTransactions)
                     .HasForeignKey(d => d.BookingDetailId)
@@ -570,16 +470,6 @@ namespace ViGo.Domain
                     .WithMany(p => p.WalletTransactions)
                     .HasForeignKey(d => d.BookingId)
                     .HasConstraintName("FK_WalletTransaction_Booking");
-
-                entity.HasOne(d => d.CreatedByNavigation)
-                    .WithMany(p => p.WalletTransactionCreatedByNavigations)
-                    .HasForeignKey(d => d.CreatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
-
-                entity.HasOne(d => d.UpdatedByNavigation)
-                    .WithMany(p => p.WalletTransactionUpdatedByNavigations)
-                    .HasForeignKey(d => d.UpdatedBy)
-                    .OnDelete(DeleteBehavior.ClientSetNull);
 
                 entity.HasOne(d => d.Wallet)
                     .WithMany(p => p.WalletTransactions)

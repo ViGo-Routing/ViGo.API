@@ -19,14 +19,12 @@ namespace ViGo.Domain
         public string Name { get; set; } = null!;
         public string Address { get; set; } = null!;
         public StationStatus Status { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual User CreatedByNavigation { get; set; } = null!;
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual ICollection<Route> RouteEndStations { get; set; }
         public virtual ICollection<Route> RouteStartStations { get; set; }
         public virtual ICollection<RouteStation> RouteStations { get; set; }

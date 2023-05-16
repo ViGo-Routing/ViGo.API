@@ -13,16 +13,14 @@ namespace ViGo.Domain
         public Guid? BookingDetailId { get; set; }
         public WalletTransactionType Type { get; set; }
         public WalletTransactionStatus Status { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
         public virtual Booking? Booking { get; set; }
         public virtual BookingDetail? BookingDetail { get; set; }
-        public virtual User CreatedByNavigation { get; set; } = null!;
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual Wallet Wallet { get; set; } = null!;
     }
 }

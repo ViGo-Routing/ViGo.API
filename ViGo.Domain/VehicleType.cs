@@ -18,14 +18,12 @@ namespace ViGo.Domain
         public string Name { get; set; } = null!;
         public short Slot { get; set; }
         public VehicleSubType Type { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+        public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
-        public DateTimeOffset UpdatedDate { get; set; }
+        public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public virtual User CreatedByNavigation { get; set; } = null!;
-        public virtual User UpdatedByNavigation { get; set; } = null!;
         public virtual ICollection<Booking> Bookings { get; set; }
         public virtual ICollection<Fare> Fares { get; set; }
         public virtual ICollection<Promotion> Promotions { get; set; }

@@ -10,7 +10,7 @@ namespace ViGo.Utilities
     {
         private static string vnTimeZoneString = "SE Asia Standard Time";
 
-        public static DateTimeOffset GetDateTimeVnNow()
+        public static DateTime GetDateTimeVnNow()
         {
             return TimeZoneInfo.ConvertTime(
                 DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
