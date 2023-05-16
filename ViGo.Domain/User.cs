@@ -29,9 +29,9 @@ namespace ViGo.Domain
         public UserRole Role { get; set; }
         public UserStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
-        public Guid? CreatedBy { get; set; }
+        public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
-        public Guid? UpdatedBy { get; set; }
+        public Guid UpdatedBy { get; set; }
         public bool IsLockedOut { get; set; }
         public DateTime? LockedOutStart { get; set; }
         public DateTime? LockedOutEnd { get; set; }

@@ -88,7 +88,7 @@ namespace ViGo.Domain
     }
 
     public partial class User
-        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
+        : BaseEntity, ITrackingCreated, ITrackingUpdated
     {
 
     }
