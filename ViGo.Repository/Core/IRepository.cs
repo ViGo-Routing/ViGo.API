@@ -30,6 +30,21 @@ namespace ViGo.Repository.Core
             bool includeDeleted = false);
 
         /// <summary>
+        /// Get the entity entry
+        /// </summary>
+        /// <param name="id">ID string value of the entity</param>
+        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
+        /// contain the soft-deleted entities
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation.
+        /// The task result contains the entity entry
+        /// </returns>
+        Task<TEntity> GetAsync(
+            string id,
+            bool includeDeleted = false);
+
+        /// <summary>
         /// Get all entity entries based on the query
         /// </summary>
         /// <param name="func">Function to select entries</param>
@@ -61,22 +76,30 @@ namespace ViGo.Repository.Core
         /// Insert a new entity entry
         /// </summary>
         /// <param name="entity">Entity entry to be inserted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
+        /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
+        /// as entity's Id</param>
+        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entry
         /// </returns>
         Task<TEntity> InsertAsync(TEntity entity,
+            bool isSelfCreatedEntity = false,
             bool isManuallyAssignDate = false);
 
         /// <summary>
         /// Insert a number of entity entries
         /// </summary>
         /// <param name="entities">Entity entries to be inserted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
+        /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
+        /// as entity's Id
+        /// </param>
+        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
@@ -84,14 +107,15 @@ namespace ViGo.Repository.Core
         /// </returns>
         Task<IEnumerable<TEntity>> InsertAsync(
             IEnumerable<TEntity> entities,
+            bool isSelfCreatedEntity = false,
             bool isManuallyAssignDate = false);
 
         /// <summary>
         /// Delete the entity entry
         /// </summary>
         /// <param name="entity">The entity entry to be deleted</param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSoftDelete">Boolean value which will determine whether or not 
+        /// the Delete action should be a soft delete or not
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation
@@ -105,8 +129,8 @@ namespace ViGo.Repository.Core
         /// <param name="predicate">Predicate expression which will return a boolean value to determine the 
         /// single entry to get. If there are more than one entry, an exception will be thrown!
         /// </param>
-        /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
-        /// contain the soft-deleted entities
+        /// <param name="isSoftDelete">Boolean value which will determine whether or not 
+        /// the Delete action should be a soft delete or not
         /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation
