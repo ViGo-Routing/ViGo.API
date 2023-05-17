@@ -18,10 +18,11 @@ namespace ViGo.API
                 if (env.IsDevelopment())
                 {
                     options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_PhongNT"));
+                    //options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_Azure"));
                 }
                 else
                 {
-                    options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_Production"));
+                    options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_Azure"));
                 }
             });
             #endregion
