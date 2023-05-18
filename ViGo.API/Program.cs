@@ -34,6 +34,7 @@ namespace ViGo.API
             // Dependency Injection
             builder.Services.AddViGoDependencyInjection(builder.Environment);
 
+            builder.Services.AddDateOnlyTimeOnlyStringConverters();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
