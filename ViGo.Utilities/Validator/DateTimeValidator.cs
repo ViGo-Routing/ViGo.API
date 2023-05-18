@@ -2,6 +2,18 @@
 
 namespace ViGo.Utilities.Validator
 {
+    public class DateTimeRange
+    {
+        public DateTime StartDateTime { get; private set; }
+        public DateTime EndDateTime { get; private set; }
+
+        public DateTimeRange(DateTime startDateTime, DateTime endDateTime)
+        {
+            StartDateTime = startDateTime;
+            EndDateTime = endDateTime;
+        }
+    }
+
     public static class DateTimeValidator
     {
         /// <summary>
@@ -47,5 +59,24 @@ namespace ViGo.Utilities.Validator
             }
             return true;
         }
+
+        /// <summary>
+        /// Determine if two DateTime ranges are overlap
+        /// </summary>
+        /// <param name="firstRange">First DateTime Range</param>
+        /// <param name="secondRange">Second DateTime Range</param>
+        /// <param name="errorMessage">Error message</param>
+        /// <returns>False if two datetime ranges are not overlap</returns>
+        /// <exception cref="ApplicationException">Throw exception with the error message if two datetime ranges are overlap</exception>
+        public static bool IsOverlap(this DateTimeRange firstRange,
+            DateTimeRange secondRange, string errorMessage)
+        {
+            if (firstRange.StartDateTime < secondRange.EndDateTime
+                && firstRange.EndDateTime > secondRange.StartDateTime)
+            {
+                throw new ApplicationException(errorMessage);
+            }
+            return false;
+        } 
     }
 }
