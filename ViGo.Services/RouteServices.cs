@@ -21,7 +21,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<Route> CreateRouteAsync(CreateRouteDto dto)
+        public async Task<Route> CreateRouteAsync(RouteCreateEditDto dto)
         {
             dto.Name.StringValidate(
                 allowEmpty: false,
@@ -46,7 +46,7 @@ namespace ViGo.Services
             {
                 throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
             }
-            foreach (CreateRouteRoutineDto routine in dto.RouteRoutines)
+            foreach (RouteRoutineCreateEditDto routine in dto.RouteRoutines)
             {
                 IsValidRoutine(routine);
             }
@@ -155,7 +155,8 @@ namespace ViGo.Services
             return route;
         }
 
-        private void IsValidStation(CreateRouteStationDto station, string stationName)
+        #region Validation
+        private void IsValidStation(RouteStationCreateEditDto station, string stationName)
         {
             stationName = stationName.ToLower().Trim();
 
@@ -183,7 +184,7 @@ namespace ViGo.Services
                 );
         }
 
-        private void IsValidRoutine(CreateRouteRoutineDto routine)
+        private void IsValidRoutine(RouteRoutineCreateEditDto routine)
         {
             DateTime startDateTime = DateTimeUtilities
                 .ToDateTime(routine.StartDate, routine.StartTime);
@@ -204,7 +205,7 @@ namespace ViGo.Services
 
         }
 
-        private async Task IsValidRoutines(IList<CreateRouteRoutineDto> routines)
+        private async Task IsValidRoutines(IList<RouteRoutineCreateEditDto> routines)
         {
             IList<DateTimeRange> routineRanges =
                 (from routine in routines
@@ -282,5 +283,6 @@ namespace ViGo.Services
             
 
         }
+        #endregion
     }
 }

@@ -8,13 +8,13 @@ using ViGo.DTOs.RouteStations;
 
 namespace ViGo.DTOs.Routes
 {
-    public class CreateRouteDto
+    public class RouteCreateEditDto
     {
         public string Name { get; set; }
         public double Distance { get; set; }
         public double Duration { get; set; }
-        public CreateRouteStationDto StartStation { get; set; }
-        public CreateRouteStationDto EndStation { get; set; }
-        public IList<CreateRouteRoutineDto> RouteRoutines { get; set; }
+        public RouteStationCreateEditDto StartStation { get; set; }
+        public RouteStationCreateEditDto EndStation { get; set; }
+        public IList<RouteRoutineCreateEditDto> RouteRoutines { get; set; }
     }
 }

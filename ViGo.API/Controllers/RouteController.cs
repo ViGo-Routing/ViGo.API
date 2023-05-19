@@ -26,7 +26,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateRoute(CreateRouteDto dto)
+        public async Task<IActionResult> CreateRoute(RouteCreateEditDto dto)
         {
             try
             {

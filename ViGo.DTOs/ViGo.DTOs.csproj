@@ -24,7 +24,6 @@
     <Folder Include="Users\" />
     <Folder Include="Stations\" />
     <Folder Include="Settings\" />
-    <Folder Include="Routes\" />
     <Folder Include="Reports\" />
     <Folder Include="Promotions\" />
     <Folder Include="Notifications\" />

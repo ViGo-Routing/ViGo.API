@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.DTOs.RouteStations
 {
-    public class CreateRouteStationDto
+    public class RouteStationCreateEditDto
     {
         public float Longtitude { get; set; }
         public float Latitude { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.DTOs.RouteRoutines
 {
-    public class CreateRouteRoutineDto
+    public class RouteRoutineCreateEditDto
     {
         public DateOnly StartDate { get; set; }
         public TimeOnly StartTime { get; set; }
