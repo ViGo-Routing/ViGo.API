@@ -155,6 +155,61 @@ namespace ViGo.Services
             return route;
         }
 
+        public async Task<IEnumerable<RouteListItemDto>> GetRoutesAsync(Guid userId)
+        {
+            IEnumerable<Route> routes = await work.Routes
+                .GetAllAsync(query => query.Where(
+                    r => r.UserId.Equals(userId)));
+
+            IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
+
+            IEnumerable<RouteStation> routeStations = await work.RouteStations
+                .GetAllAsync(query => query.Where(
+                    s => routeIds.Contains(s.RouteId)));
+
+            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId);
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)));
+
+            IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
+                .GetAllAsync(query => query.Where(
+                    r => routeIds.Contains(r.RouteId)));
+
+            IList<RouteListItemDto> dtos = new List<RouteListItemDto>();
+            foreach (Route route in routes)
+            {
+                // Routine
+                IEnumerable<RouteRoutine> _routines = routeRoutines
+                    .Where(r => r.RouteId.Equals(route.Id));
+
+                IEnumerable<RouteRoutineListItemDto> routineDtos =
+                    from routine in _routines
+                    select new RouteRoutineListItemDto(routine);
+
+                // Stations
+                Station startStation = stations.SingleOrDefault(
+                    s => s.Id.Equals(route.StartStationId));
+                RouteStationListItemDto startStationDto = new RouteStationListItemDto(
+                    startStation, 1
+                    );
+
+                Station endStation = stations.SingleOrDefault(
+                    s => s.Id.Equals(route.EndStationId));
+                RouteStationListItemDto endStationDto = new RouteStationListItemDto(
+                    endStation, 1
+                    );
+
+                dtos.Add(new RouteListItemDto(
+                    route, 
+                    startStationDto, 
+                    endStationDto, 
+                    routineDtos));
+            }
+
+            return dtos;
+
+        }
         #region Validation
         private void IsValidStation(RouteStationCreateEditDto station, string stationName)
         {

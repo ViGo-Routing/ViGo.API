@@ -8,8 +8,8 @@ namespace ViGo.DTOs.RouteStations
 {
     public class RouteStationCreateEditDto
     {
-        public float Longtitude { get; set; }
-        public float Latitude { get; set; }
+        public double Longtitude { get; set; }
+        public double Latitude { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
         //public int StationIndex { get; set; }
