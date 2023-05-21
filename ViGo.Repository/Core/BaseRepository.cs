@@ -49,7 +49,7 @@ namespace ViGo.Repository.Core
         /// <summary>
         /// Get the entity entry
         /// </summary>
-        /// <param name="id">ID string value of the entity</param>
+        /// <param name="id">ID Guid value of the entity</param>
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
@@ -58,7 +58,7 @@ namespace ViGo.Repository.Core
         /// The task result contains the entity entry
         /// </returns>
         public abstract Task<TEntity> GetAsync(
-            string id,
+            Guid id,
             bool includeDeleted = false);
 
         /// <summary>

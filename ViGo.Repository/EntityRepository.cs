@@ -208,7 +208,7 @@ namespace ViGo.Repository
         /// <summary>
         /// Get the entity entry
         /// </summary>
-        /// <param name="id">ID string value of the entity</param>
+        /// <param name="id">ID Guid value of the entity</param>
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
@@ -217,14 +217,14 @@ namespace ViGo.Repository
         /// The task result contains the entity entry
         /// </returns>
         public override async Task<TEntity> GetAsync(
-            string id,
+            Guid id,
             bool includeDeleted = false)
         {
             IQueryable<TEntity> query = AddDeletedFilter(Table,
                 includeDeleted);
 
             TEntity entity = await query.SingleOrDefaultAsync(
-                e => e.Id.Equals(Guid.Parse(id)));
+                e => e.Id.Equals(id));
 
             return entity;
         }
