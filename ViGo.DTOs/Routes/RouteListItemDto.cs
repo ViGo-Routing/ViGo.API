@@ -12,6 +12,8 @@ namespace ViGo.DTOs.Routes
 {
     public class RouteListItemDto
     {
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
         public string Name { get; set; }
         public double Distance { get; set; }
         public double Duration { get; set; }
@@ -25,6 +27,8 @@ namespace ViGo.DTOs.Routes
             RouteStationListItemDto endStation,
             IEnumerable<RouteRoutineListItemDto> routines)
         {
+            Id = route.Id;
+            UserId = route.UserId;
             Name = route.Name;
             Distance = route.Distance;
             Duration = route.Duration;

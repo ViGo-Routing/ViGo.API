@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -210,6 +211,206 @@ namespace ViGo.Services
             return dtos;
 
         }
+
+        public async Task<Route> UpdateRouteAsync(RouteCreateEditDto updateDto)
+        {
+            Route route = await work.Routes.GetAsync(updateDto.Id);
+            if (route == null)
+            {
+                throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
+            }
+
+            if (!route.UserId.Equals(updateDto.UserId))
+            {
+                throw new ApplicationException("Thông tin tuyến đường người dùng không trùng khớp! Vui lòng kiểm tra lại");
+            }
+
+            // Not tested yet
+            // TODO Code
+            // Check for Booking
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    b => b.DriverRouteId.Equals(updateDto.UserId)
+                    || b.CustomerRouteId.Equals(updateDto.UserId)));
+            if (bookingDetails.Any())
+            {
+                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
+            }
+
+            updateDto.Name.StringValidate(
+                allowEmpty: false,
+                emptyErrorMessage: "Tên tuyến đường không được bỏ trống!",
+                minLength: 5,
+                minLengthErrorMessage: "Tên tuyến đường phải có từ 5 kí tự trở lên!",
+                maxLength: 255,
+                maxLengthErrorMessage: "Tên tuyến đường không được vượt quá 255 kí tự!"
+                );
+            if (updateDto.Distance <= 0)
+            {
+                throw new ApplicationException("Khoảng cách tuyến đường phải lớn hơn 0!");
+            }
+            if (updateDto.Duration <= 0)
+            {
+                throw new ApplicationException("Thời gian di chuyển của tuyến đường phải lớn hơn 0!");
+            }
+            IsValidStation(updateDto.StartStation, "Điểm bắt đầu");
+            IsValidStation(updateDto.EndStation, "Điểm kết thúc");
+
+            if (updateDto.RouteRoutines.Count == 0)
+            {
+                throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
+            }
+            foreach (RouteRoutineCreateEditDto routine in updateDto.RouteRoutines)
+            {
+                IsValidRoutine(routine);
+            }
+            await IsValidRoutines(updateDto.RouteRoutines, true, updateDto.Id);
+
+            // Find Start Station existance
+            Station startStation = await work.Stations.GetAsync(
+                s => s.Longtitude == updateDto.StartStation.Longtitude
+                && s.Latitude == updateDto.StartStation.Latitude
+                && s.Status == StationStatus.ACTIVE);
+            if (startStation == null)
+            {
+                startStation = new Station
+                {
+                    Longtitude = updateDto.StartStation.Longtitude,
+                    Latitude = updateDto.StartStation.Latitude,
+                    Name = updateDto.StartStation.Name,
+                    Address = updateDto.StartStation.Address,
+                    Status = StationStatus.ACTIVE
+                };
+                await work.Stations.InsertAsync(startStation);
+            }
+
+            // Find End Station existance
+            Station endStation = await work.Stations.GetAsync(
+                s => s.Longtitude == updateDto.EndStation.Longtitude
+                && s.Latitude == updateDto.EndStation.Latitude
+                && s.Status == StationStatus.ACTIVE);
+            if (endStation == null)
+            {
+                endStation = new Station
+                {
+                    Longtitude = updateDto.EndStation.Longtitude,
+                    Latitude = updateDto.EndStation.Latitude,
+                    Name = updateDto.EndStation.Name,
+                    Address = updateDto.EndStation.Address,
+                    Status = StationStatus.ACTIVE
+                };
+                await work.Stations.InsertAsync(endStation);
+            }
+
+            // Update Route
+            route.Name = updateDto.Name;
+            route.StartStationId = startStation.Id;
+            route.EndStationId = endStation.Id;
+            route.Distance = updateDto.Distance;
+            route.Duration = updateDto.Duration;
+
+            await work.Routes.UpdateAsync(route);
+
+            // Update RouteStations
+            IEnumerable<RouteStation> currentRouteStations
+                = await work.RouteStations.GetAllAsync(query => query.Where(
+                    s => s.RouteId.Equals(route.Id)));
+            foreach (RouteStation routeStation in currentRouteStations)
+            {
+                await work.RouteStations.DeleteAsync(routeStation);
+            }
+
+            IList<RouteStation> routeStations = new List<RouteStation>()
+            {
+                // Start Station
+                new RouteStation
+                {
+                    RouteId = route.Id,
+                    StationId = startStation.Id,
+                    StationIndex = 1,
+                    DistanceFromFirstStation = 0,
+                    DurationFromFirstStation = 0,
+                    Status = RouteStationStatus.ACTIVE
+                },
+
+                // End Station
+                new RouteStation
+                {
+                    RouteId = route.Id,
+                    StationId = endStation.Id,
+                    StationIndex = 2,
+                    DistanceFromFirstStation = updateDto.Distance,
+                    DurationFromFirstStation = updateDto.Duration,
+                    Status = RouteStationStatus.ACTIVE
+                }
+            };
+            await work.RouteStations.InsertAsync(routeStations);
+
+            // Update RouteRoutine
+            IEnumerable<RouteRoutine> currentRoutines
+                = await work.RouteRoutines.GetAllAsync(query => query.Where(
+                    s => s.RouteId.Equals(route.Id)));
+            foreach (RouteRoutine routeRoutine in currentRoutines)
+            {
+                await work.RouteRoutines.DeleteAsync(routeRoutine);
+            }
+
+            IList<RouteRoutine> routeRoutines =
+                (from routine in updateDto.RouteRoutines
+                 select new RouteRoutine
+                 {
+                     RouteId = route.Id,
+                     StartDate = routine.StartDate.ToDateTime(TimeOnly.MinValue),
+                     StartTime = routine.StartTime.ToTimeSpan(),
+                     EndDate = routine.EndDate.ToDateTime(TimeOnly.MinValue),
+                     EndTime = routine.EndTime.ToTimeSpan(),
+                     Status = RouteRoutineStatus.ACTIVE
+                 }).ToList();
+            await work.RouteRoutines.InsertAsync(routeRoutines);
+
+            await work.SaveChangesAsync();
+
+            routeStations.ToList()
+                .ForEach(rs => rs.Station = null);
+            route.RouteStations = routeStations;
+            route.RouteRoutines = routeRoutines;
+            route.EndStation = endStation;
+            route.StartStation = startStation;
+
+            return route;
+
+        }
+
+        public async Task<Route> ChangeRouteStatusAsync(Guid routeId, RouteStatus newStatus)
+        {
+            Route route = await work.Routes.GetAsync(routeId);
+            if (route == null)
+            {
+                throw new ApplicationException("Không tìm thấy tuyến đường được chỉ định!!");
+            }
+
+            // Check for Booking
+            // Not tested yet
+            // TODO Code
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    b => b.DriverRouteId.Equals(route.UserId)
+                    || b.CustomerRouteId.Equals(route.UserId)));
+            if (bookingDetails.Any())
+            {
+                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
+            }
+
+            if (route.Status != newStatus)
+            {
+                route.Status = newStatus;
+                await work.Routes.UpdateAsync(route);
+                await work.SaveChangesAsync();
+            }
+
+            return route;
+        }
+
         #region Validation
         private void IsValidStation(RouteStationCreateEditDto station, string stationName)
         {
@@ -260,7 +461,8 @@ namespace ViGo.Services
 
         }
 
-        private async Task IsValidRoutines(IList<RouteRoutineCreateEditDto> routines)
+        private async Task IsValidRoutines(IList<RouteRoutineCreateEditDto> routines,
+            bool isUpdate = false, Guid? routeId = null)
         {
             IList<DateTimeRange> routineRanges =
                 (from routine in routines
@@ -288,6 +490,20 @@ namespace ViGo.Services
                     r => r.UserId.Equals(IdentityUtilities.GetCurrentUserId())
                     && r.Status == RouteStatus.ACTIVE));
             IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
+
+            if (isUpdate)
+            {
+                if (routeId == null)
+                {
+                    throw new Exception("Thiếu thông tin tuyến đường! Vui lòng kiểm tra lại");
+                }
+                routeIds = routeIds.Where(r => !r.Equals(routeId.Value));
+            }
+
+            if (!routeIds.Any())
+            {
+                return;
+            }
 
             IEnumerable<RouteRoutine> currentRouteRoutines =
                 await work.RouteRoutines.GetAllAsync(
@@ -334,8 +550,6 @@ namespace ViGo.Services
                         $"lịch trình mới: {added.StartDateTime} - {added.EndDateTime})");
                 }
             }
-
-            
 
         }
         #endregion

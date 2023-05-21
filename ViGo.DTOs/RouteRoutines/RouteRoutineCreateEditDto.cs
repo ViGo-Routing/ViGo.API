@@ -14,4 +14,5 @@ namespace ViGo.DTOs.RouteRoutines
         public TimeOnly EndTime { get; set; }
 
     }
+
 }

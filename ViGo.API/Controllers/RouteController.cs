@@ -59,7 +59,6 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get Routes information for the current user
         /// </summary>
-        /// <param name="userId">The Current User ID</param>
         /// <returns>
         /// List of current user's saved routes
         /// </returns>
@@ -83,6 +82,86 @@ namespace ViGo.API.Controllers
                     routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId());
                 return StatusCode(200, dtos);
             } catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+
+        /// <summary>
+        /// Update Route's information for the current user. Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
+        /// </summary>
+        /// <returns>
+        /// The updated route information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Route has been updated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("{routeId}")]
+        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteCreateEditDto dto)
+        {
+            try
+            {
+                if (!routeId.Equals(dto.Id))
+                {
+                    throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
+                }
+
+                Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto);
+                return StatusCode(200, updatedRoute);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+
+        /// <summary>
+        /// Update Route Status
+        /// </summary>
+        /// <returns>
+        /// The updated route information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Route has been updated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("ChangeStatus/{routeId}")]
+        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> ChangeRouteStatus(Guid routeId, RouteChangeStatusDto dto)
+        {
+            try
+            {
+                if (!routeId.Equals(dto.Id))
+                {
+                    throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
+                }
+
+                Domain.Route updatedRoute = await routeServices.ChangeRouteStatusAsync(dto.Id, dto.Status);
+                return StatusCode(200, updatedRoute);
+            }
+            catch (ApplicationException appEx)
             {
                 return StatusCode(400, appEx.GeneratorErrorMessage());
             }
