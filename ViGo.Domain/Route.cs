@@ -29,6 +29,8 @@ namespace ViGo.Domain
         public virtual Station EndStation { get; set; } = null!;
         public virtual Station StartStation { get; set; } = null!;
         public virtual User User { get; set; } = null!;
+        public virtual ICollection<BookingDetail> CustomerBookingDetails { get; set; }
+        public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
         public virtual ICollection<RouteRoutine> RouteRoutines { get; set; }
         public virtual ICollection<RouteStation> RouteStations { get; set; }
     }
