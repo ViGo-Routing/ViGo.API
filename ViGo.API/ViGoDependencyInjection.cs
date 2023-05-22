@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using Microsoft.EntityFrameworkCore;
 using ViGo.Domain;
 using ViGo.Repository;
 using ViGo.Repository.Core;
@@ -12,6 +14,15 @@ namespace ViGo.API
             this IServiceCollection services,
             IWebHostEnvironment env)
         {
+            #region Firebase
+            var credential = GoogleCredential.FromFile(ViGoConfiguration.FirebaseCredentialFile);
+            FirebaseApp.Create(new AppOptions
+            {
+                Credential = credential
+            });
+
+            #endregion
+
             #region DbContext
             services.AddDbContext<ViGoDBContext>(options =>
             {

@@ -70,5 +70,10 @@ namespace ViGo.Utilities.Configuration
         public static int SecurityKeySize
             => int.Parse(Configuration["Security:KeySize"]);
         #endregion
+
+        #region Firebase
+        public static string FirebaseCredentialFile
+            => Configuration.GetSection("Firebase")["CredentialFile"];
+        #endregion
     }
 }
