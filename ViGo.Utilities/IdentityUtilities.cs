@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Security.Claims;
+using ViGo.Domain.Enumerations;
 
 namespace ViGo.Utilities
 {
@@ -22,8 +23,8 @@ namespace ViGo.Utilities
                 CurrentUser.Claims.FirstOrDefault(claim =>
                 claim.Type.Equals(ClaimTypes.NameIdentifier)).Value);
 
-        public static short GetCurrentRoleId()
-            => short.Parse(
+        public static UserRole GetCurrentRole()
+            => (UserRole)Enum.Parse(typeof(UserRole), 
                 CurrentUser.Claims.FirstOrDefault(claim =>
                 claim.Type.Equals(ClaimTypes.Role)).Value);
 

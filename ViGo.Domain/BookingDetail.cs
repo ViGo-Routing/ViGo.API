@@ -15,6 +15,8 @@ namespace ViGo.Domain
         public override Guid Id { get; set; }
         public Guid BookingId { get; set; }
         public Guid? DriverId { get; set; }
+        public Guid CustomerRouteId { get; set; }
+        public Guid DriverRouteId { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }
         public double? Price { get; set; }
@@ -34,6 +36,8 @@ namespace ViGo.Domain
 
         public virtual Booking Booking { get; set; } = null!;
         public virtual User? Driver { get; set; }
+        public virtual Route CustomerRoute { get; set; }
+        public virtual Route DriverRoute { get; set; }
         public virtual ICollection<Report> Reports { get; set; }
         public virtual ICollection<WalletTransaction> WalletTransactions { get; set; }
     }

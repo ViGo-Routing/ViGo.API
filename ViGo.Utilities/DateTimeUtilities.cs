@@ -16,5 +16,10 @@ namespace ViGo.Utilities
                 DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                 TimeZoneInfo.FindSystemTimeZoneById(vnTimeZoneString));
         }
+
+        public static DateTime ToDateTime(DateOnly date, TimeOnly time)
+        {
+            return date.ToDateTime(time);
+        }
     }
 }
