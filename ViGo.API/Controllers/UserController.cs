@@ -65,7 +65,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginUserDto loginUser)
+        public async Task<IActionResult> Login([FromBody] UserLoginDto loginUser)
         {
             try
             {
