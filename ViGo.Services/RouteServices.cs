@@ -9,6 +9,7 @@ using ViGo.Domain.Enumerations;
 using ViGo.DTOs.RouteRoutines;
 using ViGo.DTOs.Routes;
 using ViGo.DTOs.RouteStations;
+using ViGo.DTOs.Stations;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
@@ -148,7 +149,8 @@ namespace ViGo.Services
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
             route.RouteStations = routeStations;
-            route.RouteRoutines = routeRoutines;
+            route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
+                .ThenBy(r => r.StartTime).ToList();
 
             route.EndStation.RouteStations = null;
             route.StartStation.RouteStations = null;
@@ -173,42 +175,101 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
 
-            IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
-                .GetAllAsync(query => query.Where(
-                    r => routeIds.Contains(r.RouteId)));
+            //IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
+            //    .GetAllAsync(query => query.Where(
+            //        r => routeIds.Contains(r.RouteId)));
 
             IList<RouteListItemDto> dtos = new List<RouteListItemDto>();
             foreach (Route route in routes)
             {
                 // Routine
-                IEnumerable<RouteRoutine> _routines = routeRoutines
-                    .Where(r => r.RouteId.Equals(route.Id));
+                //IEnumerable<RouteRoutine> _routines = routeRoutines
+                //    .Where(r => r.RouteId.Equals(route.Id));
 
-                IEnumerable<RouteRoutineListItemDto> routineDtos =
-                    from routine in _routines
-                    select new RouteRoutineListItemDto(routine);
+                //IEnumerable<RouteRoutineListItemDto> routineDtos =
+                //    (from routine in _routines
+                //    select new RouteRoutineListItemDto(routine))
+                //    .OrderBy(r => r.StartDate)
+                //    .ThenBy(r => r.StartTime);
 
                 // Stations
                 Station startStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.StartStationId));
-                RouteStationListItemDto startStationDto = new RouteStationListItemDto(
+                StationListItemDto startStationDto = new StationListItemDto(
                     startStation, 1
                     );
 
                 Station endStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.EndStationId));
-                RouteStationListItemDto endStationDto = new RouteStationListItemDto(
-                    endStation, 1
+                StationListItemDto endStationDto = new StationListItemDto(
+                    endStation, 2
                     );
 
                 dtos.Add(new RouteListItemDto(
-                    route, 
-                    startStationDto, 
-                    endStationDto, 
-                    routineDtos));
+                    route,
+                    startStationDto,
+                    endStationDto));
             }
 
             return dtos;
+
+        }
+
+        public async Task<RouteListItemDto> GetRouteAsync(Guid routeId)
+        {
+            Route route = await work.Routes.GetAsync(routeId);
+            if (route == null)
+            {
+                throw new ApplicationException("Tuyến đường không tồn tại!!");
+            }
+
+            IEnumerable<RouteStation> routeStations = await work.RouteStations
+                .GetAllAsync(query => query.Where(
+                    s => s.RouteId.Equals(routeId)));
+
+            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId);
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)));
+
+            IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
+                .GetAllAsync(query => query.Where(
+                    r => r.RouteId.Equals(routeId)));
+
+
+            // Routine
+            IEnumerable<RouteRoutineListItemDto> routineDtos =
+                (from routine in routeRoutines
+                 select new RouteRoutineListItemDto(routine))
+                .OrderBy(r => r.StartDate)
+                .ThenBy(r => r.StartTime);
+
+            // Stations
+            Station startStation = stations.SingleOrDefault(
+                    s => s.Id.Equals(route.StartStationId));
+            StationListItemDto startStationDto = new StationListItemDto(
+                startStation, 1
+                );
+
+            Station endStation = stations.SingleOrDefault(
+                s => s.Id.Equals(route.EndStationId));
+            StationListItemDto endStationDto = new StationListItemDto(
+                endStation, 2
+                );
+
+            // Route Stations
+            IEnumerable<RouteStationListItemDto> routeStationDtos =
+                (from routeStation in routeStations
+                 join station in stations
+                    on routeStation.StationId equals station.Id
+                 select new RouteStationListItemDto(routeStation, station))
+                 .OrderBy(s => s.StationIndex);
+
+            return new RouteListItemDto(
+                    route,
+                    startStationDto,
+                    endStationDto, 
+                    routineDtos, routeStationDtos);
 
         }
 
@@ -317,7 +378,7 @@ namespace ViGo.Services
                     s => s.RouteId.Equals(route.Id)));
             foreach (RouteStation routeStation in currentRouteStations)
             {
-                await work.RouteStations.DeleteAsync(routeStation);
+                await work.RouteStations.DeleteAsync(routeStation, isSoftDelete: false);
             }
 
             IList<RouteStation> routeStations = new List<RouteStation>()
@@ -352,7 +413,7 @@ namespace ViGo.Services
                     s => s.RouteId.Equals(route.Id)));
             foreach (RouteRoutine routeRoutine in currentRoutines)
             {
-                await work.RouteRoutines.DeleteAsync(routeRoutine);
+                await work.RouteRoutines.DeleteAsync(routeRoutine, isSoftDelete: false);
             }
 
             IList<RouteRoutine> routeRoutines =
@@ -373,7 +434,8 @@ namespace ViGo.Services
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
             route.RouteStations = routeStations;
-            route.RouteRoutines = routeRoutines;
+            route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
+                .ThenBy(r => r.StartTime).ToList();
             route.EndStation = endStation;
             route.StartStation = startStation;
 

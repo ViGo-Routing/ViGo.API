@@ -21,7 +21,6 @@
     <Folder Include="VehicleTypes\" />
     <Folder Include="Vehicles\" />
     <Folder Include="UserLicenses\" />
-    <Folder Include="Stations\" />
     <Folder Include="Settings\" />
     <Folder Include="Reports\" />
     <Folder Include="Promotions\" />

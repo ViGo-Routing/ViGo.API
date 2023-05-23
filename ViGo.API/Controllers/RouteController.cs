@@ -46,7 +46,8 @@ namespace ViGo.API.Controllers
                 Domain.Route route = await routeServices.CreateRouteAsync(dto);
 
                 return StatusCode(200, route);
-            } catch (ApplicationException appEx)
+            }
+            catch (ApplicationException appEx)
             {
                 return StatusCode(400, appEx.GeneratorErrorMessage());
             }
@@ -81,7 +82,41 @@ namespace ViGo.API.Controllers
                 IEnumerable<RouteListItemDto> dtos = await
                     routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId());
                 return StatusCode(200, dtos);
-            } catch (ApplicationException appEx)
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+
+        /// <summary>
+        /// Get Route information for a specific route
+        /// </summary>
+        /// <returns>
+        /// Route's information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get route's information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("{routeId}")]
+        [Authorize]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRoute(Guid routeId)
+        {
+            try
+            {
+                RouteListItemDto dto = await routeServices.GetRouteAsync(routeId);
+                return StatusCode(200, dto);
+            }
+            catch (ApplicationException appEx)
             {
                 return StatusCode(400, appEx.GeneratorErrorMessage());
             }
