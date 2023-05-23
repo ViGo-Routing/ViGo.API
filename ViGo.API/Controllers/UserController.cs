@@ -27,134 +27,29 @@ namespace ViGo.API.Controllers
             userServices = new UserServices(work);
         }
 
-        /// <summary>
-        /// Get List of Users
-        /// </summary>
-        /// <remarks>Authorization required</remarks>
-        /// <returns>List of current users</returns>
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetUsers()
-        {
-            try
-            {
-                IEnumerable<Domain.User> users =
-                    await userServices.GetUsersAsync();
-                return StatusCode(200, users);
-            } catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
-        }
+        ///// <summary>
+        ///// Get List of Users
+        ///// </summary>
+        ///// <remarks>Authorization required</remarks>
+        ///// <returns>List of current users</returns>
+        //[Authorize]
+        //[HttpGet]
+        //public async Task<IActionResult> GetUsers()
+        //{
+        //    try
+        //    {
+        //        IEnumerable<Domain.User> users =
+        //            await userServices.GetUsersAsync();
+        //        return StatusCode(200, users);
+        //    } catch (ApplicationException ex)
+        //    {
+        //        return StatusCode(400, ex.GeneratorErrorMessage());
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, ex.GeneratorErrorMessage());
+        //    }
+        //}
 
-        /// <summary>
-        /// Generates JWT token for user
-        /// </summary>
-        /// <param name="loginUser">User login information</param>
-        /// <returns>
-        /// JWT token object { token: "" }
-        /// </returns>
-        /// <response code="401">Login failed</response>
-        /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
-        /// <response code="500">Server error</response>
-        [HttpPost("Login")]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(500)]
-        [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] UserLoginDto loginUser)
-        {
-            try
-            {
-                User user = await userServices.LoginAsync(
-                    loginUser.Phone, loginUser.Password);
-
-                if (user == null)
-                {
-                    return StatusCode(401, "Đăng nhập không thành công!");
-                }
-
-                user.Password = "";
-
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Name),
-                    new Claim(ClaimTypes.Role, user.Role.ToString()),
-                    new Claim(ClaimTypes.Email, user.Email ?? ""),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                };
-
-                var authSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
-
-                // Token
-                var token = new JwtSecurityToken(
-                    issuer: ViGoConfiguration.ValidIssuer,
-                    audience: ViGoConfiguration.ValidAudience,
-                    expires: DateTime.Now.AddHours(2),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(
-                        authSigningKey, SecurityAlgorithms.HmacSha256));
-
-                var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
-
-                return StatusCode(200, new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token)
-                });
-
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
-        }
-
-        /// <summary>
-        /// Register new user
-        /// </summary>
-        /// <param name="registerDto">User register information</param>
-        /// <returns>
-        /// The newly created user
-        /// </returns>
-        /// <response code="200">Register successfully</response>
-        /// <response code="500">Server error</response>
-        /// <response code="400">Some information is invalid</response>
-        [HttpPost("Register")]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
-        {
-            try
-            {
-                if (User.IsAuthenticated())
-                {
-                    throw new ApplicationException("Bạn đã đăng nhập vào hệ thống!");
-                }
-
-                User user = await userServices.RegisterAsync(registerDto);
-                return StatusCode(200, user);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
-        }
     }
 }
