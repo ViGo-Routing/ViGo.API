@@ -18,7 +18,7 @@ namespace ViGo.Domain.Enumerations
         PENDING = 0,
         ACTIVE = 1,
         INACTIVE = -1,
-        VERIFIED = 2,
+        UNVERIFIED = -3,
         REJECTED = -2
     }
 

@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
+using ViGo.DTOs.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
@@ -16,23 +19,23 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<User> Login(string email, string password)
+        public async Task<User> LoginAsync(string phone, string password)
         {
             User? user = null;
 
-            try
-            {
+            //try
+            //{
                 user = await work.Users.GetAsync(
                     u => u.Phone.ToLower().Trim()
-                    .Equals(email.ToLower().Trim())
+                    .Equals(phone.ToLower().Trim())
                     && u.Password.Equals(password.Encrypt()));
 
                 //return user;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message, ex.InnerException);
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception(ex.Message, ex.InnerException);
+            //}
             return user;
         }
 
@@ -73,6 +76,53 @@ namespace ViGo.Services
                 = await work.Users.GetAllAsync();
 
             return users;
+        }
+
+        public async Task<User> RegisterAsync(UserRegisterDto dto)
+        {
+            dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
+            dto.Password.StringValidate(
+                allowEmpty: false,
+                emptyErrorMessage: "Mật khẩu không được bỏ trống!",
+                minLength: 5,
+                minLengthErrorMessage: "Mật khẩu phải có ít nhất 5 kí tự!",
+                maxLength: 20,
+                maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
+            if (!Enum.IsDefined<UserRole>(dto.Role)) {
+                throw new ApplicationException("Vai trò người dùng không hợp lệ!");
+            }
+
+            dto.Name.StringValidate(
+                allowEmpty: false,
+                emptyErrorMessage: "Họ tên không được bỏ trống!",
+                minLength: 5,
+                minLengthErrorMessage: "Họ tên phải có ít nhất 5 kí tự!",
+                maxLength: 50,
+                maxLengthErrorMessage: "Họ tên không được vượt quá 50 kí tự!");
+
+
+            User checkUser = await work.Users.GetAsync(
+                u => u.Phone.Equals(dto.Phone));
+            if (checkUser != null)
+            {
+                throw new ApplicationException("Số điện thoại đã được sử dụng!");
+            }
+
+            User newUser = new User
+            {
+                Name = dto.Name,
+                Phone = dto.Phone,
+                Password = dto.Password.Encrypt(),
+                Role = dto.Role,
+                Status = UserStatus.UNVERIFIED
+            };
+
+            await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true);
+            await work.SaveChangesAsync();
+
+            newUser.Password = "";
+
+            return newUser;
         }
     }
 }

@@ -96,18 +96,18 @@ namespace ViGo.Utilities.Validator
             Regex emailReg = new Regex(re);
             if (!emailReg.IsMatch(stringToCheck))
             {
-                throw new Exception(errorMessage);
+                throw new ApplicationException(errorMessage);
             }
             return true;
         }
 
         public static bool IsPhoneNumber(this string stringToCheck, string errorMessage)
         {
-            var re = @"^\+(?:[0-9]●?){6,14}[0-9]$";
+            var re = @"^0[0-9]{9}$";
             Regex phoneReg = new Regex(re);
             if (!phoneReg.IsMatch(stringToCheck))
             {
-                throw new Exception(errorMessage);
+                throw new ApplicationException(errorMessage);
             }
             return true;
         }

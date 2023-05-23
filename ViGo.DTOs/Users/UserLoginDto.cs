@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.DTOs.Users
 {
-    public class LoginUserDto
+    public class UserLoginDto
     {
         public string Phone { get; set; }
         public string Password { get; set; }
