@@ -36,5 +36,8 @@ namespace ViGo.Utilities
 
         public static bool IsAuthenticated(this ClaimsPrincipal user)
             => user == null ? false : user.Identity.IsAuthenticated;
+
+        public static bool IsAdmin()
+            => GetCurrentRole() == UserRole.ADMIN;
     }
 }
