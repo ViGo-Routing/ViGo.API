@@ -100,7 +100,7 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.AssignedTime).HasColumnType("datetime");
 
-                entity.Property(e => e.BeginTime).HasColumnType("datetime");
+                //entity.Property(e => e.BeginTime).HasColumnType("datetime");
 
                 entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
