@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.DTOs.Routes;
 using ViGo.DTOs.Users;
 
 namespace ViGo.DTOs.BookingDetails
@@ -12,11 +13,13 @@ namespace ViGo.DTOs.BookingDetails
     public class BookingDetailListItemDto
     {
         public Guid Id { get; set; }
-        //public Guid BookingId { get; set; }
+        public Guid? BookingId { get; set; }
         //public Guid? DriverId { get; set; }
         public UserListItemDto? Driver { get; set; }
         public Guid CustomerRouteId { get; set; }
+        public RouteListItemDto? CustomerRoute { get; set; }
         public Guid DriverRouteId { get; set; }
+        public RouteListItemDto? DriverRoute { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }
         public double? Price { get; set; }
@@ -57,6 +60,16 @@ namespace ViGo.DTOs.BookingDetails
             CreatedBy = bookingDetail.CreatedBy;
             UpdatedTime = bookingDetail.UpdatedTime;
             UpdatedBy = bookingDetail.UpdatedBy;
-        } 
+        }
+        
+        public BookingDetailListItemDto(BookingDetail bookingDetail,
+            UserListItemDto? driver,
+            RouteListItemDto customerRoute,
+            RouteListItemDto driverRoute)
+            : this(bookingDetail, driver)
+        {
+            CustomerRoute = customerRoute;
+            DriverRoute = driverRoute;
+        }
     }
 }
