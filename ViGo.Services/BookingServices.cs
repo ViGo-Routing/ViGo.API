@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Google.Apis.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.DTOs.BookingDetails;
 using ViGo.DTOs.Bookings;
 using ViGo.DTOs.RouteStations;
 using ViGo.DTOs.Users;
@@ -76,6 +78,66 @@ namespace ViGo.Services
                     );
 
             return dtos;
+        }
+
+        public async Task<BookingListItemDto?> GetBookingAsync(Guid bookingId)
+        {
+            Booking booking = await work.Bookings.GetAsync(bookingId);
+            if (booking == null)
+            {
+                return null;
+            }
+
+            User customer = await work.Users.GetAsync(booking.CustomerId);
+            UserListItemDto customerDto = new UserListItemDto(customer);
+
+            IEnumerable<RouteStation> routeStations = await work.RouteStations
+                .GetAllAsync(query => query.Where(
+                    rs => rs.Id.Equals(booking.StartRouteStationId)
+                    || rs.Id.Equals(booking.EndRouteStationId)));
+            IEnumerable<Guid> stationIds = routeStations.Select(rs => rs.StationId);
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)));
+
+            RouteStation startStation = routeStations.SingleOrDefault(rs => rs.Id.Equals(booking.StartRouteStationId));
+            RouteStationListItemDto startStationDto = new RouteStationListItemDto(
+                startStation, stations.SingleOrDefault(s => s.Id.Equals(startStation.StationId))
+                );
+
+            RouteStation endStation = routeStations.SingleOrDefault(rs => rs.Id.Equals(booking.EndRouteStationId));
+            RouteStationListItemDto endStationDto = new RouteStationListItemDto(
+                endStation, stations.SingleOrDefault(s => s.Id.Equals(endStation.StationId)));
+
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId);
+
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => bd.BookingId.Equals(booking.Id)));
+
+            IEnumerable<Guid?> driverIds = bookingDetails.Select(bd => bd.DriverId);
+            driverIds = driverIds.Where(d => d.HasValue);
+            IEnumerable<User> drivers = await work.Users.GetAllAsync(
+                query => query.Where(
+                    u => driverIds.Contains(u.Id)));
+
+            IList<BookingDetailListItemDto> bookingDetailDtos = new List<BookingDetailListItemDto>();
+            foreach (BookingDetail bookingDetail in bookingDetails)
+            {
+                UserListItemDto? driver = null;
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    driver = new UserListItemDto(
+                        drivers.SingleOrDefault(
+                        d => d.Id.Equals(bookingDetail.DriverId.Value)));
+                }
+                bookingDetailDtos.Add(new BookingDetailListItemDto(bookingDetail, driver));
+            }
+
+            BookingListItemDto dto = new BookingListItemDto(booking,
+                customerDto, startStationDto, endStationDto, vehicleType, bookingDetailDtos);
+
+            return dto;
         }
     }
 }

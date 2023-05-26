@@ -62,5 +62,42 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
+
+        /// <summary>
+        /// Get information of one Booking. BookingDetails are also fetched.
+        /// </summary>
+        /// <returns>
+        /// Booking information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get Booking information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("{bookingId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> GetBooking(Guid bookingId)
+        {
+            try
+            {
+                BookingListItemDto? dto = await bookingServices.GetBookingAsync(bookingId);
+                if (dto == null)
+                {
+                    throw new ApplicationException("Booking không tồn tại!");
+                }
+                return StatusCode(200, dto);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
     }
 }
