@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.DTOs.BookingDetails;
 using ViGo.DTOs.RouteStations;
 using ViGo.DTOs.Users;
 
@@ -39,6 +40,7 @@ namespace ViGo.DTOs.Bookings
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
+        public IEnumerable<BookingDetailListItemDto> BookingDetails { get; set; }
         public BookingListItemDto(Booking booking, UserListItemDto customer,
             RouteStationListItemDto startRouteStation,
             RouteStationListItemDto endRouteStation,
@@ -68,6 +70,16 @@ namespace ViGo.DTOs.Bookings
             UpdatedTime = booking.UpdatedTime;
             UpdatedBy = booking.UpdatedBy;
             IsDeleted = booking.IsDeleted;
-        } 
+        }
+
+        public BookingListItemDto(Booking booking, UserListItemDto customer,
+            RouteStationListItemDto startRouteStation,
+            RouteStationListItemDto endRouteStation,
+            VehicleType vehicleType,
+            IEnumerable<BookingDetailListItemDto> bookingDetails)
+            : this (booking, customer, startRouteStation, endRouteStation, vehicleType)
+        {
+            BookingDetails = bookingDetails;
+        }
     }
 }

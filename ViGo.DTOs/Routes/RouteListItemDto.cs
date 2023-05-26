@@ -29,15 +29,16 @@ namespace ViGo.DTOs.Routes
             StationListItemDto endStation,
             IEnumerable<RouteRoutineListItemDto> routines,
             IEnumerable<RouteStationListItemDto> routeStations)
+            : this(route, startStation, endStation)
         {
-            Id = route.Id;
-            UserId = route.UserId;
-            Name = route.Name;
-            Distance = route.Distance;
-            Duration = route.Duration;
-            Status = route.Status;
-            StartStation = startStation;
-            EndStation = endStation;
+            //Id = route.Id;
+            //UserId = route.UserId;
+            //Name = route.Name;
+            //Distance = route.Distance;
+            //Duration = route.Duration;
+            //Status = route.Status;
+            //StartStation = startStation;
+            //EndStation = endStation;
             RouteRoutines = routines.ToList();
             RouteStations = routeStations.ToList();
         }
@@ -54,8 +55,8 @@ namespace ViGo.DTOs.Routes
             Status = route.Status;
             StartStation = startStation;
             EndStation = endStation;
-            RouteRoutines = new List<RouteRoutineListItemDto>();
-            RouteStations = new List<RouteStationListItemDto>();
+            //RouteRoutines = new List<RouteRoutineListItemDto>();
+            //RouteStations = new List<RouteStationListItemDto>();
         }
     }
 }
