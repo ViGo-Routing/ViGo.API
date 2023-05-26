@@ -445,6 +445,11 @@ namespace ViGo.Services
 
         public async Task<Route> ChangeRouteStatusAsync(Guid routeId, RouteStatus newStatus)
         {
+            if (!Enum.IsDefined(newStatus))
+            {
+                throw new ApplicationException("Trạng thái tuyến đường không hợp lệ!");
+            }
+
             Route route = await work.Routes.GetAsync(routeId);
             if (route == null)
             {
