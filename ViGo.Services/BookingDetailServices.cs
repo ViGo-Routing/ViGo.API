@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.DTOs.BookingDetails;
 using ViGo.DTOs.Routes;
 using ViGo.DTOs.Stations;
@@ -130,6 +131,59 @@ namespace ViGo.Services
                         new StationListItemDto(driverEndStation, 2)));
 
             return dtos;
+        }
+
+        public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
+            BookingDetailUpdateStatusDto updateDto)
+        {
+            if (!Enum.IsDefined(updateDto.Status))
+            {
+                throw new ApplicationException("Trạng thái Booking Detail không hợp lệ!");
+            }
+
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(updateDto.BookingDetailId);
+            if (bookingDetail == null)
+            {
+                throw new ApplicationException("Booking Detail không tồn tại!!");
+            }
+
+            if (bookingDetail.Status == updateDto.Status)
+            {
+                throw new ApplicationException("Trạng thái Booking Detail không hợp lệ!!");
+            }
+
+            if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_PICKUP
+                || updateDto.Status == BookingDetailStatus.GOING
+                || updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+            {
+                if (!updateDto.Time.HasValue)
+                {
+                    throw new ApplicationException("Dữ liệu truyền đi bị thiếu thời gian cập nhật!!");
+                }
+
+                // TODO Code
+                // Time validation
+            }
+
+            bookingDetail.Status = updateDto.Status;
+            switch (updateDto.Status)
+            {
+                case BookingDetailStatus.ARRIVE_AT_PICKUP:
+                    bookingDetail.ArriveAtPickupTime = updateDto.Time;
+                    break;
+                case BookingDetailStatus.GOING:
+                    bookingDetail.PickupTime = updateDto.Time;
+                    break;
+                case BookingDetailStatus.ARRIVE_AT_DROPOFF:
+                    bookingDetail.DropoffTime = updateDto.Time;
+                    break;
+            }
+
+            await work.BookingDetails.UpdateAsync(bookingDetail);
+            await work.SaveChangesAsync();
+
+            return bookingDetail;
         }
     }
 }
