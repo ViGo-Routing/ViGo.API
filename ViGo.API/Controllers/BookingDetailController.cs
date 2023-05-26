@@ -57,5 +57,39 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
+
+        /// <summary>
+        /// Get list of Booking Details that are assigned to a driver
+        /// </summary>
+        /// <returns>
+        /// List of Booking Details
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of booking details successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Driver/{driverId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> GetBookingDetails(Guid driverId)
+        {
+            try
+            {
+                IEnumerable<BookingDetailListItemDto> dtos =
+                    await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(driverId);
+                return StatusCode(200, dtos);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
     }
 }

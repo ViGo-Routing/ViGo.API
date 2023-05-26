@@ -70,5 +70,66 @@ namespace ViGo.Services
             return dto;
         
         }
+
+        public async Task<IEnumerable<BookingDetailListItemDto>>
+            GetDriverAssignedBookingDetailsAsync(Guid driverId)
+        {
+            User driver = await work.Users.GetAsync(driverId);
+            if (driver == null)
+            {
+                throw new ApplicationException("Tài xế không tồn tại!!!");
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                    bd.DriverId.Value.Equals(driverId)));
+            if (!bookingDetails.Any())
+            {
+                return new List<BookingDetailListItemDto>();
+            }
+
+            IEnumerable<Guid> routeIds = bookingDetails
+                .Select(bd => bd.CustomerRouteId)
+                .Concat(bookingDetails.Select(bd => bd.DriverRouteId))
+                .Distinct();
+
+            IEnumerable<Route> routes = await work.Routes
+                .GetAllAsync(query => query.Where(
+                    r => routeIds.Contains(r.Id)));
+
+            IEnumerable<Guid> stationIds = routes.Select(
+                r => r.StartStationId).Concat(routes.Select(
+                    r => r.EndStationId)).Distinct();
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)));
+
+
+            IEnumerable<BookingDetailListItemDto> dtos =
+                from bookingDetail in bookingDetails
+                join customerRoute in routes
+                    on bookingDetail.CustomerRouteId equals customerRoute.Id
+                join customerStartStation in stations
+                    on customerRoute.StartStationId equals customerStartStation.Id
+                join customerEndStation in stations
+                    on customerRoute.EndStationId equals customerEndStation.Id
+                join driverRoute in routes
+                    on bookingDetail.DriverRouteId equals driverRoute.Id
+                join driverStartStation in stations
+                    on customerRoute.StartStationId equals driverStartStation.Id
+                join driverEndStation in stations
+                    on customerRoute.EndStationId equals driverEndStation.Id
+                select new BookingDetailListItemDto(
+                    bookingDetail, null,
+                    new RouteListItemDto(customerRoute,
+                        new StationListItemDto(customerStartStation, 1),
+                        new StationListItemDto(customerEndStation, 2)),
+                    new RouteListItemDto(driverRoute,
+                        new StationListItemDto(driverStartStation, 1),
+                        new StationListItemDto(driverEndStation, 2)));
+
+            return dtos;
+        }
     }
 }
