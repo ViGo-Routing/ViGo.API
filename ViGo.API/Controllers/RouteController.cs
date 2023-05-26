@@ -127,8 +127,11 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
-        /// Update Route's information for the current user. Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
+        /// Update Route's information for the current user
         /// </summary>
+        /// <remarks>
+        ///  Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
+        /// </remarks>
         /// <returns>
         /// The updated route information
         /// </returns>

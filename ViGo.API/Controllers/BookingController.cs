@@ -21,9 +21,12 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
-        /// Get list of Bookings. If the current user is Admin, all the bookings will be fetched.
-        /// Otherwise, only bookings of current user (Driver or Customer) will be fetched.
+        /// Get list of Bookings. 
         /// </summary>
+        /// <remarks>
+        /// If the current user is Admin, all the bookings will be fetched.
+        /// Otherwise, only bookings of current user (Driver or Customer) will be fetched.
+        /// </remarks>
         /// <returns>
         /// List of Bookings
         /// </returns>
@@ -99,5 +102,6 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
+
     }
 }
