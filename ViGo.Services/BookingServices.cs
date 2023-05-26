@@ -34,7 +34,8 @@ namespace ViGo.Services
             IEnumerable<Guid> customerIds = bookings.Select(b => b.CustomerId);
             IEnumerable<Guid> routeStationIds = bookings.Select(
                 b => b.StartRouteStationId).Concat(bookings.Select(
-                    b => b.EndRouteStationId));
+                    b => b.EndRouteStationId))
+                .Distinct();
 
             IEnumerable<User> users = await work.Users
                 .GetAllAsync(query => query.Where(
@@ -46,12 +47,14 @@ namespace ViGo.Services
             IEnumerable<RouteStation> routeStations = await work.RouteStations
                 .GetAllAsync(query => query.Where(
                     rs => routeStationIds.Contains(rs.Id)));
-            IEnumerable<Guid> stationIds = routeStations.Select(rs => rs.StationId);
+            IEnumerable<Guid> stationIds = 
+                routeStations.Select(rs => rs.StationId)
+                .Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
 
-            IEnumerable<Guid> vehicleTypeIds = bookings.Select(b => b.VehicleTypeId);
+            IEnumerable<Guid> vehicleTypeIds = bookings.Select(b => b.VehicleTypeId).Distinct();
             IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes
                 .GetAllAsync(query => query.Where(
                     v => vehicleTypeIds.Contains(v.Id)));
@@ -95,7 +98,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     rs => rs.Id.Equals(booking.StartRouteStationId)
                     || rs.Id.Equals(booking.EndRouteStationId)));
-            IEnumerable<Guid> stationIds = routeStations.Select(rs => rs.StationId);
+            IEnumerable<Guid> stationIds = routeStations.Select(rs => rs.StationId).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
@@ -116,7 +119,8 @@ namespace ViGo.Services
                     bd => bd.BookingId.Equals(booking.Id)));
 
             IEnumerable<Guid?> driverIds = bookingDetails.Select(bd => bd.DriverId);
-            driverIds = driverIds.Where(d => d.HasValue);
+            driverIds = driverIds.Where(d => d.HasValue)
+                .Distinct();
             IEnumerable<User> drivers = await work.Users.GetAllAsync(
                 query => query.Where(
                     u => driverIds.Contains(u.Id)));

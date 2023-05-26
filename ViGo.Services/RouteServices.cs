@@ -170,7 +170,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     s => routeIds.Contains(s.RouteId)));
 
-            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId);
+            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
@@ -227,7 +227,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     s => s.RouteId.Equals(routeId)));
 
-            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId);
+            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
