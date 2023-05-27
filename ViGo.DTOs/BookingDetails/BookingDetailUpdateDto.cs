@@ -17,4 +17,11 @@ namespace ViGo.DTOs.BookingDetails
         public BookingDetailStatus Status { get; set; }
         public DateTime? Time { get; set; }
     }
+
+    public class BookingDetailAssignDriverDto
+    {
+        public Guid BookingDetailId { get; set; }
+        public Guid DriverId { get; set; }
+
+    }
 }
