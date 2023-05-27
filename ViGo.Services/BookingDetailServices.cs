@@ -11,6 +11,7 @@ using ViGo.DTOs.Stations;
 using ViGo.DTOs.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
+using ViGo.Utilities;
 
 namespace ViGo.Services
 {
@@ -37,15 +38,23 @@ namespace ViGo.Services
             }
 
             Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId);
-            Route driverRoute = await work.Routes.GetAsync(bookingDetail.DriverRouteId);
 
             IEnumerable<Guid> stationIds = (new List<Guid>
             {
                 customerRoute.StartStationId,
                 customerRoute.EndStationId,
-                driverRoute.StartStationId,
-                driverRoute.EndStationId
+
             }).Distinct();
+
+            Route? driverRoute = null;
+            if (bookingDetail.DriverRouteId.HasValue)
+            {
+                driverRoute = await work.Routes
+                    .GetAsync(bookingDetail.DriverRouteId.Value);
+                stationIds = stationIds.Append(driverRoute.StartStationId)
+                    .Append(driverRoute.EndStationId);
+                
+            }
 
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
@@ -58,12 +67,16 @@ namespace ViGo.Services
                 new StationListItemDto(
                     stations.SingleOrDefault(s => s.Id.Equals(customerRoute.EndStationId)), 2));
 
-            RouteListItemDto driverRouteDto = new RouteListItemDto(
+            RouteListItemDto? driverRouteDto = null;
+            if (driverRoute != null)
+            {
+                driverRouteDto = new RouteListItemDto(
                 driverRoute,
                 new StationListItemDto(
                     stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId)), 1),
                 new StationListItemDto(
                     stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2));
+            }
 
             BookingDetailListItemDto dto = new BookingDetailListItemDto(
                 bookingDetail, driverDto, customerRouteDto, driverRouteDto);
@@ -92,7 +105,9 @@ namespace ViGo.Services
 
             IEnumerable<Guid> routeIds = bookingDetails
                 .Select(bd => bd.CustomerRouteId)
-                .Concat(bookingDetails.Select(bd => bd.DriverRouteId))
+                .Concat(bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
+                .Select(bd => 
+                bd.DriverRouteId.Value))
                 .Distinct();
 
             IEnumerable<Route> routes = await work.Routes
@@ -179,6 +194,32 @@ namespace ViGo.Services
                     bookingDetail.DropoffTime = updateDto.Time;
                     break;
             }
+
+            await work.BookingDetails.UpdateAsync(bookingDetail);
+            await work.SaveChangesAsync();
+
+            return bookingDetail;
+        }
+
+        public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverDto dto)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(dto.BookingDetailId);
+            if (bookingDetail == null)
+            {
+                throw new ApplicationException("Booking Detail không tồn tại!!");
+            }
+
+            User driver = await work.Users
+                .GetAsync(dto.DriverId);
+            if (driver == null || driver.Role != UserRole.DRIVER)
+            {
+                throw new ApplicationException("Tài xế không tồn tại!!");
+            }
+
+            bookingDetail.DriverId = dto.DriverId;
+            bookingDetail.AssignedTime = DateTimeUtilities.GetDateTimeVnNow();
+            bookingDetail.Status = BookingDetailStatus.ASSIGNED;
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync();

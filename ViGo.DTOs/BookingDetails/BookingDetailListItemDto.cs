@@ -18,7 +18,7 @@ namespace ViGo.DTOs.BookingDetails
         public UserListItemDto? Driver { get; set; }
         public Guid CustomerRouteId { get; set; }
         public RouteListItemDto? CustomerRoute { get; set; }
-        public Guid DriverRouteId { get; set; }
+        public Guid? DriverRouteId { get; set; }
         public RouteListItemDto? DriverRoute { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }

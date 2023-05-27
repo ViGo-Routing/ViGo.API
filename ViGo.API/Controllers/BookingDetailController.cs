@@ -135,5 +135,50 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
+
+        /// <summary>
+        /// Manually assign a driver to a Booking detail
+        /// </summary>
+        /// <remarks>
+        /// Only ADMIN can perform this task
+        /// </remarks>
+        /// <returns>
+        /// The updated Booking Detail
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Assign driver successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("AssignDriver/{bookingDetailId}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> AssignDriver(
+            Guid bookingDetailId, BookingDetailAssignDriverDto dto)
+        {
+            try
+            {
+                if (!bookingDetailId.Equals(dto.BookingDetailId))
+                {
+                    throw new ApplicationException("Request không hợp lệ!!");
+                }
+
+                BookingDetail bookingDetail = await bookingDetailServices
+                    .AssignDriverAsync(dto);
+                return StatusCode(200, bookingDetail);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
     }
 }
