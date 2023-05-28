@@ -35,7 +35,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get List of Bookings successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(IEnumerable<BookingViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -77,7 +77,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get Booking information successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("{bookingId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(BookingViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
