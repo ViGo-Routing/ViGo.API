@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 
-namespace ViGo.DTOs.Users
+namespace ViGo.Models.Users
 {
-    public class UserListItemDto
+    public class UserViewModel
     {
         public Guid Id { get; set; }
         public string? Email { get; set; }
@@ -28,7 +28,7 @@ namespace ViGo.DTOs.Users
         //public DateTime? LockedOutStart { get; set; }
         //public DateTime? LockedOutEnd { get; set; }
 
-        public UserListItemDto(User user)
+        public UserViewModel(User user)
         {
             Id = user.Id;
             Email = user.Email;

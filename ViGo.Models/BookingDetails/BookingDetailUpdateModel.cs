@@ -5,20 +5,20 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain.Enumerations;
 
-namespace ViGo.DTOs.BookingDetails
+namespace ViGo.Models.BookingDetails
 {
-    public class BookingDetailUpdateDto
+    public class BookingDetailUpdateModel
     {
     }
 
-    public class BookingDetailUpdateStatusDto
+    public class BookingDetailUpdateStatusModel
     {
         public Guid BookingDetailId { get; set; }
         public BookingDetailStatus Status { get; set; }
         public DateTime? Time { get; set; }
     }
 
-    public class BookingDetailAssignDriverDto
+    public class BookingDetailAssignDriverModel
     {
         public Guid BookingDetailId { get; set; }
         public Guid DriverId { get; set; }

@@ -5,16 +5,16 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 
-namespace ViGo.DTOs.RouteRoutines
+namespace ViGo.Models.RouteRoutines
 {
-    public class RouteRoutineListItemDto
+    public class RouteRoutineViewModel
     {
         public DateOnly StartDate { get; set; }
         public TimeOnly StartTime { get; set; }
         public DateOnly EndDate { get; set; }
         public TimeOnly EndTime { get; set; }
 
-        public RouteRoutineListItemDto(RouteRoutine routeRoutine)
+        public RouteRoutineViewModel(RouteRoutine routeRoutine)
         {
             StartDate = DateOnly.FromDateTime(routeRoutine.StartDate);
             StartTime = TimeOnly.FromTimeSpan(routeRoutine.StartTime);

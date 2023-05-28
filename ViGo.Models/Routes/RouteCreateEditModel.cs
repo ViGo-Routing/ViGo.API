@@ -4,24 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.RouteRoutines;
-using ViGo.DTOs.RouteStations;
+using ViGo.Models.RouteRoutines;
+using ViGo.Models.RouteStations;
 
-namespace ViGo.DTOs.Routes
+namespace ViGo.Models.Routes
 {
-    public class RouteCreateEditDto
+    public class RouteCreateEditModel
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string Name { get; set; }
         public double Distance { get; set; }
         public double Duration { get; set; }
-        public RouteStationCreateEditDto StartStation { get; set; }
-        public RouteStationCreateEditDto EndStation { get; set; }
-        public IList<RouteRoutineCreateEditDto> RouteRoutines { get; set; }
+        public RouteStationCreateEditModel StartStation { get; set; }
+        public RouteStationCreateEditModel EndStation { get; set; }
+        public IList<RouteRoutineCreateEditModel> RouteRoutines { get; set; }
     }
 
-    public class RouteChangeStatusDto
+    public class RouteChangeStatusModel
     {
         public Guid Id { get; set; }
         public RouteStatus Status { get; set; }

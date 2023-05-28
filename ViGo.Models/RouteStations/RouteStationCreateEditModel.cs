@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.DTOs.RouteStations
+namespace ViGo.Models.RouteStations
 {
-    public class RouteStationCreateEditDto
+    public class RouteStationCreateEditModel
     {
         public double Longtitude { get; set; }
         public double Latitude { get; set; }

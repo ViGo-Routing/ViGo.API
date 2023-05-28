@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 
-namespace ViGo.DTOs.Stations
+namespace ViGo.Models.Stations
 {
-    public class StationListItemDto
+    public class StationViewModel
     {
         public double Longtitude { get; set; }
         public double Latitude { get; set; }
@@ -15,7 +15,7 @@ namespace ViGo.DTOs.Stations
         public string Address { get; set; }
         public int StationIndex { get; set; }
 
-        public StationListItemDto(Station station, int stationIndex)
+        public StationViewModel(Station station, int stationIndex)
         {
             Longtitude = station.Longtitude;
             Latitude = station.Latitude;

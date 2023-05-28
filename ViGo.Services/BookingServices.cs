@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
-using ViGo.DTOs.BookingDetails;
-using ViGo.DTOs.Bookings;
-using ViGo.DTOs.RouteStations;
-using ViGo.DTOs.Users;
+using ViGo.Models.BookingDetails;
+using ViGo.Models.Bookings;
+using ViGo.Models.RouteStations;
+using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 
@@ -20,7 +20,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<BookingListItemDto>>
+        public async Task<IEnumerable<BookingViewModel>>
             GetBookingsAsync(Guid? userId = null)
         {
             IEnumerable<Booking> bookings =
@@ -40,9 +40,9 @@ namespace ViGo.Services
             IEnumerable<User> users = await work.Users
                 .GetAllAsync(query => query.Where(
                     u => customerIds.Contains(u.Id)));
-            IEnumerable<UserListItemDto> userDtos =
+            IEnumerable<UserViewModel> userDtos =
                 from user in users
-                select new UserListItemDto(user);
+                select new UserViewModel(user);
 
             IEnumerable<RouteStation> routeStations = await work.RouteStations
                 .GetAllAsync(query => query.Where(
@@ -59,7 +59,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     v => vehicleTypeIds.Contains(v.Id)));
 
-            IEnumerable<BookingListItemDto> dtos =
+            IEnumerable<BookingViewModel> dtos =
                 from booking in bookings
                 join customer in userDtos
                     on booking.CustomerId equals customer.Id
@@ -73,17 +73,17 @@ namespace ViGo.Services
                     on endRouteStation.StationId equals endStation.Id
                 join vehicleType in vehicleTypes
                     on booking.VehicleTypeId equals vehicleType.Id
-                select new BookingListItemDto(
+                select new BookingViewModel(
                     booking, customer,
-                    new RouteStationListItemDto(startRouteStation, startStation),
-                    new RouteStationListItemDto(endRouteStation, endStation),
+                    new RouteStationViewModel(startRouteStation, startStation),
+                    new RouteStationViewModel(endRouteStation, endStation),
                     vehicleType
                     );
 
             return dtos;
         }
 
-        public async Task<BookingListItemDto?> GetBookingAsync(Guid bookingId)
+        public async Task<BookingViewModel?> GetBookingAsync(Guid bookingId)
         {
             Booking booking = await work.Bookings.GetAsync(bookingId);
             if (booking == null)
@@ -92,7 +92,7 @@ namespace ViGo.Services
             }
 
             User customer = await work.Users.GetAsync(booking.CustomerId);
-            UserListItemDto customerDto = new UserListItemDto(customer);
+            UserViewModel customerDto = new UserViewModel(customer);
 
             IEnumerable<RouteStation> routeStations = await work.RouteStations
                 .GetAllAsync(query => query.Where(
@@ -104,12 +104,12 @@ namespace ViGo.Services
                     s => stationIds.Contains(s.Id)));
 
             RouteStation startStation = routeStations.SingleOrDefault(rs => rs.Id.Equals(booking.StartRouteStationId));
-            RouteStationListItemDto startStationDto = new RouteStationListItemDto(
+            RouteStationViewModel startStationDto = new RouteStationViewModel(
                 startStation, stations.SingleOrDefault(s => s.Id.Equals(startStation.StationId))
                 );
 
             RouteStation endStation = routeStations.SingleOrDefault(rs => rs.Id.Equals(booking.EndRouteStationId));
-            RouteStationListItemDto endStationDto = new RouteStationListItemDto(
+            RouteStationViewModel endStationDto = new RouteStationViewModel(
                 endStation, stations.SingleOrDefault(s => s.Id.Equals(endStation.StationId)));
 
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId);
@@ -125,20 +125,20 @@ namespace ViGo.Services
                 query => query.Where(
                     u => driverIds.Contains(u.Id)));
 
-            IList<BookingDetailListItemDto> bookingDetailDtos = new List<BookingDetailListItemDto>();
+            IList<BookingDetailViewModel> bookingDetailDtos = new List<BookingDetailViewModel>();
             foreach (BookingDetail bookingDetail in bookingDetails)
             {
-                UserListItemDto? driver = null;
+                UserViewModel? driver = null;
                 if (bookingDetail.DriverId.HasValue)
                 {
-                    driver = new UserListItemDto(
+                    driver = new UserViewModel(
                         drivers.SingleOrDefault(
                         d => d.Id.Equals(bookingDetail.DriverId.Value)));
                 }
-                bookingDetailDtos.Add(new BookingDetailListItemDto(bookingDetail, driver));
+                bookingDetailDtos.Add(new BookingDetailViewModel(bookingDetail, driver));
             }
 
-            BookingListItemDto dto = new BookingListItemDto(booking,
+            BookingViewModel dto = new BookingViewModel(booking,
                 customerDto, startStationDto, endStationDto, vehicleType, bookingDetailDtos);
 
             return dto;

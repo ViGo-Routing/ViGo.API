@@ -7,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ViGo.Domain;
-using ViGo.DTOs.Users;
+using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;

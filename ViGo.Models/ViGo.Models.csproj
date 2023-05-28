@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Bookings\" />
     <Folder Include="Events\" />
     <Folder Include="Fares\" />
     <Folder Include="FarePolicies\" />

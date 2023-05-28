@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.DTOs.BookingDetails;
+using ViGo.Models.BookingDetails;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
@@ -40,7 +40,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                BookingDetailListItemDto? dto = await bookingDetailServices
+                BookingDetailViewModel? dto = await bookingDetailServices
                     .GetBookingDetailAsync(bookingDetailId);
                 if (dto == null)
                 {
@@ -79,7 +79,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                IEnumerable<BookingDetailListItemDto> dtos =
+                IEnumerable<BookingDetailViewModel> dtos =
                     await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(driverId);
                 return StatusCode(200, dtos);
             }
@@ -113,7 +113,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         public async Task<IActionResult> UpdateBookingDetailStatus(
-            Guid bookingDetailId, BookingDetailUpdateStatusDto dto)
+            Guid bookingDetailId, BookingDetailUpdateStatusModel dto)
         {
             try
             {
@@ -158,7 +158,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> AssignDriver(
-            Guid bookingDetailId, BookingDetailAssignDriverDto dto)
+            Guid bookingDetailId, BookingDetailAssignDriverModel dto)
         {
             try
             {

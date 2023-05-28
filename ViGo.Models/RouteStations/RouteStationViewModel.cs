@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 
-namespace ViGo.DTOs.RouteStations
+namespace ViGo.Models.RouteStations
 {
-    public class RouteStationListItemDto
+    public class RouteStationViewModel
     {
         public int StationIndex { get; set; }
         public string Name { get; set; }
@@ -17,7 +17,7 @@ namespace ViGo.DTOs.RouteStations
         public double? DistanceFromFirstStation { get; set; }
         public double? DurationFromFirstStation { get; set; }
 
-        public RouteStationListItemDto(RouteStation routeStation, Station station)
+        public RouteStationViewModel(RouteStation routeStation, Station station)
         {
             Longtitude = station.Longtitude;
             Latitude = station.Latitude;

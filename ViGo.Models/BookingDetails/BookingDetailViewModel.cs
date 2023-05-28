@@ -5,21 +5,21 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.Routes;
-using ViGo.DTOs.Users;
+using ViGo.Models.Routes;
+using ViGo.Models.Users;
 
-namespace ViGo.DTOs.BookingDetails
+namespace ViGo.Models.BookingDetails
 {
-    public class BookingDetailListItemDto
+    public class BookingDetailViewModel
     {
         public Guid Id { get; set; }
         public Guid? BookingId { get; set; }
         //public Guid? DriverId { get; set; }
-        public UserListItemDto? Driver { get; set; }
+        public UserViewModel? Driver { get; set; }
         public Guid CustomerRouteId { get; set; }
-        public RouteListItemDto? CustomerRoute { get; set; }
+        public RouteViewModel? CustomerRoute { get; set; }
         public Guid? DriverRouteId { get; set; }
-        public RouteListItemDto? DriverRoute { get; set; }
+        public RouteViewModel? DriverRoute { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }
         public double? Price { get; set; }
@@ -37,8 +37,8 @@ namespace ViGo.DTOs.BookingDetails
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
 
-        public BookingDetailListItemDto(BookingDetail bookingDetail,
-            UserListItemDto? driver)
+        public BookingDetailViewModel(BookingDetail bookingDetail,
+            UserViewModel? driver)
         {
             Id = bookingDetail.Id;
             Driver = driver;
@@ -62,10 +62,10 @@ namespace ViGo.DTOs.BookingDetails
             UpdatedBy = bookingDetail.UpdatedBy;
         }
         
-        public BookingDetailListItemDto(BookingDetail bookingDetail,
-            UserListItemDto? driver,
-            RouteListItemDto customerRoute,
-            RouteListItemDto driverRoute)
+        public BookingDetailViewModel(BookingDetail bookingDetail,
+            UserViewModel? driver,
+            RouteViewModel customerRoute,
+            RouteViewModel driverRoute)
             : this(bookingDetail, driver)
         {
             CustomerRoute = customerRoute;

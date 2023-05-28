@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.Users;
+using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
@@ -78,7 +78,7 @@ namespace ViGo.Services
             return users;
         }
 
-        public async Task<User> RegisterAsync(UserRegisterDto dto)
+        public async Task<User> RegisterAsync(UserRegisterModel dto)
         {
             dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
             dto.Password.StringValidate(
