@@ -44,7 +44,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                IEnumerable<BookingListItemDto> dtos;
+                IEnumerable<BookingViewModel> dtos;
                 if (IdentityUtilities.IsAdmin())
                 {
                     // Get All Bookings
@@ -86,7 +86,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                BookingListItemDto? dto = await bookingServices.GetBookingAsync(bookingId);
+                BookingViewModel? dto = await bookingServices.GetBookingAsync(bookingId);
                 if (dto == null)
                 {
                     throw new ApplicationException("Booking không tồn tại!");

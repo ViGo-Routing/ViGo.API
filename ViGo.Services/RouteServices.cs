@@ -23,7 +23,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<Route> CreateRouteAsync(RouteCreateEditDto dto)
+        public async Task<Route> CreateRouteAsync(RouteCreateEditModel dto)
         {
             dto.Name.StringValidate(
                 allowEmpty: false,
@@ -48,7 +48,7 @@ namespace ViGo.Services
             {
                 throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
             }
-            foreach (RouteRoutineCreateEditDto routine in dto.RouteRoutines)
+            foreach (RouteRoutineCreateEditModel routine in dto.RouteRoutines)
             {
                 IsValidRoutine(routine);
             }
@@ -158,7 +158,7 @@ namespace ViGo.Services
             return route;
         }
 
-        public async Task<IEnumerable<RouteListItemDto>> GetRoutesAsync(Guid userId)
+        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid userId)
         {
             IEnumerable<Route> routes = await work.Routes
                 .GetAllAsync(query => query.Where(
@@ -179,7 +179,7 @@ namespace ViGo.Services
             //    .GetAllAsync(query => query.Where(
             //        r => routeIds.Contains(r.RouteId)));
 
-            IList<RouteListItemDto> dtos = new List<RouteListItemDto>();
+            IList<RouteViewModel> dtos = new List<RouteViewModel>();
             foreach (Route route in routes)
             {
                 // Routine
@@ -195,17 +195,17 @@ namespace ViGo.Services
                 // Stations
                 Station startStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.StartStationId));
-                StationListItemDto startStationDto = new StationListItemDto(
+                StationViewModel startStationDto = new StationViewModel(
                     startStation, 1
                     );
 
                 Station endStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.EndStationId));
-                StationListItemDto endStationDto = new StationListItemDto(
+                StationViewModel endStationDto = new StationViewModel(
                     endStation, 2
                     );
 
-                dtos.Add(new RouteListItemDto(
+                dtos.Add(new RouteViewModel(
                     route,
                     startStationDto,
                     endStationDto));
@@ -215,7 +215,7 @@ namespace ViGo.Services
 
         }
 
-        public async Task<RouteListItemDto> GetRouteAsync(Guid routeId)
+        public async Task<RouteViewModel> GetRouteAsync(Guid routeId)
         {
             Route route = await work.Routes.GetAsync(routeId);
             if (route == null)
@@ -238,34 +238,34 @@ namespace ViGo.Services
 
 
             // Routine
-            IEnumerable<RouteRoutineListItemDto> routineDtos =
+            IEnumerable<RouteRoutineViewModel> routineDtos =
                 (from routine in routeRoutines
-                 select new RouteRoutineListItemDto(routine))
+                 select new RouteRoutineViewModel(routine))
                 .OrderBy(r => r.StartDate)
                 .ThenBy(r => r.StartTime);
 
             // Stations
             Station startStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.StartStationId));
-            StationListItemDto startStationDto = new StationListItemDto(
+            StationViewModel startStationDto = new StationViewModel(
                 startStation, 1
                 );
 
             Station endStation = stations.SingleOrDefault(
                 s => s.Id.Equals(route.EndStationId));
-            StationListItemDto endStationDto = new StationListItemDto(
+            StationViewModel endStationDto = new StationViewModel(
                 endStation, 2
                 );
 
             // Route Stations
-            IEnumerable<RouteStationListItemDto> routeStationDtos =
+            IEnumerable<RouteStationViewModel> routeStationDtos =
                 (from routeStation in routeStations
                  join station in stations
                     on routeStation.StationId equals station.Id
-                 select new RouteStationListItemDto(routeStation, station))
+                 select new RouteStationViewModel(routeStation, station))
                  .OrderBy(s => s.StationIndex);
 
-            return new RouteListItemDto(
+            return new RouteViewModel(
                     route,
                     startStationDto,
                     endStationDto, 
@@ -273,7 +273,7 @@ namespace ViGo.Services
 
         }
 
-        public async Task<Route> UpdateRouteAsync(RouteCreateEditDto updateDto)
+        public async Task<Route> UpdateRouteAsync(RouteCreateEditModel updateDto)
         {
             Route route = await work.Routes.GetAsync(updateDto.Id);
             if (route == null)
@@ -321,7 +321,7 @@ namespace ViGo.Services
             {
                 throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
             }
-            foreach (RouteRoutineCreateEditDto routine in updateDto.RouteRoutines)
+            foreach (RouteRoutineCreateEditModel routine in updateDto.RouteRoutines)
             {
                 IsValidRoutine(routine);
             }
@@ -479,7 +479,7 @@ namespace ViGo.Services
         }
 
         #region Validation
-        private void IsValidStation(RouteStationCreateEditDto station, string stationName)
+        private void IsValidStation(RouteStationCreateEditModel station, string stationName)
         {
             stationName = stationName.ToLower().Trim();
 
@@ -507,7 +507,7 @@ namespace ViGo.Services
                 );
         }
 
-        private void IsValidRoutine(RouteRoutineCreateEditDto routine)
+        private void IsValidRoutine(RouteRoutineCreateEditModel routine)
         {
             DateTime startDateTime = DateTimeUtilities
                 .ToDateTime(routine.StartDate, routine.StartTime);
@@ -528,7 +528,7 @@ namespace ViGo.Services
 
         }
 
-        private async Task IsValidRoutines(IList<RouteRoutineCreateEditDto> routines,
+        private async Task IsValidRoutines(IList<RouteRoutineCreateEditModel> routines,
             bool isUpdate = false, Guid? routeId = null)
         {
             IList<DateTimeRange> routineRanges =

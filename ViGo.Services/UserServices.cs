@@ -78,7 +78,7 @@ namespace ViGo.Services
             return users;
         }
 
-        public async Task<User> RegisterAsync(UserRegisterDto dto)
+        public async Task<User> RegisterAsync(UserRegisterModel dto)
         {
             dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
             dto.Password.StringValidate(

@@ -11,7 +11,7 @@ using ViGo.Models.Stations;
 
 namespace ViGo.Models.Routes
 {
-    public class RouteListItemDto
+    public class RouteViewModel
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
@@ -19,16 +19,16 @@ namespace ViGo.Models.Routes
         public double Distance { get; set; }
         public double Duration { get; set; }
         public RouteStatus Status { get; set; }
-        public StationListItemDto StartStation { get; set; }
-        public StationListItemDto EndStation { get; set; }
-        public IList<RouteRoutineListItemDto> RouteRoutines { get; set; }
-        public IList<RouteStationListItemDto> RouteStations { get; set; }
+        public StationViewModel StartStation { get; set; }
+        public StationViewModel EndStation { get; set; }
+        public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
+        public IList<RouteStationViewModel> RouteStations { get; set; }
 
-        public RouteListItemDto(Route route,
-            StationListItemDto startStation,
-            StationListItemDto endStation,
-            IEnumerable<RouteRoutineListItemDto> routines,
-            IEnumerable<RouteStationListItemDto> routeStations)
+        public RouteViewModel(Route route,
+            StationViewModel startStation,
+            StationViewModel endStation,
+            IEnumerable<RouteRoutineViewModel> routines,
+            IEnumerable<RouteStationViewModel> routeStations)
             : this(route, startStation, endStation)
         {
             //Id = route.Id;
@@ -43,9 +43,9 @@ namespace ViGo.Models.Routes
             RouteStations = routeStations.ToList();
         }
 
-        public RouteListItemDto(Route route,
-            StationListItemDto startStation,
-            StationListItemDto endStation)
+        public RouteViewModel(Route route,
+            StationViewModel startStation,
+            StationViewModel endStation)
         {
             Id = route.Id;
             UserId = route.UserId;

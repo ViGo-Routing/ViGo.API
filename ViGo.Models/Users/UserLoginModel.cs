@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Models.Users
 {
-    public class UserLoginDto
+    public class UserLoginModel
     {
         public string Phone { get; set; }
         public string Password { get; set; }

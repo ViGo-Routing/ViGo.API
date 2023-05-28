@@ -21,7 +21,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<BookingDetailListItemDto?> GetBookingDetailAsync(
+        public async Task<BookingDetailViewModel?> GetBookingDetailAsync(
             Guid bookingDetailId)
         {
             BookingDetail bookingDetail = await work.BookingDetails.GetAsync(bookingDetailId);
@@ -30,11 +30,11 @@ namespace ViGo.Services
                 return null;
             }
 
-            UserListItemDto? driverDto = null;
+            UserViewModel? driverDto = null;
             if (bookingDetail.DriverId.HasValue)
             {
                 User driver = await work.Users.GetAsync(bookingDetail.DriverId.Value);
-                driverDto = new UserListItemDto(driver);
+                driverDto = new UserViewModel(driver);
             }
 
             Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId);
@@ -60,32 +60,32 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)));
 
-            RouteListItemDto customerRouteDto = new RouteListItemDto(
+            RouteViewModel customerRouteDto = new RouteViewModel(
                 customerRoute,
-                new StationListItemDto(
+                new StationViewModel(
                     stations.SingleOrDefault(s => s.Id.Equals(customerRoute.StartStationId)), 1),
-                new StationListItemDto(
+                new StationViewModel(
                     stations.SingleOrDefault(s => s.Id.Equals(customerRoute.EndStationId)), 2));
 
-            RouteListItemDto? driverRouteDto = null;
+            RouteViewModel? driverRouteDto = null;
             if (driverRoute != null)
             {
-                driverRouteDto = new RouteListItemDto(
+                driverRouteDto = new RouteViewModel(
                 driverRoute,
-                new StationListItemDto(
+                new StationViewModel(
                     stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId)), 1),
-                new StationListItemDto(
+                new StationViewModel(
                     stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2));
             }
 
-            BookingDetailListItemDto dto = new BookingDetailListItemDto(
+            BookingDetailViewModel dto = new BookingDetailViewModel(
                 bookingDetail, driverDto, customerRouteDto, driverRouteDto);
 
             return dto;
         
         }
 
-        public async Task<IEnumerable<BookingDetailListItemDto>>
+        public async Task<IEnumerable<BookingDetailViewModel>>
             GetDriverAssignedBookingDetailsAsync(Guid driverId)
         {
             User driver = await work.Users.GetAsync(driverId);
@@ -100,7 +100,7 @@ namespace ViGo.Services
                     bd.DriverId.Value.Equals(driverId)));
             if (!bookingDetails.Any())
             {
-                return new List<BookingDetailListItemDto>();
+                return new List<BookingDetailViewModel>();
             }
 
             IEnumerable<Guid> routeIds = bookingDetails
@@ -122,7 +122,7 @@ namespace ViGo.Services
                     s => stationIds.Contains(s.Id)));
 
 
-            IEnumerable<BookingDetailListItemDto> dtos =
+            IEnumerable<BookingDetailViewModel> dtos =
                 from bookingDetail in bookingDetails
                 join customerRoute in routes
                     on bookingDetail.CustomerRouteId equals customerRoute.Id
@@ -136,20 +136,20 @@ namespace ViGo.Services
                     on customerRoute.StartStationId equals driverStartStation.Id
                 join driverEndStation in stations
                     on customerRoute.EndStationId equals driverEndStation.Id
-                select new BookingDetailListItemDto(
+                select new BookingDetailViewModel(
                     bookingDetail, null,
-                    new RouteListItemDto(customerRoute,
-                        new StationListItemDto(customerStartStation, 1),
-                        new StationListItemDto(customerEndStation, 2)),
-                    new RouteListItemDto(driverRoute,
-                        new StationListItemDto(driverStartStation, 1),
-                        new StationListItemDto(driverEndStation, 2)));
+                    new RouteViewModel(customerRoute,
+                        new StationViewModel(customerStartStation, 1),
+                        new StationViewModel(customerEndStation, 2)),
+                    new RouteViewModel(driverRoute,
+                        new StationViewModel(driverStartStation, 1),
+                        new StationViewModel(driverEndStation, 2)));
 
             return dtos;
         }
 
         public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
-            BookingDetailUpdateStatusDto updateDto)
+            BookingDetailUpdateStatusModel updateDto)
         {
             if (!Enum.IsDefined(updateDto.Status))
             {
@@ -201,7 +201,7 @@ namespace ViGo.Services
             return bookingDetail;
         }
 
-        public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverDto dto)
+        public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverModel dto)
         {
             BookingDetail bookingDetail = await work.BookingDetails
                 .GetAsync(dto.BookingDetailId);

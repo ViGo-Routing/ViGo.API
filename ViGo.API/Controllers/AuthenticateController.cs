@@ -43,7 +43,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] UserLoginDto loginUser)
+        public async Task<IActionResult> Login([FromBody] UserLoginModel loginUser)
         {
             try
             {
@@ -111,7 +111,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterModel registerDto)
         {
             try
             {

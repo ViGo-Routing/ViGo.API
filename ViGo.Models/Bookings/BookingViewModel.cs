@@ -11,15 +11,15 @@ using ViGo.Models.Users;
 
 namespace ViGo.Models.Bookings
 {
-    public class BookingListItemDto
+    public class BookingViewModel
     {
         public Guid Id { get; set; }
         //public Guid CustomerId { get; set; }
         //public Guid StartRouteStationId { get; set; }
         //public Guid EndRouteStationId { get; set; }
-        public UserListItemDto Customer { get; set; }
-        public RouteStationListItemDto StartRouteStation { get; set; }
-        public RouteStationListItemDto EndRouteStation { get; set; }
+        public UserViewModel Customer { get; set; }
+        public RouteStationViewModel StartRouteStation { get; set; }
+        public RouteStationViewModel EndRouteStation { get; set; }
         public TimeSpan? StartTime { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -40,10 +40,10 @@ namespace ViGo.Models.Bookings
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        public IEnumerable<BookingDetailListItemDto> BookingDetails { get; set; }
-        public BookingListItemDto(Booking booking, UserListItemDto customer,
-            RouteStationListItemDto startRouteStation,
-            RouteStationListItemDto endRouteStation,
+        public IEnumerable<BookingDetailViewModel> BookingDetails { get; set; }
+        public BookingViewModel(Booking booking, UserViewModel customer,
+            RouteStationViewModel startRouteStation,
+            RouteStationViewModel endRouteStation,
             VehicleType vehicleType)
         {
             Id = booking.Id;
@@ -72,11 +72,11 @@ namespace ViGo.Models.Bookings
             IsDeleted = booking.IsDeleted;
         }
 
-        public BookingListItemDto(Booking booking, UserListItemDto customer,
-            RouteStationListItemDto startRouteStation,
-            RouteStationListItemDto endRouteStation,
+        public BookingViewModel(Booking booking, UserViewModel customer,
+            RouteStationViewModel startRouteStation,
+            RouteStationViewModel endRouteStation,
             VehicleType vehicleType,
-            IEnumerable<BookingDetailListItemDto> bookingDetails)
+            IEnumerable<BookingDetailViewModel> bookingDetails)
             : this (booking, customer, startRouteStation, endRouteStation, vehicleType)
         {
             BookingDetails = bookingDetails;

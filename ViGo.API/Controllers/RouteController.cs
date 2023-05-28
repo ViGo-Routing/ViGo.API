@@ -39,7 +39,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateRoute(RouteCreateEditDto dto)
+        public async Task<IActionResult> CreateRoute(RouteCreateEditModel dto)
         {
             try
             {
@@ -79,7 +79,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                IEnumerable<RouteListItemDto> dtos = await
+                IEnumerable<RouteViewModel> dtos = await
                     routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId());
                 return StatusCode(200, dtos);
             }
@@ -113,7 +113,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                RouteListItemDto dto = await routeServices.GetRouteAsync(routeId);
+                RouteViewModel dto = await routeServices.GetRouteAsync(routeId);
                 return StatusCode(200, dto);
             }
             catch (ApplicationException appEx)
@@ -147,7 +147,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteCreateEditDto dto)
+        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteCreateEditModel dto)
         {
             try
             {
@@ -187,7 +187,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> ChangeRouteStatus(Guid routeId, RouteChangeStatusDto dto)
+        public async Task<IActionResult> ChangeRouteStatus(Guid routeId, RouteChangeStatusModel dto)
         {
             try
             {
