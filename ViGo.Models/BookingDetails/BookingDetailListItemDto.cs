@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.Routes;
-using ViGo.DTOs.Users;
+using ViGo.Models.Routes;
+using ViGo.Models.Users;
 
-namespace ViGo.DTOs.BookingDetails
+namespace ViGo.Models.BookingDetails
 {
     public class BookingDetailListItemDto
     {

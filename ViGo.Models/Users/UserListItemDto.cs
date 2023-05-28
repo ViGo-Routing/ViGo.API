@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 
-namespace ViGo.DTOs.Users
+namespace ViGo.Models.Users
 {
     public class UserListItemDto
     {

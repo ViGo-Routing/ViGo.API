@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain.Enumerations;
 
-namespace ViGo.DTOs.BookingDetails
+namespace ViGo.Models.BookingDetails
 {
     public class BookingDetailUpdateDto
     {

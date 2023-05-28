@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViGo.DTOs.Bookings;
+using ViGo.Models.Bookings;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;

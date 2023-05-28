@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.DTOs.RouteRoutines
+namespace ViGo.Models.RouteRoutines
 {
     public class RouteRoutineCreateEditDto
     {

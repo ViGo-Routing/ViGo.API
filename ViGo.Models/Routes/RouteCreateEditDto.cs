@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.RouteRoutines;
-using ViGo.DTOs.RouteStations;
+using ViGo.Models.RouteRoutines;
+using ViGo.Models.RouteStations;
 
-namespace ViGo.DTOs.Routes
+namespace ViGo.Models.Routes
 {
     public class RouteCreateEditDto
     {

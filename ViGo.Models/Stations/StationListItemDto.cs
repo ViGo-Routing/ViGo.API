@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 
-namespace ViGo.DTOs.Stations
+namespace ViGo.Models.Stations
 {
     public class StationListItemDto
     {

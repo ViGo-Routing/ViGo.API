@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
-using ViGo.DTOs.BookingDetails;
-using ViGo.DTOs.Bookings;
-using ViGo.DTOs.RouteStations;
-using ViGo.DTOs.Users;
+using ViGo.Models.BookingDetails;
+using ViGo.Models.Bookings;
+using ViGo.Models.RouteStations;
+using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 

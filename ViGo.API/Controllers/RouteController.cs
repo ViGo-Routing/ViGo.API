@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViGo.DTOs.Routes;
+using ViGo.Models.Routes;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;

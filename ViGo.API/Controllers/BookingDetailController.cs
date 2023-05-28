@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.DTOs.BookingDetails;
+using ViGo.Models.BookingDetails;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;

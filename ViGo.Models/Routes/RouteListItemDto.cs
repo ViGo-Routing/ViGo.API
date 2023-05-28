@@ -5,11 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.DTOs.RouteRoutines;
-using ViGo.DTOs.RouteStations;
-using ViGo.DTOs.Stations;
+using ViGo.Models.RouteRoutines;
+using ViGo.Models.RouteStations;
+using ViGo.Models.Stations;
 
-namespace ViGo.DTOs.Routes
+namespace ViGo.Models.Routes
 {
     public class RouteListItemDto
     {
