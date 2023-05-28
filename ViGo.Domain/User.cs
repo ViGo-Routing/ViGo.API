@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using ViGo.Domain.Enumerations;
 
@@ -36,13 +37,21 @@ namespace ViGo.Domain
         public DateTime? LockedOutStart { get; set; }
         public DateTime? LockedOutEnd { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<BookingDetail> BookingDetails { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Booking> Bookings { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Notification> Notifications { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Report> Reports { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Route> Routes { get; set; }
+        [JsonIgnore]
         public virtual ICollection<UserLicense> UserLicenses { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Vehicle> Vehicles { get; set; }
+        [JsonIgnore]
         public virtual ICollection<Wallet> Wallets { get; set; }
     }
 }

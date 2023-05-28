@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using ViGo.Domain.Enumerations;
 
@@ -26,12 +27,19 @@ namespace ViGo.Domain
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
+        [JsonIgnore]
         public virtual Station EndStation { get; set; } = null!;
+        [JsonIgnore]
         public virtual Station StartStation { get; set; } = null!;
+        [JsonIgnore]
         public virtual User User { get; set; } = null!;
+        [JsonIgnore]
         public virtual ICollection<BookingDetail> CustomerBookingDetails { get; set; }
+        [JsonIgnore]
         public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
+        [JsonIgnore]
         public virtual ICollection<RouteRoutine> RouteRoutines { get; set; }
+        [JsonIgnore]
         public virtual ICollection<RouteStation> RouteStations { get; set; }
     }
 }
