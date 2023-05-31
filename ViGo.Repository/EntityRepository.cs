@@ -236,7 +236,7 @@ namespace ViGo.Repository
         /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
         /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
         /// as entity's Id</param>
-        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
@@ -245,7 +245,7 @@ namespace ViGo.Repository
         /// </returns>
         public override async Task<TEntity> InsertAsync(TEntity entity,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignDate = false)
+            bool isManuallyAssignTracking = false)
         {
             if (entity == null)
             {
@@ -253,41 +253,43 @@ namespace ViGo.Repository
             }
 
             entity.Id = Guid.NewGuid();
-            if (isSelfCreatedEntity)
+
+            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+
+            if (entity is ITrackingCreated)
             {
-                if (entity is ITrackingCreated created)
-                {
-                    created.CreatedBy = entity.Id;
-                }
-                if (entity is ITrackingUpdated updated)
-                {
-                    updated.UpdatedBy = entity.Id;
-                }
-            } else
+                ((ITrackingCreated)entity).CreatedTime = vnNow;
+                //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
+            }
+            if (entity is ITrackingUpdated)
             {
-                if (entity is ITrackingCreated created)
-                {
-                    created.CreatedBy = IdentityUtilities.GetCurrentUserId();
-                }
-                if (entity is ITrackingUpdated updated)
-                {
-                    updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
-                }
+                ((ITrackingUpdated)entity).UpdatedTime = vnNow;
+                //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
             }
 
-            if (!isManuallyAssignDate)
+            if (!isManuallyAssignTracking)
             {
-                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
-
-                if (entity is ITrackingCreated)
+                if (isSelfCreatedEntity)
                 {
-                    ((ITrackingCreated)entity).CreatedTime = vnNow;
-                    //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
+                    if (entity is ITrackingCreated created)
+                    {
+                        created.CreatedBy = entity.Id;
+                    }
+                    if (entity is ITrackingUpdated updated)
+                    {
+                        updated.UpdatedBy = entity.Id;
+                    }
                 }
-                if (entity is ITrackingUpdated)
+                else
                 {
-                    ((ITrackingUpdated)entity).UpdatedTime = vnNow;
-                    //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                    if (entity is ITrackingCreated created)
+                    {
+                        created.CreatedBy = IdentityUtilities.GetCurrentUserId();
+                    }
+                    if (entity is ITrackingUpdated updated)
+                    {
+                        updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                    }
                 }
             }
 
@@ -309,7 +311,7 @@ namespace ViGo.Repository
         /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
         /// as entity's Id
         /// </param>
-        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
@@ -319,7 +321,7 @@ namespace ViGo.Repository
         public override async Task<IEnumerable<TEntity>> InsertAsync(
             IEnumerable<TEntity> entities,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignDate = false)
+            bool isManuallyAssignTracking = false)
         {
             if (entities == null)
             {
@@ -333,40 +335,41 @@ namespace ViGo.Repository
                 foreach (TEntity entity in entities)
                 {
                     entity.Id = Guid.NewGuid();
-                    if (isSelfCreatedEntity)
+
+                    if (entity is ITrackingCreated)
                     {
-                        if (entity is ITrackingCreated created)
-                        {
-                            created.CreatedBy = entity.Id;
-                        }
-                        if (entity is ITrackingUpdated updated)
-                        {
-                            updated.UpdatedBy = entity.Id;
-                        }
+                        ((ITrackingCreated)entity).CreatedTime = vnNow;
+                        //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
                     }
-                    else
+                    if (entity is ITrackingUpdated)
                     {
-                        if (entity is ITrackingCreated created)
-                        {
-                            created.CreatedBy = IdentityUtilities.GetCurrentUserId();
-                        }
-                        if (entity is ITrackingUpdated updated)
-                        {
-                            updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
-                        }
+                        ((ITrackingUpdated)entity).UpdatedTime = vnNow;
+                        //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
                     }
 
-                    if (!isManuallyAssignDate)
+                    if (!isManuallyAssignTracking)
                     {
-                        if (entity is ITrackingCreated)
+                        if (isSelfCreatedEntity)
                         {
-                            ((ITrackingCreated)entity).CreatedTime = vnNow;
-                            //((ITrackingCreated)entity).CreatedBy = IdentityUtilities.GetCurrentUserId();
+                            if (entity is ITrackingCreated created)
+                            {
+                                created.CreatedBy = entity.Id;
+                            }
+                            if (entity is ITrackingUpdated updated)
+                            {
+                                updated.UpdatedBy = entity.Id;
+                            }
                         }
-                        if (entity is ITrackingUpdated)
+                        else
                         {
-                            ((ITrackingUpdated)entity).UpdatedTime = vnNow;
-                            //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                            if (entity is ITrackingCreated created)
+                            {
+                                created.CreatedBy = IdentityUtilities.GetCurrentUserId();
+                            }
+                            if (entity is ITrackingUpdated updated)
+                            {
+                                updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                            }
                         }
                     }
 
@@ -387,11 +390,15 @@ namespace ViGo.Repository
         /// Update the entity entry
         /// </summary>
         /// <param name="entity">Entity entry to be updated</param>
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
+        /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entries
         /// </returns>
-        public override async Task<TEntity> UpdateAsync(TEntity entity)
+        public override async Task<TEntity> UpdateAsync(TEntity entity,
+            bool isManuallyAssignTracking = false)
         {
             if (entity == null)
             {
@@ -401,9 +408,16 @@ namespace ViGo.Repository
             if (entity is ITrackingUpdated)
             {
                 ((ITrackingUpdated)entity).UpdatedTime = DateTimeUtilities.GetDateTimeVnNow();
-                ((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                //((ITrackingUpdated)entity).UpdatedBy = IdentityUtilities.GetCurrentUserId();
             }
 
+            if (!isManuallyAssignTracking)
+            {
+                if (entity is ITrackingUpdated updated)
+                {
+                    updated.UpdatedBy = IdentityUtilities.GetCurrentUserId();
+                }
+            }
 
             Table.Update(entity);
 

@@ -96,7 +96,7 @@ namespace ViGo.Repository.Core
         /// <param name="isSelfCreatedEntity">Boolean value which will determine whether or not
         /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
         /// as entity's Id</param>
-        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
@@ -105,7 +105,7 @@ namespace ViGo.Repository.Core
         /// </returns>
         public abstract Task<TEntity> InsertAsync(TEntity entity,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignDate = false);
+            bool isManuallyAssignTracking = false);
 
         /// <summary>
         /// Insert a number of entity entries
@@ -115,7 +115,7 @@ namespace ViGo.Repository.Core
         /// the entity being inserted is a self-created one. CreatedBy and UpdatedBy will be the same 
         /// as entity's Id
         /// </param>
-        /// <param name="isManuallyAssignDate">Boolean value which will determine whether or not 
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
         /// <returns>
@@ -125,7 +125,7 @@ namespace ViGo.Repository.Core
         public abstract Task<IEnumerable<TEntity>> InsertAsync(
             IEnumerable<TEntity> entities,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignDate = false);
+            bool isManuallyAssignTracking = false);
 
         /// <summary>
         /// Delete the entity entry
@@ -159,11 +159,15 @@ namespace ViGo.Repository.Core
         /// Update the entity entry
         /// </summary>
         /// <param name="entity">Entity entry to be updated</param>
+        /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
+        /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
+        /// </param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entries
         /// </returns>
-        public abstract Task<TEntity> UpdateAsync(TEntity entity);
+        public abstract Task<TEntity> UpdateAsync(TEntity entity,
+            bool isManuallyAssignTracking = false);
 
         /// <summary>
         /// Detach an entity from the Change Tracker
