@@ -5,6 +5,7 @@ using Newtonsoft.Json.Converters;
 using System.Reflection;
 using System.Text;
 using ViGo.API.Middlewares;
+using ViGo.API.SignalR;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.API
@@ -132,6 +133,8 @@ namespace ViGo.API
             app.UseCors("AllowAll");
 
             app.MapControllers();
+
+            app.MapHub<SignalRHub>("vigoHub");
 
             app.Run();
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace ViGo.Domain
@@ -20,7 +21,9 @@ namespace ViGo.Domain
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
+        [JsonIgnore]
         public virtual VehicleType VehicleType { get; set; } = null!;
+        [JsonIgnore]
         public virtual ICollection<FarePolicy> FarePolicies { get; set; }
     }
 }

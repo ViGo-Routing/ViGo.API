@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using ViGo.Domain.Enumerations;
 
@@ -17,6 +18,7 @@ namespace ViGo.Domain
         public EventType Type { get; set; }
         public EventStatus Status { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<Notification> Notifications { get; set; }
     }
 }

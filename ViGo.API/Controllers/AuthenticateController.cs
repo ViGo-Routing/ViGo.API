@@ -107,7 +107,7 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         /// <response code="400">Some information is invalid</response>
         [HttpPost("Register")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(200, Type = typeof(User))]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [AllowAnonymous]

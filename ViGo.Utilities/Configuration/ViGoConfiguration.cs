@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,6 +75,24 @@ namespace ViGo.Utilities.Configuration
         #region Firebase
         public static string FirebaseCredentialFile
             => Configuration.GetSection("Firebase")["CredentialFile"];
+        #endregion
+
+        #region VnPay
+        public static string VnPayApiVersion
+            => Configuration["Payments:VnPay:ApiVersion"];
+
+        public static string VnPayReturnUrl(HttpContext context)
+            => context.GetApiBaseUrl() +
+            Configuration["Payments:VnPay:ReturnUrl"];
+
+        public static string VnPayPaymentUrl
+            => Configuration["Payments:VnPay:Url"];
+
+        public static string VnPayTmnCode
+            => Configuration["Payments:VnPay:TmnCode"];
+
+        public static string VnPayHashSecret
+            => Configuration["Payments:VnPay:SecretKey"];
         #endregion
     }
 }

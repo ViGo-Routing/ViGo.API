@@ -1,6 +1,8 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
+using ViGo.API.SignalR;
+using ViGo.API.SignalR.Core;
 using ViGo.Domain;
 using ViGo.Repository;
 using ViGo.Repository.Core;
@@ -14,6 +16,15 @@ namespace ViGo.API
             this IServiceCollection services,
             IWebHostEnvironment env)
         {
+            #region SignalR
+            services.AddSignalR(options =>
+            {
+                options.EnableDetailedErrors = true;
+            });
+
+            services.AddTransient<ISignalRService, SignalRService>();
+            #endregion
+
             #region Firebase
             var credential = GoogleCredential.FromFile(ViGoConfiguration.FirebaseCredentialFile);
             FirebaseApp.Create(new AppOptions

@@ -31,7 +31,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get Booking Detail information successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("{bookingDetailId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(BookingDetailViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -70,7 +70,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get list of booking details successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Driver/{driverId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(IEnumerable<BookingDetailViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -107,7 +107,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Update successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("{bookingDetailId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(BookingDetail), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -151,7 +151,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Assign driver successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("AssignDriver/{bookingDetailId}")]
-        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(BookingDetail), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         [ProducesResponseType(400)]
