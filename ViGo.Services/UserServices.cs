@@ -118,6 +118,19 @@ namespace ViGo.Services
             };
 
             await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true);
+
+            Wallet wallet = new Wallet
+            {
+                UserId = newUser.Id,
+                Balance = 0,
+                Type = WalletType.PERSONAL,
+                Status = WalletStatus.ACTIVE,
+                CreatedBy = newUser.Id,
+                UpdatedBy = newUser.Id,
+            };
+
+            await work.Wallets.InsertAsync(wallet, isManuallyAssignTracking: true);
+
             await work.SaveChangesAsync();
 
             newUser.Password = "";
