@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using ViGo.API.SignalR.Core;
+using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
@@ -13,10 +16,12 @@ namespace ViGo.API.Controllers
     public class PaymentController : ControllerBase
     {
         private PaymentServices paymentServices;
+        private ISignalRService signalRService;
 
-        public PaymentController(IUnitOfWork work)
+        public PaymentController(IUnitOfWork work, ISignalRService signalRService)
         {
             paymentServices = new PaymentServices(work);
+            this.signalRService = signalRService;
         }
 
         /// <summary>
@@ -69,7 +74,19 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                await paymentServices.VnPayPaymentConfirmAsync(Request.Query);
+                Booking? booking = await paymentServices.VnPayPaymentConfirmAsync(Request.Query);
+                if (booking != null)
+                {
+                    // TODO Code
+                    await signalRService.SendToUserAsync(booking.CustomerId, "BookingPaymentResult",
+                        new
+                        {
+                            BookingId = booking.Id,
+                            PaymentMethod = PaymentMethod.VNPAY,
+                            IsSuccess = true,
+                            Message = "Thanh toán bằng VNPay thành công!"
+                        });
+                }
                 return StatusCode(204);
             }
             catch (ApplicationException appEx)

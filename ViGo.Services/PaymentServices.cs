@@ -25,7 +25,7 @@ namespace ViGo.Services
         }
 
         #region VnPay
-        public async Task VnPayPaymentConfirmAsync(IQueryCollection vnPayData)
+        public async Task<Booking?> VnPayPaymentConfirmAsync(IQueryCollection vnPayData)
         {
             if (vnPayData.Any())
             {
@@ -85,6 +85,7 @@ namespace ViGo.Services
 
                         await work.SaveChangesAsync();
 
+                        return booking;
                     } else
                     {
                         throw new ApplicationException("Thanh toán lỗi! Mã lỗi: " + vnpResponseCode);
@@ -94,6 +95,7 @@ namespace ViGo.Services
                     throw new ApplicationException("Đã có lỗi xảy ra trong quá trình xử lý đơn thanh toán!!");
                 }
             }
+            return null;
         }
 
         public string GenerateVnPayTestPaymentUrl(HttpContext context)
