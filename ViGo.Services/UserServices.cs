@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
@@ -230,6 +231,64 @@ namespace ViGo.Services
             newUser.Password = "";
 
             return newUser;
+        }
+        public async Task<User> GetUserByIdAsync(Guid id)
+        {
+            User user = await work.Users.GetAsync(id);
+            return user;
+        }
+
+        public async Task<User> UpdateUserAsync(Guid id, UserUpdateModel userUpdate)
+        {
+            User currentUser = await GetUserByIdAsync(id);
+
+            if (currentUser != null)
+            {
+                if (userUpdate.Email != null)
+                {
+                    userUpdate.Email.IsEmail("Email không hợp lệ!");
+                    currentUser.Email = userUpdate.Email;
+                }
+                if (userUpdate.Password != null)
+                {
+                    currentUser.Password.StringValidate(
+                        allowEmpty: false,
+                        emptyErrorMessage: "Mật khẩu không được bỏ trống!",
+                        minLength: 5,
+                        minLengthErrorMessage: "Mật khẩu phải có ít nhất 5 kí tự!",
+                        maxLength: 20,
+                        maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
+                    currentUser.Password = userUpdate.Password.Encrypt();
+                }
+                if (userUpdate.Name != null)
+                {
+                    currentUser.Name.StringValidate(
+                        allowEmpty: false,
+                        emptyErrorMessage: "Họ tên không được bỏ trống!",
+                        minLength: 5,
+                        minLengthErrorMessage: "Họ tên phải có ít nhất 5 kí tự!",
+                        maxLength: 50,
+                        maxLengthErrorMessage: "Họ tên không được vượt quá 50 kí tự!");
+                    currentUser.Name = userUpdate.Name;
+                }
+                if (userUpdate.Gender != null)
+                {
+                    currentUser.Gender = userUpdate.Gender;
+                }
+                if (userUpdate.DateOfBirth != null)
+                {
+                    currentUser.DateOfBirth.Value.DateTimeValidate(maximum: DateTimeUtilities.GetDateTimeVnNow(), maxErrorMessage: "Ngày sinh không hợp lệ!");
+                    currentUser.DateOfBirth = userUpdate.DateOfBirth;
+                }
+                if (userUpdate.AvatarUrl != null)
+                {
+                    currentUser.AvatarUrl = userUpdate.AvatarUrl;
+                }
+            }
+
+            await work.Users.UpdateAsync(currentUser!);
+            await work.SaveChangesAsync();
+            return currentUser!;
         }
     }
 }
