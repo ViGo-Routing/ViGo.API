@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,8 +29,9 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
-        /// Generates JWT token for user
+        /// Generates JWT token for Admin and Staff
         /// </summary>
+        /// <remarks>Login with email and password</remarks>
         /// <param name="loginUser">User login information</param>
         /// <returns>
         /// JWT token object { token: "" }
@@ -38,21 +40,30 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [HttpPost("Login")]
+        [HttpPost("Web/Login")]
         [ProducesResponseType(401)]
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] UserLoginModel loginUser)
+        public async Task<IActionResult> WebLogin([FromBody] WebUserLoginModel loginUser)
         {
             try
             {
-                User user = await userServices.LoginAsync(
-                    loginUser.Phone, loginUser.Password);
+                User? user = await userServices.LoginAsync(
+                    loginUser);
 
                 if (user == null)
                 {
                     return StatusCode(401, "Đăng nhập không thành công!");
+                }
+
+                if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+                {
+                    return StatusCode(401, "Tài khoản chưa được xác minh!");
+                }
+                if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+                {
+                    return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
                 }
 
                 user.Password = "";
@@ -60,7 +71,7 @@ namespace ViGo.API.Controllers
                 var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Name, user.Name ?? ""),
                     new Claim(ClaimTypes.Role, user.Role.ToString()),
                     new Claim(ClaimTypes.Email, user.Email ?? ""),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -73,7 +84,7 @@ namespace ViGo.API.Controllers
                 var token = new JwtSecurityToken(
                     issuer: ViGoConfiguration.ValidIssuer,
                     audience: ViGoConfiguration.ValidAudience,
-                    expires: DateTime.Now.AddHours(2),
+                    expires: DateTime.Now.AddHours(1),
                     claims: authClaims,
                     signingCredentials: new SigningCredentials(
                         authSigningKey, SecurityAlgorithms.HmacSha256));
@@ -85,6 +96,84 @@ namespace ViGo.API.Controllers
                     token = new JwtSecurityTokenHandler().WriteToken(token)
                 });
 
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(400, ex.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+        
+        /// <summary>
+        /// Generates JWT token for Customer and Driver
+        /// </summary>
+        /// <remarks>Login with phone number and Firebase Token</remarks>
+        /// <param name="loginUser">User login information</param>
+        /// <returns>
+        /// JWT token object { token: "" }
+        /// </returns>
+        /// <response code="401">Login failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Login successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Mobile/Login")]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(500)]
+        [AllowAnonymous]
+        public async Task<IActionResult> MobileLogin([FromBody] MobileUserLoginModel loginUser)
+        {
+            try
+            {
+                User user = await userServices.LoginAsync(
+                    loginUser);
+
+                if (user == null)
+                {
+                    return StatusCode(401, "Đăng nhập không thành công!");
+                }
+                if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+                {
+                    return StatusCode(401, "Tài khoản chưa được xác minh!");
+                }
+                if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+                {
+                    return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
+                }
+
+                user.Password = "";
+
+                var authClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Name ?? ""),
+                    new Claim(ClaimTypes.Role, user.Role.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email ?? ""),
+                    new Claim("FirebaseUid", user.FirebaseUid ?? ""),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                };
+
+                var authSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
+
+                // Token
+                var token = new JwtSecurityToken(
+                    issuer: ViGoConfiguration.ValidIssuer,
+                    audience: ViGoConfiguration.ValidAudience,
+                    expires: DateTime.Now.AddHours(1),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(
+                        authSigningKey, SecurityAlgorithms.HmacSha256));
+
+                var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
+
+                return StatusCode(200, new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token)
+                });
             }
             catch (ApplicationException ex)
             {

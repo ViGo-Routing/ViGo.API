@@ -10,7 +10,8 @@ namespace ViGo.Domain.Enumerations
     {
         ADMIN = 0,
         CUSTOMER = 1,
-        DRIVER = 2
+        DRIVER = 2,
+        STAFF = 3
     }
 
     public enum UserStatus : short

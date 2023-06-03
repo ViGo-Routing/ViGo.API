@@ -20,9 +20,10 @@ namespace ViGo.Domain
         }
 
         public override Guid Id { get; set; }
+        public string? FirebaseUid { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        public string Password { get; set; } = null!;
+        public string? Password { get; set; }
         public string? Name { get; set; }
         public bool? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
@@ -36,6 +37,7 @@ namespace ViGo.Domain
         public bool IsLockedOut { get; set; }
         public DateTime? LockedOutStart { get; set; }
         public DateTime? LockedOutEnd { get; set; }
+        public short FailedLoginCount { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<BookingDetail> BookingDetails { get; set; }

@@ -103,7 +103,7 @@ namespace ViGo.Utilities.Validator
 
         public static bool IsPhoneNumber(this string stringToCheck, string errorMessage)
         {
-            var re = @"^0[0-9]{9}$";
+            var re = @"^\+(?:[0-9]●?){6,14}[0-9]$";
             Regex phoneReg = new Regex(re);
             if (!phoneReg.IsMatch(stringToCheck))
             {

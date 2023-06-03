@@ -367,6 +367,8 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.AvatarUrl).HasMaxLength(255);
 
+                entity.Property(e => e.FirebaseUid).HasMaxLength(48);
+
                 entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
                 entity.Property(e => e.DateOfBirth).HasColumnType("date");
