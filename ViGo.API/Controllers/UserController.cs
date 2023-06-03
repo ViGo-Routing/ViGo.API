@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ViGo.Domain;
+using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services;
@@ -33,23 +34,42 @@ namespace ViGo.API.Controllers
         ///// <remarks>Authorization required</remarks>
         ///// <returns>List of current users</returns>
         //[Authorize]
-        //[HttpGet]
-        //public async Task<IActionResult> GetUsers()
-        //{
-        //    try
-        //    {
-        //        IEnumerable<Domain.User> users =
-        //            await userServices.GetUsersAsync();
-        //        return StatusCode(200, users);
-        //    } catch (ApplicationException ex)
-        //    {
-        //        return StatusCode(400, ex.GeneratorErrorMessage());
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, ex.GeneratorErrorMessage());
-        //    }
-        //}
+        [HttpGet]
+        public async Task<IActionResult> GetUsersAsync()
+        {
+            try
+            {
+                IEnumerable<Domain.User> users =
+                    await userServices.GetUsersAsync();
+                return StatusCode(200, users);
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(400, ex.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
 
+        //[Authorize]
+        [HttpPut]
+        public async Task<IActionResult> UpdateUserAsync(Guid id, UserUpdateModel userUpdate)
+        {
+            try
+            {
+                User user = await userServices.UpdateUserAsync(id, userUpdate);
+                return StatusCode(200, user);
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(400, ex.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
     }
 }
