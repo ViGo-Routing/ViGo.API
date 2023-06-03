@@ -75,8 +75,12 @@ namespace ViGo.Utilities.Configuration
         #region Firebase
         public static string FirebaseCredentialFile
             => Configuration.GetSection("Firebase")["CredentialFile"];
+
         public static string FirebaseProjectId
             => Configuration["Firebase:ProjectId"];
+
+        public static string FirebaseApiKey
+            => Configuration["Firebase:ApiKey"];
         #endregion
 
         #region VnPay

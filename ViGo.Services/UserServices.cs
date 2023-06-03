@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FirebaseAdmin.Auth;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,24 +20,101 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<User> LoginAsync(string phone, string password)
+        public async Task<User?> LoginAsync(WebUserLoginModel loginModel)
         {
-            User? user = null;
+            User? user = await work.Users.GetAsync(u =>
+                !string.IsNullOrEmpty(u.Email) &&
+                u.Email.ToLower().Trim()
+                .Equals(loginModel.Email.ToLower().Trim())
+                && (u.Role == UserRole.ADMIN || u.Role == UserRole.STAFF));
 
-            //try
-            //{
-                user = await work.Users.GetAsync(
-                    u => u.Phone.ToLower().Trim()
-                    .Equals(phone.ToLower().Trim())
-                    && u.Password.Equals(password.Encrypt()));
+            if (user == null)
+            {
+                return null;
+            }
+            
+            if (user.IsLockedOut &&
+                DateTimeUtilities.GetDateTimeVnNow() <= user.LockedOutEnd)
+            {
+                throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!\n" +
+                    "Vui lòng thử đăng nhập lại sau " + (user.LockedOutEnd - DateTimeUtilities.GetDateTimeVnNow()).Value.Minutes
+                    + " phút nữa");
+            } else if (DateTimeUtilities.GetDateTimeVnNow() > user.LockedOutEnd)
+            {
+                user.IsLockedOut = false;
+            }
 
-                //return user;
-            //}
-            //catch (Exception ex)
-            //{
-            //    throw new Exception(ex.Message, ex.InnerException);
-            //}
-            return user;
+            bool checkPassword = user.Password.Equals(loginModel.Password.Encrypt());
+            if (!checkPassword)
+            {
+                // Wrong password
+                if (user.FailedLoginCount == 4)
+                {
+                    // This time will be the fifth time
+                    user.FailedLoginCount = 0;
+                    user.IsLockedOut = true;
+                    user.LockedOutStart = DateTimeUtilities.GetDateTimeVnNow();
+                    user.LockedOutEnd = DateTimeUtilities.GetDateTimeVnNow().AddMinutes(30);
+
+                    await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                    await work.SaveChangesAsync();
+
+                    throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!");
+                } else
+                {
+                    user.FailedLoginCount++;
+                    await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                    await work.SaveChangesAsync();
+                }
+
+                return null;
+            } else
+            {
+                // Correct password
+                if (user.FailedLoginCount > 0)
+                {
+                    user.FailedLoginCount = 0;
+                    user.IsLockedOut = false;
+                    user.LockedOutStart = null;
+                    user.LockedOutEnd = null;
+
+                    await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                    await work.SaveChangesAsync();
+                }
+
+                return user;
+            }
+
+        }
+
+        public async Task<User> LoginAsync(MobileUserLoginModel loginModel)
+        {
+            try
+            {
+                FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
+                .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true);
+
+                string uid = decodedToken.Uid;
+
+                User? user = await work.Users.GetAsync(
+                    u => !string.IsNullOrEmpty(u.FirebaseUid) &&
+                        u.FirebaseUid.Equals(uid)
+                    // Only Customer and Driver can login with Firebase
+                    && (u.Role == UserRole.CUSTOMER || u.Role == UserRole.DRIVER));
+
+                return user;
+
+            } catch (FirebaseAuthException ex)
+            {
+                if (ex.AuthErrorCode == AuthErrorCode.RevokedIdToken)
+                {
+                    throw new ApplicationException("Token đã hết hiệu lực! Vui lòng đăng nhập lại");
+                } else
+                {
+                    throw ex;
+                }
+            }
+            
         }
 
         public async Task<IEnumerable<User>> GetUsersAsync()
@@ -81,14 +159,16 @@ namespace ViGo.Services
         public async Task<User> RegisterAsync(UserRegisterModel dto)
         {
             dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
-            dto.Password.StringValidate(
-                allowEmpty: false,
-                emptyErrorMessage: "Mật khẩu không được bỏ trống!",
-                minLength: 5,
-                minLengthErrorMessage: "Mật khẩu phải có ít nhất 5 kí tự!",
-                maxLength: 20,
-                maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
-            if (!Enum.IsDefined<UserRole>(dto.Role)) {
+            //dto.Password.StringValidate(
+            //    allowEmpty: false,
+            //    emptyErrorMessage: "Mật khẩu không được bỏ trống!",
+            //    minLength: 5,
+            //    minLengthErrorMessage: "Mật khẩu phải có ít nhất 5 kí tự!",
+            //    maxLength: 20,
+            //    maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
+            if (!Enum.IsDefined<UserRole>(dto.Role)
+                || dto.Role != UserRole.CUSTOMER ||
+                dto.Role != UserRole.DRIVER) {
                 throw new ApplicationException("Vai trò người dùng không hợp lệ!");
             }
 
@@ -102,19 +182,33 @@ namespace ViGo.Services
 
 
             User checkUser = await work.Users.GetAsync(
-                u => u.Phone.Equals(dto.Phone));
+                u => !string.IsNullOrEmpty(u.Phone) &&
+                    u.Phone.Equals(dto.Phone));
+
             if (checkUser != null)
             {
                 throw new ApplicationException("Số điện thoại đã được sử dụng!");
+            }
+
+            User checkFirebase = await work.Users.GetAsync(
+                u => !string.IsNullOrEmpty(u.FirebaseUid)
+                && u.FirebaseUid.Equals(dto.FirebaseUid));
+
+            if (checkFirebase != null)
+            {
+                throw new ApplicationException("Thông tin Firebase UId không hợp lệ!");
             }
 
             User newUser = new User
             {
                 Name = dto.Name,
                 Phone = dto.Phone,
-                Password = dto.Password.Encrypt(),
+                //Password = dto.Password.Encrypt(),
                 Role = dto.Role,
-                Status = UserStatus.UNVERIFIED
+                FirebaseUid = dto.FirebaseUid,
+                Status = dto.Role == UserRole.DRIVER 
+                    ? UserStatus.PENDING 
+                    : UserStatus.ACTIVE
             };
 
             await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true);

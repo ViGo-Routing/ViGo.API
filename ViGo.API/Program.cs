@@ -80,19 +80,7 @@ namespace ViGo.API
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer("Firebase_Bearer", options =>
-                {
-                    options.Authority = "https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = "https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId,
-                        ValidateAudience = true,
-                        ValidAudience = ViGoConfiguration.FirebaseProjectId,
-                        ValidateLifetime = true
-                    };
-                })
-                .AddJwtBearer("API_Bearer", options =>
+                .AddJwtBearer(options =>
                 {
                     options.SaveToken = true;
                     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
@@ -115,32 +103,32 @@ namespace ViGo.API
                             return Task.CompletedTask;
                         }
                     };
-                })
-                .AddPolicyScheme(JwtBearerDefaults.AuthenticationScheme, JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.ForwardDefaultSelector = context =>
-                    {
-                        string authorization = context.Request.Headers[HeaderNames.Authorization];
-                        if (!string.IsNullOrEmpty(authorization) &&
-                            authorization.StartsWith("Bearer "))
-                        {
-                            string token = authorization.Substring("Bearer ".Length).Trim();
-                            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
-
-                            if (jwtHandler.CanReadToken(token))
-                            {
-                                if (jwtHandler.ReadJwtToken(token).Issuer.Equals("https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId))
-                                {
-                                    return "Firebase_Bearer";
-                                } else
-                                {
-                                    return "API_Bearer";
-                                }
-                            }
-                        }
-                        return "API_Bearer";
-                    };
                 });
+                //.AddPolicyScheme(JwtBearerDefaults.AuthenticationScheme, JwtBearerDefaults.AuthenticationScheme, options =>
+                //{
+                //    options.ForwardDefaultSelector = context =>
+                //    {
+                //        string authorization = context.Request.Headers[HeaderNames.Authorization];
+                //        if (!string.IsNullOrEmpty(authorization) &&
+                //            authorization.StartsWith("Bearer "))
+                //        {
+                //            string token = authorization.Substring("Bearer ".Length).Trim();
+                //            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
+
+                //            if (jwtHandler.CanReadToken(token))
+                //            {
+                //                if (jwtHandler.ReadJwtToken(token).Issuer.Equals("https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId))
+                //                {
+                //                    return "Firebase_Bearer";
+                //                } else
+                //                {
+                //                    return "API_Bearer";
+                //                }
+                //            }
+                //        }
+                //        return "API_Bearer";
+                //    };
+                //});
             builder.Services.AddAuthorization();
 
             // CORS
