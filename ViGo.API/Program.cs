@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
+using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
 using ViGo.API.Middlewares;
@@ -24,7 +26,6 @@ namespace ViGo.API
             builder.Services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
-
                     options.SerializerSettings.ReferenceLoopHandling =
                     Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     options.SerializerSettings.Converters.Add(
@@ -79,7 +80,19 @@ namespace ViGo.API
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer(options =>
+                .AddJwtBearer("Firebase_Bearer", options =>
+                {
+                    options.Authority = "https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = "https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId,
+                        ValidateAudience = true,
+                        ValidAudience = ViGoConfiguration.FirebaseProjectId,
+                        ValidateLifetime = true
+                    };
+                })
+                .AddJwtBearer("API_Bearer", options =>
                 {
                     options.SaveToken = true;
                     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
@@ -101,6 +114,31 @@ namespace ViGo.API
                             }
                             return Task.CompletedTask;
                         }
+                    };
+                })
+                .AddPolicyScheme(JwtBearerDefaults.AuthenticationScheme, JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                    {
+                        string authorization = context.Request.Headers[HeaderNames.Authorization];
+                        if (!string.IsNullOrEmpty(authorization) &&
+                            authorization.StartsWith("Bearer "))
+                        {
+                            string token = authorization.Substring("Bearer ".Length).Trim();
+                            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
+
+                            if (jwtHandler.CanReadToken(token))
+                            {
+                                if (jwtHandler.ReadJwtToken(token).Issuer.Equals("https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId))
+                                {
+                                    return "Firebase_Bearer";
+                                } else
+                                {
+                                    return "API_Bearer";
+                                }
+                            }
+                        }
+                        return "API_Bearer";
                     };
                 });
             builder.Services.AddAuthorization();
