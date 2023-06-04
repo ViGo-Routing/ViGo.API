@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViGo.Utilities", "ViGo.Util
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ViGo.Models", "ViGo.Models\ViGo.Models.csproj", "{7EA27815-29D4-4366-905E-C732EFD1EE71}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ViGoConsole", "ViGoConsole\ViGoConsole.csproj", "{63BB1F00-0E74-4A8B-B056-EDCC156C6096}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{7EA27815-29D4-4366-905E-C732EFD1EE71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EA27815-29D4-4366-905E-C732EFD1EE71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EA27815-29D4-4366-905E-C732EFD1EE71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63BB1F00-0E74-4A8B-B056-EDCC156C6096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63BB1F00-0E74-4A8B-B056-EDCC156C6096}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63BB1F00-0E74-4A8B-B056-EDCC156C6096}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63BB1F00-0E74-4A8B-B056-EDCC156C6096}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -64,6 +70,7 @@ Global
 		{BA3B26F3-0605-45E0-896B-E5159A3E8EA1} = {E740DFCD-6D20-4AAD-A762-16630B2A6BD2}
 		{DCCDC3C2-456E-46C7-99C1-01383F613CC8} = {B71C12B0-74F8-4F12-8397-4D99C0798B96}
 		{7EA27815-29D4-4366-905E-C732EFD1EE71} = {895B774A-29CB-463F-8C1C-2BEFC60C3B14}
+		{63BB1F00-0E74-4A8B-B056-EDCC156C6096} = {B71C12B0-74F8-4F12-8397-4D99C0798B96}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F0E924FE-BCCC-40E9-AF09-F85A30C7182B}
