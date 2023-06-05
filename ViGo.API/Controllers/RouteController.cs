@@ -75,12 +75,49 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRoutes()
+        public async Task<IActionResult> GetRoutesCurrentUser()
         {
             try
             {
                 IEnumerable<RouteViewModel> dtos = await
                     routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId());
+                return StatusCode(200, dtos);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+
+        /// <summary>
+        /// Get Routes information
+        /// </summary>
+        /// <remarks>ADMIN only</remarks>
+        /// <returns>
+        /// List of all the saved routes
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Get List of routes successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet]
+        [Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRoutes()
+        {
+            try
+            {
+                IEnumerable<RouteViewModel> dtos = await
+                    routeServices.GetRoutesAsync();
                 return StatusCode(200, dtos);
             }
             catch (ApplicationException appEx)
