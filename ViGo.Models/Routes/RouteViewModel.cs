@@ -8,6 +8,7 @@ using ViGo.Domain.Enumerations;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
+using ViGo.Models.Users;
 
 namespace ViGo.Models.Routes
 {
@@ -23,13 +24,15 @@ namespace ViGo.Models.Routes
         public StationViewModel EndStation { get; set; }
         public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
         public IList<RouteStationViewModel> RouteStations { get; set; }
+        public UserViewModel? User { get; set; }
 
         public RouteViewModel(Route route,
             StationViewModel startStation,
             StationViewModel endStation,
             IEnumerable<RouteRoutineViewModel> routines,
-            IEnumerable<RouteStationViewModel> routeStations)
-            : this(route, startStation, endStation)
+            IEnumerable<RouteStationViewModel> routeStations,
+            UserViewModel? user = null)
+            : this(route, startStation, endStation, user)
         {
             //Id = route.Id;
             //UserId = route.UserId;
@@ -45,7 +48,8 @@ namespace ViGo.Models.Routes
 
         public RouteViewModel(Route route,
             StationViewModel startStation,
-            StationViewModel endStation)
+            StationViewModel endStation,
+            UserViewModel? user = null)
         {
             Id = route.Id;
             UserId = route.UserId;
@@ -55,6 +59,7 @@ namespace ViGo.Models.Routes
             Status = route.Status;
             StartStation = startStation;
             EndStation = endStation;
+            User = user;
             //RouteRoutines = new List<RouteRoutineListItemDto>();
             //RouteStations = new List<RouteStationListItemDto>();
         }

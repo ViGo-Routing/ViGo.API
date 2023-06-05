@@ -10,6 +10,7 @@ using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
+using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
@@ -158,60 +159,104 @@ namespace ViGo.Services
             return route;
         }
 
-        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid userId)
+        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId = null)
         {
-            IEnumerable<Route> routes = await work.Routes
+            IEnumerable<Route> routes = new List<Route>();
+
+            if (userId.HasValue)
+            {
+                routes = await work.Routes
                 .GetAllAsync(query => query.Where(
                     r => r.UserId.Equals(userId)));
-
-            IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
-
-            IEnumerable<RouteStation> routeStations = await work.RouteStations
-                .GetAllAsync(query => query.Where(
-                    s => routeIds.Contains(s.RouteId)));
-
-            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
-            IEnumerable<Station> stations = await work.Stations
-                .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
-
-            //IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
-            //    .GetAllAsync(query => query.Where(
-            //        r => routeIds.Contains(r.RouteId)));
-
-            IList<RouteViewModel> dtos = new List<RouteViewModel>();
-            foreach (Route route in routes)
+            } else
             {
-                // Routine
-                //IEnumerable<RouteRoutine> _routines = routeRoutines
-                //    .Where(r => r.RouteId.Equals(route.Id));
-
-                //IEnumerable<RouteRoutineListItemDto> routineDtos =
-                //    (from routine in _routines
-                //    select new RouteRoutineListItemDto(routine))
-                //    .OrderBy(r => r.StartDate)
-                //    .ThenBy(r => r.StartTime);
-
-                // Stations
-                Station startStation = stations.SingleOrDefault(
-                    s => s.Id.Equals(route.StartStationId));
-                StationViewModel startStationDto = new StationViewModel(
-                    startStation, 1
-                    );
-
-                Station endStation = stations.SingleOrDefault(
-                    s => s.Id.Equals(route.EndStationId));
-                StationViewModel endStationDto = new StationViewModel(
-                    endStation, 2
-                    );
-
-                dtos.Add(new RouteViewModel(
-                    route,
-                    startStationDto,
-                    endStationDto));
+                routes = await work.Routes
+                    .GetAllAsync();
             }
 
-            return dtos;
+            if (routes.Any())
+            {
+                IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
+
+                IEnumerable<RouteStation> routeStations = await work.RouteStations
+                    .GetAllAsync(query => query.Where(
+                        s => routeIds.Contains(s.RouteId)));
+
+                IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
+                IEnumerable<Station> stations = await work.Stations
+                    .GetAllAsync(query => query.Where(
+                        s => stationIds.Contains(s.Id)));
+
+                //IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
+                //    .GetAllAsync(query => query.Where(
+                //        r => routeIds.Contains(r.RouteId)));
+
+                IEnumerable<User> users = new List<User>();
+                User? user = null;
+
+                if (userId.HasValue)
+                {
+                    user = await work.Users.GetAsync(userId.Value);
+                }
+                else
+                {
+                    IEnumerable<Guid> userIds = routes.Select(r => r.UserId).Distinct();
+                    users = await work.Users.GetAllAsync(
+                        query => query.Where(
+                            u => userIds.Contains(u.Id)));
+                }
+
+                IList<RouteViewModel> dtos = new List<RouteViewModel>();
+                foreach (Route route in routes)
+                {
+                    // Routine
+                    //IEnumerable<RouteRoutine> _routines = routeRoutines
+                    //    .Where(r => r.RouteId.Equals(route.Id));
+
+                    //IEnumerable<RouteRoutineListItemDto> routineDtos =
+                    //    (from routine in _routines
+                    //    select new RouteRoutineListItemDto(routine))
+                    //    .OrderBy(r => r.StartDate)
+                    //    .ThenBy(r => r.StartTime);
+
+                    // Stations
+                    Station startStation = stations.SingleOrDefault(
+                        s => s.Id.Equals(route.StartStationId));
+                    StationViewModel startStationDto = new StationViewModel(
+                        startStation, 1
+                        );
+
+                    Station endStation = stations.SingleOrDefault(
+                        s => s.Id.Equals(route.EndStationId));
+                    StationViewModel endStationDto = new StationViewModel(
+                        endStation, 2
+                        );
+
+                    User? routeUser = null;
+
+                    if (userId.HasValue)
+                    {
+                        routeUser = user;
+                    }
+                    else
+                    {
+                        routeUser = users.SingleOrDefault(
+                            u => u.Id.Equals(route.UserId));
+                    }
+
+                    UserViewModel userViewModel = new UserViewModel(routeUser);
+
+                    dtos.Add(new RouteViewModel(
+                        route,
+                        startStationDto,
+                        endStationDto,
+                        userViewModel));
+                }
+
+                return dtos;
+            }
+
+            return new List<RouteViewModel>();
 
         }
 
@@ -265,11 +310,14 @@ namespace ViGo.Services
                  select new RouteStationViewModel(routeStation, station))
                  .OrderBy(s => s.StationIndex);
 
+            // User
+            User user = await work.Users.GetAsync(route.UserId);
+            UserViewModel userViewModel = new UserViewModel(user);
             return new RouteViewModel(
                     route,
                     startStationDto,
                     endStationDto, 
-                    routineDtos, routeStationDtos);
+                    routineDtos, routeStationDtos, userViewModel);
 
         }
 
