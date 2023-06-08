@@ -339,8 +339,10 @@ namespace ViGo.Services
             // Check for Booking
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => b.DriverRouteId.Equals(updateDto.UserId)
-                    || b.CustomerRouteId.Equals(updateDto.UserId)));
+                    b => (b.DriverRouteId.Equals(updateDto.Id)
+                    || (b.CustomerRouteId.Equals(updateDto.Id)
+                        && b.DriverId.HasValue))
+                    && b.Status != BookingDetailStatus.CANCELLED));
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
@@ -509,8 +511,10 @@ namespace ViGo.Services
             // TODO Code
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => b.DriverRouteId.Equals(route.UserId)
-                    || b.CustomerRouteId.Equals(route.UserId)));
+                    b => (b.DriverRouteId.Equals(route.Id)
+                    || (b.CustomerRouteId.Equals(route.Id)
+                        && b.DriverId.HasValue))
+                    && b.Status != BookingDetailStatus.CANCELLED));
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
@@ -522,6 +526,60 @@ namespace ViGo.Services
                 await work.Routes.UpdateAsync(route);
                 await work.SaveChangesAsync();
             }
+
+            return route;
+        }
+
+        public async Task<Route> DeleteRouteAsync(Guid routeId)
+        {
+            Route route = await work.Routes.GetAsync(routeId);
+            if (route == null)
+            {
+                throw new ApplicationException("Không tìm thấy tuyến đường được chỉ định!!");
+            }
+
+            // Check for Booking
+            // Not tested yet
+            // TODO Code
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    b => (b.DriverRouteId.Equals(route.Id)
+                    || (b.CustomerRouteId.Equals(route.Id)
+                        && b.DriverId.HasValue))
+                    && b.Status != BookingDetailStatus.CANCELLED));
+            if (bookingDetails.Any())
+            {
+                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể xóa tuyến đường");
+            }
+
+            // Booking and Booking Details are deleted as well
+            // NOT TESTED yet
+            // TODO code
+            IEnumerable<BookingDetail> deleteBookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    b => b.DriverRouteId.Equals(route.Id)
+                    || b.CustomerRouteId.Equals(route.Id)));
+            IEnumerable<Guid> bookingIds = deleteBookingDetails.Select(d => d.BookingId).Distinct();
+            IEnumerable<Guid> deletedBookingDetailIds = deleteBookingDetails.Select(d => d.Id);
+            foreach (BookingDetail bookingDetail in deleteBookingDetails)
+            {
+                await work.BookingDetails.DeleteAsync(bookingDetail);
+            }
+            foreach (Guid bookingId in bookingIds)
+            {
+                IEnumerable<BookingDetail> checkBookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        bd => bd.BookingId.Equals(bookingId)
+                        && !deletedBookingDetailIds.Contains(bd.Id)));
+                if (!checkBookingDetails.Any())
+                {
+                    await work.Bookings.DeleteAsync(b => b.Id.Equals(bookingId));
+                }
+            }
+
+            await work.Routes.DeleteAsync(route);
+
+            await work.SaveChangesAsync();
 
             return route;
         }
