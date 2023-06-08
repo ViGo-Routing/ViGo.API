@@ -129,6 +129,10 @@ namespace ViGo.Repository
         {
             TEntity entity = await Table
                 .SingleOrDefaultAsync(predicate);
+            if (entity != null)
+            {
+                await DeleteAsync(entity, isSoftDelete);
+            }
         }
 
         /// <summary>
