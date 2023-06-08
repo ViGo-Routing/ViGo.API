@@ -250,7 +250,9 @@ namespace ViGo.API.Controllers
         /// Delete Route
         /// </summary>
         /// <remarks>
-        ///  Only ADMIN can delete. Soft Delete
+        /// Only ADMIN can delete.
+        /// Only Route that has EVERY BookingDetails which have not been assigned to any Driver can be deleted.
+        /// Soft Delete
         /// </remarks>
         /// <returns>
         /// The deleted route information
