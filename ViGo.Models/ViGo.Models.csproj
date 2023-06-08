@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <Folder Include="Events\" />
-    <Folder Include="Fares\" />
     <Folder Include="FarePolicies\" />
     <Folder Include="WalletTransactions\" />
     <Folder Include="Wallets\" />
