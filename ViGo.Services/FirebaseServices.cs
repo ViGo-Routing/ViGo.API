@@ -36,7 +36,7 @@ namespace ViGo.Services
                     {
                         PhoneNumber = user.Phone,
                         DisplayName = user.Name,
-                        PhotoUrl = user.AvatarUrl,
+                        PhotoUrl = string.IsNullOrEmpty(user.AvatarUrl) ? null : user.AvatarUrl,
                         Disabled = false
                     };
                     try

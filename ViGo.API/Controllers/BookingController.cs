@@ -14,10 +14,30 @@ namespace ViGo.API.Controllers
     public class BookingController : ControllerBase
     {
         private BookingServices bookingServices;
+        private FareServices fareServices;
 
         public BookingController(IUnitOfWork work)
         {
             bookingServices = new BookingServices(work);
+            fareServices = new FareServices(work);
+        }
+
+        [HttpGet("FareCalculate")]
+        public async Task<IActionResult> FareCalculate(double distance)
+        {
+            try
+            {
+                double tripFare = await fareServices.TestCalculateTripFare(distance);
+                return StatusCode(200, tripFare);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
         }
 
         /// <summary>

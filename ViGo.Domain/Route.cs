@@ -21,6 +21,7 @@ namespace ViGo.Domain
         public double Distance { get; set; }
         public double Duration { get; set; }
         public RouteStatus Status { get; set; }
+        public RoutineType RoutineType { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
