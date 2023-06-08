@@ -12,6 +12,14 @@ namespace ViGo.Domain.Enumerations
         ACTIVE = 1
     }
 
+    public enum RoutineType : short
+    {
+        RANDOMLY = 0,
+        WEEKLY = 1,
+        MONTHLY = 2,
+        QUARTERLY = 3
+    }
+
     public enum RouteStationStatus : short
     {
         INACTIVE = -1,
