@@ -245,5 +245,44 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
+
+        /// <summary>
+        /// Delete Route
+        /// </summary>
+        /// <remarks>
+        ///  Only ADMIN can delete. Soft Delete
+        /// </remarks>
+        /// <returns>
+        /// The deleted route information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Route has been deleted successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpDelete("{routeId}")]
+        [Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(typeof(Domain.Route), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteRoute(Guid routeId)
+        {
+            try
+            {
+
+                Domain.Route deletedRoute = await routeServices.DeleteRouteAsync(routeId);
+                return StatusCode(200, deletedRoute);
+            }
+            catch (ApplicationException appEx)
+            {
+                return StatusCode(400, appEx.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
     }
 }

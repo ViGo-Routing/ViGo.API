@@ -106,7 +106,7 @@ namespace ViGo.API.Controllers
         /// <response code="401">Unauthorized</response>
         /// <response code="200">Update successfully</response>
         /// <response code="500">Server error</response>
-        [HttpPut("{bookingDetailId}")]
+        [HttpPut("UpdateStatus/{bookingDetailId}")]
         [ProducesResponseType(typeof(BookingDetail), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
