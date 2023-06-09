@@ -55,6 +55,31 @@ namespace ViGo.API.Controllers
             }
         }
 
+        ///// <summary>
+        ///// Get User information
+        ///// </summary>
+        ///// <remarks>Authorization required</remarks>
+        ///// <returns>User's information</returns>
+        [Authorize]
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUserAsync(Guid userId)
+        {
+            try
+            {
+               User user =
+                    await userServices.GetUserByIdAsync(userId);
+                return StatusCode(200, user);
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(400, ex.GeneratorErrorMessage());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.GeneratorErrorMessage());
+            }
+        }
+
         //[Authorize]
         //[HttpPost("Generate-Firebase")]
         //public async Task<IActionResult> GenerateFirebaseUsers()

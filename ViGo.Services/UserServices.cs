@@ -232,6 +232,7 @@ namespace ViGo.Services
 
             return newUser;
         }
+
         public async Task<User> GetUserByIdAsync(Guid id)
         {
             User user = await work.Users.GetAsync(id);

@@ -94,7 +94,7 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
-        /// Get list of Booking Details that are belong to a Bookign
+        /// Get list of Booking Details that are belong to a Booking
         /// </summary>
         /// <returns>
         /// List of Booking Details
