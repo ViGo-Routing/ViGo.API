@@ -250,9 +250,11 @@ namespace ViGo.Services
                     userUpdate.Email.IsEmail("Email không hợp lệ!");
                     currentUser.Email = userUpdate.Email;
                 }
-                if (userUpdate.Password != null)
+                if (userUpdate.Password != null
+                    && !string.IsNullOrEmpty(userUpdate.Password)
+                    && !currentUser.Password.Decrypt().Equals(userUpdate.Password))
                 {
-                    currentUser.Password.StringValidate(
+                    userUpdate.Password.StringValidate(
                         allowEmpty: false,
                         emptyErrorMessage: "Mật khẩu không được bỏ trống!",
                         minLength: 5,
@@ -263,7 +265,7 @@ namespace ViGo.Services
                 }
                 if (userUpdate.Name != null)
                 {
-                    currentUser.Name.StringValidate(
+                    userUpdate.Name.StringValidate(
                         allowEmpty: false,
                         emptyErrorMessage: "Họ tên không được bỏ trống!",
                         minLength: 5,
@@ -278,7 +280,7 @@ namespace ViGo.Services
                 }
                 if (userUpdate.DateOfBirth != null)
                 {
-                    currentUser.DateOfBirth.Value.DateTimeValidate(maximum: DateTimeUtilities.GetDateTimeVnNow(), maxErrorMessage: "Ngày sinh không hợp lệ!");
+                    userUpdate.DateOfBirth.Value.DateTimeValidate(maximum: DateTimeUtilities.GetDateTimeVnNow(), maxErrorMessage: "Ngày sinh không hợp lệ!");
                     currentUser.DateOfBirth = userUpdate.DateOfBirth;
                 }
                 if (userUpdate.AvatarUrl != null)

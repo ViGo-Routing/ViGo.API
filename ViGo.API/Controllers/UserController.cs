@@ -128,7 +128,8 @@ namespace ViGo.API.Controllers
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
-        
+
+        [Authorize]
         [HttpPut]
         public async Task<IActionResult> UpdateUserAsync(Guid id, UserUpdateModel userUpdate)
         {
