@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Models.Stations;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 
@@ -13,6 +14,19 @@ namespace ViGo.Services
     {
         public StationServices(IUnitOfWork work) : base(work)
         {
+        }
+
+        public async Task<StationViewModel?> GetStationAsync(Guid stationId)
+        {
+            Station station = await work.Stations.GetAsync(stationId);
+            if (station == null)
+            {
+                return null;
+            }
+
+            StationViewModel model = new StationViewModel(station);
+            return model;
+
         }
     }
 }

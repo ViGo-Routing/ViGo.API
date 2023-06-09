@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 
 namespace ViGo.Models.RouteRoutines
 {
@@ -13,6 +14,7 @@ namespace ViGo.Models.RouteRoutines
         public TimeOnly StartTime { get; set; }
         public DateOnly EndDate { get; set; }
         public TimeOnly EndTime { get; set; }
+        public RouteRoutineStatus Status { get; set; }
 
         public RouteRoutineViewModel(RouteRoutine routeRoutine)
         {
@@ -20,6 +22,7 @@ namespace ViGo.Models.RouteRoutines
             StartTime = TimeOnly.FromTimeSpan(routeRoutine.StartTime);
             EndDate = DateOnly.FromDateTime(routeRoutine.EndDate);
             EndTime = TimeOnly.FromTimeSpan(routeRoutine.EndTime);
+            Status = routeRoutine.Status;
         }
     }
 }

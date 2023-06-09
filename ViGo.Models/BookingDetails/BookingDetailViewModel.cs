@@ -14,12 +14,12 @@ namespace ViGo.Models.BookingDetails
     {
         public Guid Id { get; set; }
         public Guid? BookingId { get; set; }
-        //public Guid? DriverId { get; set; }
-        public UserViewModel? Driver { get; set; }
+        public Guid? DriverId { get; set; }
+        //public UserViewModel? Driver { get; set; }
         public Guid CustomerRouteId { get; set; }
-        public RouteViewModel? CustomerRoute { get; set; }
+        //public RouteViewModel? CustomerRoute { get; set; }
         public Guid? DriverRouteId { get; set; }
-        public RouteViewModel? DriverRoute { get; set; }
+        //public RouteViewModel? DriverRoute { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }
         public double? Price { get; set; }
@@ -37,11 +37,11 @@ namespace ViGo.Models.BookingDetails
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
 
-        public BookingDetailViewModel(BookingDetail bookingDetail,
-            UserViewModel? driver)
+        public BookingDetailViewModel(BookingDetail bookingDetail)
         {
             Id = bookingDetail.Id;
-            Driver = driver;
+            //Driver = driver;
+            DriverId = bookingDetail.DriverId;
             CustomerRouteId = bookingDetail.CustomerRouteId;
             DriverRouteId = bookingDetail.DriverRouteId;
             AssignedTime = bookingDetail.AssignedTime;
@@ -62,14 +62,14 @@ namespace ViGo.Models.BookingDetails
             UpdatedBy = bookingDetail.UpdatedBy;
         }
         
-        public BookingDetailViewModel(BookingDetail bookingDetail,
-            UserViewModel? driver,
-            RouteViewModel customerRoute,
-            RouteViewModel driverRoute)
-            : this(bookingDetail, driver)
-        {
-            CustomerRoute = customerRoute;
-            DriverRoute = driverRoute;
-        }
+        //public BookingDetailViewModel(BookingDetail bookingDetail,
+        //    UserViewModel? driver,
+        //    RouteViewModel customerRoute,
+        //    RouteViewModel driverRoute)
+        //    : this(bookingDetail, driver)
+        //{
+        //    CustomerRoute = customerRoute;
+        //    DriverRoute = driverRoute;
+        //}
     }
 }
