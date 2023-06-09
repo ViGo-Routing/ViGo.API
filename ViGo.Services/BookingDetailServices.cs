@@ -30,56 +30,57 @@ namespace ViGo.Services
                 return null;
             }
 
-            UserViewModel? driverDto = null;
-            if (bookingDetail.DriverId.HasValue)
-            {
-                User driver = await work.Users.GetAsync(bookingDetail.DriverId.Value);
-                driverDto = new UserViewModel(driver);
-            }
+            //UserViewModel? driverDto = null;
+            //if (bookingDetail.DriverId.HasValue)
+            //{
+            //    User driver = await work.Users.GetAsync(bookingDetail.DriverId.Value);
+            //    driverDto = new UserViewModel(driver);
+            //}
 
-            Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId);
+            //Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId);
 
-            IEnumerable<Guid> stationIds = (new List<Guid>
-            {
-                customerRoute.StartStationId,
-                customerRoute.EndStationId,
+            //IEnumerable<Guid> stationIds = (new List<Guid>
+            //{
+            //    customerRoute.StartStationId,
+            //    customerRoute.EndStationId,
 
-            }).Distinct();
+            //}).Distinct();
 
-            Route? driverRoute = null;
-            if (bookingDetail.DriverRouteId.HasValue)
-            {
-                driverRoute = await work.Routes
-                    .GetAsync(bookingDetail.DriverRouteId.Value);
-                stationIds = stationIds.Append(driverRoute.StartStationId)
-                    .Append(driverRoute.EndStationId);
-                
-            }
+            //Route? driverRoute = null;
+            //if (bookingDetail.DriverRouteId.HasValue)
+            //{
+            //    driverRoute = await work.Routes
+            //        .GetAsync(bookingDetail.DriverRouteId.Value);
+            //    stationIds = stationIds.Append(driverRoute.StartStationId)
+            //        .Append(driverRoute.EndStationId);
 
-            IEnumerable<Station> stations = await work.Stations
-                .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
+            //}
 
-            RouteViewModel customerRouteDto = new RouteViewModel(
-                customerRoute,
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(customerRoute.StartStationId)), 1),
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(customerRoute.EndStationId)), 2));
+            //IEnumerable<Station> stations = await work.Stations
+            //    .GetAllAsync(query => query.Where(
+            //        s => stationIds.Contains(s.Id)));
 
-            RouteViewModel? driverRouteDto = null;
-            if (driverRoute != null)
-            {
-                driverRouteDto = new RouteViewModel(
-                driverRoute,
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId)), 1),
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2));
-            }
+            //RouteViewModel customerRouteDto = new RouteViewModel(
+            //    customerRoute,
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(customerRoute.StartStationId)), 1),
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(customerRoute.EndStationId)), 2));
 
-            BookingDetailViewModel dto = new BookingDetailViewModel(
-                bookingDetail, driverDto, customerRouteDto, driverRouteDto);
+            //RouteViewModel? driverRouteDto = null;
+            //if (driverRoute != null)
+            //{
+            //    driverRouteDto = new RouteViewModel(
+            //    driverRoute,
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId)), 1),
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2));
+            //}
+
+            //BookingDetailViewModel dto = new BookingDetailViewModel(
+            //    bookingDetail, driverDto, customerRouteDto, driverRouteDto);
+            BookingDetailViewModel dto = new BookingDetailViewModel(bookingDetail);
 
             return dto;
         
@@ -103,50 +104,67 @@ namespace ViGo.Services
                 return new List<BookingDetailViewModel>();
             }
 
-            IEnumerable<Guid> routeIds = bookingDetails
-                .Select(bd => bd.CustomerRouteId)
-                .Concat(bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
-                .Select(bd => 
-                bd.DriverRouteId.Value))
-                .Distinct();
+            //IEnumerable<Guid> routeIds = bookingDetails
+            //    .Select(bd => bd.CustomerRouteId)
+            //    .Concat(bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
+            //    .Select(bd => 
+            //    bd.DriverRouteId.Value))
+            //    .Distinct();
 
-            IEnumerable<Route> routes = await work.Routes
-                .GetAllAsync(query => query.Where(
-                    r => routeIds.Contains(r.Id)));
+            //IEnumerable<Route> routes = await work.Routes
+            //    .GetAllAsync(query => query.Where(
+            //        r => routeIds.Contains(r.Id)));
 
-            IEnumerable<Guid> stationIds = routes.Select(
-                r => r.StartStationId).Concat(routes.Select(
-                    r => r.EndStationId)).Distinct();
-            IEnumerable<Station> stations = await work.Stations
-                .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
+            //IEnumerable<Guid> stationIds = routes.Select(
+            //    r => r.StartStationId).Concat(routes.Select(
+            //        r => r.EndStationId)).Distinct();
+            //IEnumerable<Station> stations = await work.Stations
+            //    .GetAllAsync(query => query.Where(
+            //        s => stationIds.Contains(s.Id)));
 
 
+            //IEnumerable<BookingDetailViewModel> dtos =
+            //    from bookingDetail in bookingDetails
+            //    join customerRoute in routes
+            //        on bookingDetail.CustomerRouteId equals customerRoute.Id
+            //    join customerStartStation in stations
+            //        on customerRoute.StartStationId equals customerStartStation.Id
+            //    join customerEndStation in stations
+            //        on customerRoute.EndStationId equals customerEndStation.Id
+            //    join driverRoute in routes
+            //        on bookingDetail.DriverRouteId equals driverRoute.Id
+            //    join driverStartStation in stations
+            //        on customerRoute.StartStationId equals driverStartStation.Id
+            //    join driverEndStation in stations
+            //        on customerRoute.EndStationId equals driverEndStation.Id
+            //    select new BookingDetailViewModel(
+            //        bookingDetail, null,
+            //        new RouteViewModel(customerRoute,
+            //            new StationViewModel(customerStartStation, 1),
+            //            new StationViewModel(customerEndStation, 2)),
+            //        new RouteViewModel(driverRoute,
+            //            new StationViewModel(driverStartStation, 1),
+            //            new StationViewModel(driverEndStation, 2)));
             IEnumerable<BookingDetailViewModel> dtos =
                 from bookingDetail in bookingDetails
-                join customerRoute in routes
-                    on bookingDetail.CustomerRouteId equals customerRoute.Id
-                join customerStartStation in stations
-                    on customerRoute.StartStationId equals customerStartStation.Id
-                join customerEndStation in stations
-                    on customerRoute.EndStationId equals customerEndStation.Id
-                join driverRoute in routes
-                    on bookingDetail.DriverRouteId equals driverRoute.Id
-                join driverStartStation in stations
-                    on customerRoute.StartStationId equals driverStartStation.Id
-                join driverEndStation in stations
-                    on customerRoute.EndStationId equals driverEndStation.Id
-                select new BookingDetailViewModel(
-                    bookingDetail, null,
-                    new RouteViewModel(customerRoute,
-                        new StationViewModel(customerStartStation, 1),
-                        new StationViewModel(customerEndStation, 2)),
-                    new RouteViewModel(driverRoute,
-                        new StationViewModel(driverStartStation, 1),
-                        new StationViewModel(driverEndStation, 2)));
+                select new BookingDetailViewModel(bookingDetail);
 
             return dtos;
         }
+
+        public async Task<IEnumerable<BookingDetailViewModel>>
+            GetBookingDetailsAsync(Guid bookingId)
+        {
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => d.BookingId.Equals(bookingId)));
+
+            IEnumerable<BookingDetailViewModel> dtos =
+                from bookingDetail in bookingDetails
+                select new BookingDetailViewModel(bookingDetail);
+
+            return dtos;
+        } 
 
         public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
             BookingDetailUpdateStatusModel updateDto)
