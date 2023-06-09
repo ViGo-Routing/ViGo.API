@@ -14,12 +14,12 @@ namespace ViGo.Models.Bookings
     public class BookingViewModel
     {
         public Guid Id { get; set; }
-        public Guid CustomerId { get; set; }
-        public Guid StartRouteStationId { get; set; }
-        public Guid EndRouteStationId { get; set; }
-        //public UserViewModel Customer { get; set; }
-        //public RouteStationViewModel StartRouteStation { get; set; }
-        //public RouteStationViewModel EndRouteStation { get; set; }
+        //public Guid CustomerId { get; set; }
+        //public Guid StartRouteStationId { get; set; }
+        //public Guid EndRouteStationId { get; set; }
+        public UserViewModel Customer { get; set; }
+        public RouteStationViewModel StartRouteStation { get; set; }
+        public RouteStationViewModel EndRouteStation { get; set; }
         public TimeSpan? StartTime { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -32,7 +32,7 @@ namespace ViGo.Models.Bookings
         public double? Distance { get; set; }
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
-        //public string VehicleName { get; set; }
+        public string VehicleName { get; set; }
         public BookingStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -41,15 +41,15 @@ namespace ViGo.Models.Bookings
         public bool IsDeleted { get; set; }
 
         //public IEnumerable<BookingDetailViewModel> BookingDetails { get; set; }
-        public BookingViewModel(Booking booking)
+        public BookingViewModel(Booking booking, UserViewModel customer,
+            RouteStationViewModel startRouteStation,
+            RouteStationViewModel endRouteStation,
+            VehicleType vehicleType)
         {
             Id = booking.Id;
-            //Customer = customer;
-            //StartRouteStation = startRouteStation;
-            //EndRouteStation = endRouteStation;
-            CustomerId = booking.CustomerId;
-            StartRouteStationId = booking.StartRouteStationId;
-            EndRouteStationId = booking.EndRouteStationId;
+            Customer = customer;
+            StartRouteStation = startRouteStation;
+            EndRouteStation = endRouteStation;
             StartTime = booking.StartTime;
             StartDate = booking.StartDate;
             EndDate = booking.EndDate;
@@ -62,8 +62,8 @@ namespace ViGo.Models.Bookings
             Distance = booking.Distance;
             PromotionId = booking.PromotionId;
             VehicleTypeId = booking.VehicleTypeId;
-            //VehicleName = vehicleType.Name + " - " + 
-            //    vehicleType.Slot + " chỗ";
+            VehicleName = vehicleType.Name + " - " + 
+                vehicleType.Slot + " chỗ";
             Status = booking.Status;
             CreatedTime = booking.CreatedTime;
             CreatedBy = booking.CreatedBy;
