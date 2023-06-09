@@ -25,7 +25,10 @@ namespace ViGo.Services
                 return null;
             }
 
-            RouteStationViewModel model = new RouteStationViewModel(routeStation
+            Station station = await work.Stations.GetAsync(routeStation.StationId);
+
+            RouteStationViewModel model = new RouteStationViewModel(routeStation,
+                station
                 );
             return model;
         }
@@ -37,9 +40,16 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     rs => rs.RouteId.Equals(routeId)));
 
+            IEnumerable<Guid> stationIds = routeStations.Select(r => r.StationId);
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)));
+
             IEnumerable<RouteStationViewModel> models =
                 from routeStation in routeStations
-                select new RouteStationViewModel(routeStation);
+                join station in stations
+                    on routeStation.StationId equals station.Id
+                select new RouteStationViewModel(routeStation, station);
             return models;
         }
     }
