@@ -33,7 +33,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Create Route successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -69,7 +69,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get List of routes successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("CurrentUser")]
-        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -178,7 +178,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route has been updated successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("{routeId}")]
-        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -218,7 +218,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route has been updated successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("ChangeStatus/{routeId}")]
-        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
