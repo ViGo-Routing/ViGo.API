@@ -14,6 +14,7 @@ using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -26,6 +27,15 @@ namespace ViGo.Services
 
         public async Task<Route> CreateRouteAsync(RouteCreateEditModel dto)
         {
+            if (!IdentityUtilities.IsAdmin()
+                && !IdentityUtilities.IsStaff())
+            {
+                if (!dto.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new AccessDeniedException();
+                }
+            }
+
             dto.Name.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Tên tuyến đường không được bỏ trống!",
@@ -45,15 +55,15 @@ namespace ViGo.Services
             IsValidStation(dto.StartStation, "Điểm bắt đầu");
             IsValidStation(dto.EndStation, "Điểm kết thúc");
 
-            if (dto.RouteRoutines.Count == 0)
-            {
-                throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
-            }
-            foreach (RouteRoutineCreateEditModel routine in dto.RouteRoutines)
-            {
-                IsValidRoutine(routine);
-            }
-            await IsValidRoutines(dto.RouteRoutines);
+            //if (dto.RouteRoutines.Count == 0)
+            //{
+            //    throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
+            //}
+            //foreach (RouteRoutineCreateEditModel routine in dto.RouteRoutines)
+            //{
+            //    IsValidRoutine(routine);
+            //}
+            //await IsValidRoutines(dto.RouteRoutines);
 
             // Find Start Station existance
             Station startStation = await work.Stations.GetAsync(
@@ -132,29 +142,29 @@ namespace ViGo.Services
             await work.RouteStations.InsertAsync(routeStations);
 
             // Create RouteRoutine
-            IList<RouteRoutine> routeRoutines =
-                (from routine in dto.RouteRoutines
-                 select new RouteRoutine
-                 {
-                     RouteId = route.Id,
-                     StartDate = routine.StartDate.ToDateTime(TimeOnly.MinValue),
-                     StartTime = routine.StartTime.ToTimeSpan(),
-                     EndDate = routine.EndDate.ToDateTime(TimeOnly.MinValue),
-                     EndTime = routine.EndTime.ToTimeSpan(),
-                     Status = RouteRoutineStatus.ACTIVE
-                 }).ToList();
-            await work.RouteRoutines.InsertAsync(routeRoutines);
+            //IList<RouteRoutine> routeRoutines =
+            //    (from routine in dto.RouteRoutines
+            //     select new RouteRoutine
+            //     {
+            //         RouteId = route.Id,
+            //         StartDate = routine.StartDate.ToDateTime(TimeOnly.MinValue),
+            //         StartTime = routine.StartTime.ToTimeSpan(),
+            //         EndDate = routine.EndDate.ToDateTime(TimeOnly.MinValue),
+            //         EndTime = routine.EndTime.ToTimeSpan(),
+            //         Status = RouteRoutineStatus.ACTIVE
+            //     }).ToList();
+            //await work.RouteRoutines.InsertAsync(routeRoutines);
 
             await work.SaveChangesAsync();
 
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
             route.RouteStations = routeStations;
-            route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
-                .ThenBy(r => r.StartTime).ToList();
+            //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
+            //    .ThenBy(r => r.StartTime).ToList();
 
-            route.EndStation.RouteStations = null;
-            route.StartStation.RouteStations = null;
+            //route.EndStation.RouteStations = null;
+            //route.StartStation.RouteStations = null;
 
             return route;
         }
@@ -288,11 +298,11 @@ namespace ViGo.Services
 
 
             // Routine
-            IEnumerable<RouteRoutineViewModel> routineDtos =
-                (from routine in routeRoutines
-                 select new RouteRoutineViewModel(routine))
-                .OrderBy(r => r.StartDate)
-                .ThenBy(r => r.StartTime);
+            //IEnumerable<RouteRoutineViewModel> routineDtos =
+            //    (from routine in routeRoutines
+            //     select new RouteRoutineViewModel(routine))
+            //    .OrderBy(r => r.RoutineDate)
+            //    .ThenBy(r => r.StartTime);
 
             // Stations
             Station startStation = stations.SingleOrDefault(
@@ -331,7 +341,12 @@ namespace ViGo.Services
 
         public async Task<Route> UpdateRouteAsync(RouteCreateEditModel updateDto)
         {
-            Route route = await work.Routes.GetAsync(updateDto.Id);
+            if (!updateDto.Id.HasValue)
+            {
+                throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
+            }
+
+            Route route = await work.Routes.GetAsync(updateDto.Id.Value);
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
@@ -340,6 +355,14 @@ namespace ViGo.Services
             if (!route.UserId.Equals(updateDto.UserId))
             {
                 throw new ApplicationException("Thông tin tuyến đường người dùng không trùng khớp! Vui lòng kiểm tra lại");
+            }
+            if (!IdentityUtilities.IsAdmin()
+                && !IdentityUtilities.IsStaff())
+            {
+                if (!updateDto.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
+                }
             }
 
             // Not tested yet
@@ -375,15 +398,15 @@ namespace ViGo.Services
             IsValidStation(updateDto.StartStation, "Điểm bắt đầu");
             IsValidStation(updateDto.EndStation, "Điểm kết thúc");
 
-            if (updateDto.RouteRoutines.Count == 0)
-            {
-                throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
-            }
-            foreach (RouteRoutineCreateEditModel routine in updateDto.RouteRoutines)
-            {
-                IsValidRoutine(routine);
-            }
-            await IsValidRoutines(updateDto.RouteRoutines, true, updateDto.Id);
+            //if (updateDto.RouteRoutines.Count == 0)
+            //{
+            //    throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
+            //}
+            //foreach (RouteRoutineCreateEditModel routine in updateDto.RouteRoutines)
+            //{
+            //    IsValidRoutine(routine);
+            //}
+            //await IsValidRoutines(updateDto.RouteRoutines, true, updateDto.Id);
 
             // Find Start Station existance
             Station startStation = await work.Stations.GetAsync(
@@ -466,34 +489,34 @@ namespace ViGo.Services
             await work.RouteStations.InsertAsync(routeStations);
 
             // Update RouteRoutine
-            IEnumerable<RouteRoutine> currentRoutines
-                = await work.RouteRoutines.GetAllAsync(query => query.Where(
-                    s => s.RouteId.Equals(route.Id)));
-            foreach (RouteRoutine routeRoutine in currentRoutines)
-            {
-                await work.RouteRoutines.DeleteAsync(routeRoutine, isSoftDelete: false);
-            }
+            //IEnumerable<RouteRoutine> currentRoutines
+            //    = await work.RouteRoutines.GetAllAsync(query => query.Where(
+            //        s => s.RouteId.Equals(route.Id)));
+            //foreach (RouteRoutine routeRoutine in currentRoutines)
+            //{
+            //    await work.RouteRoutines.DeleteAsync(routeRoutine, isSoftDelete: false);
+            //}
 
-            IList<RouteRoutine> routeRoutines =
-                (from routine in updateDto.RouteRoutines
-                 select new RouteRoutine
-                 {
-                     RouteId = route.Id,
-                     StartDate = routine.StartDate.ToDateTime(TimeOnly.MinValue),
-                     StartTime = routine.StartTime.ToTimeSpan(),
-                     EndDate = routine.EndDate.ToDateTime(TimeOnly.MinValue),
-                     EndTime = routine.EndTime.ToTimeSpan(),
-                     Status = RouteRoutineStatus.ACTIVE
-                 }).ToList();
-            await work.RouteRoutines.InsertAsync(routeRoutines);
+            //IList<RouteRoutine> routeRoutines =
+            //    (from routine in updateDto.RouteRoutines
+            //     select new RouteRoutine
+            //     {
+            //         RouteId = route.Id,
+            //         StartDate = routine.StartDate.ToDateTime(TimeOnly.MinValue),
+            //         StartTime = routine.StartTime.ToTimeSpan(),
+            //         EndDate = routine.EndDate.ToDateTime(TimeOnly.MinValue),
+            //         EndTime = routine.EndTime.ToTimeSpan(),
+            //         Status = RouteRoutineStatus.ACTIVE
+            //     }).ToList();
+            //await work.RouteRoutines.InsertAsync(routeRoutines);
 
             await work.SaveChangesAsync();
 
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
             route.RouteStations = routeStations;
-            route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
-                .ThenBy(r => r.StartTime).ToList();
+            //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
+            //    .ThenBy(r => r.StartTime).ToList();
             route.EndStation = endStation;
             route.StartStation = startStation;
 
@@ -512,6 +535,15 @@ namespace ViGo.Services
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường được chỉ định!!");
+            }
+
+            if (!IdentityUtilities.IsAdmin()
+                && !IdentityUtilities.IsStaff())
+            {
+                if (!route.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
+                }
             }
 
             // Check for Booking
@@ -619,119 +651,6 @@ namespace ViGo.Services
                 maxLength: 500,
                 maxLengthErrorMessage: "Địa chỉ " + stationName + " không được vượt quá 255 kí tự!"
                 );
-        }
-
-        private void IsValidRoutine(RouteRoutineCreateEditModel routine)
-        {
-            DateTime startDateTime = DateTimeUtilities
-                .ToDateTime(routine.StartDate, routine.StartTime);
-            DateTime endDateTime = DateTimeUtilities.
-                ToDateTime(routine.EndDate, routine.EndTime);
-
-            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
-            startDateTime.DateTimeValidate(
-                minimum: vnNow,
-                minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
-                $"{routine.StartDate.ToShortDateString()}, " +
-                $"giờ: {routine.StartTime.ToShortTimeString()})",
-                maximum: endDateTime,
-                maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
-                $"{routine.EndDate.ToShortDateString()}, " +
-                $"giờ: {routine.EndTime.ToShortTimeString()})"
-                );
-
-        }
-
-        private async Task IsValidRoutines(IList<RouteRoutineCreateEditModel> routines,
-            bool isUpdate = false, Guid? routeId = null)
-        {
-            IList<DateTimeRange> routineRanges =
-                (from routine in routines
-                 select new DateTimeRange(
-                     DateTimeUtilities
-                 .ToDateTime(routine.StartDate, routine.StartTime),
-                     DateTimeUtilities.
-                 ToDateTime(routine.EndDate, routine.EndTime)
-                     )).ToList();
-            routineRanges = routineRanges.OrderBy(r => r.StartDateTime).ToList();
-
-            for (int i = 0; i < routineRanges.Count - 1; i++)
-            {
-                DateTimeRange first = routineRanges[i];
-                DateTimeRange second = routineRanges[i + 1];
-
-                first.IsOverlap(second,
-                    $"Hai khoảng thời gian lịch trình đã bị trùng lặp " +
-                    $"({first.StartDateTime} - {first.EndDateTime} và " +
-                    $"{second.StartDateTime} - {second.EndDateTime})");
-            }
-
-            IEnumerable<Route> routes = await work.Routes
-                .GetAllAsync(query => query.Where(
-                    r => r.UserId.Equals(IdentityUtilities.GetCurrentUserId())
-                    && r.Status == RouteStatus.ACTIVE));
-            IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
-
-            if (isUpdate)
-            {
-                if (routeId == null)
-                {
-                    throw new Exception("Thiếu thông tin tuyến đường! Vui lòng kiểm tra lại");
-                }
-                routeIds = routeIds.Where(r => !r.Equals(routeId.Value));
-            }
-
-            if (!routeIds.Any())
-            {
-                return;
-            }
-
-            IEnumerable<RouteRoutine> currentRouteRoutines =
-                await work.RouteRoutines.GetAllAsync(
-                    query => query.Where(
-                        r => routeIds.Contains(r.RouteId)
-                        && r.Status == RouteRoutineStatus.ACTIVE)
-            );
-
-            IEnumerable<DateTimeRange> currentRanges =
-                from routine in currentRouteRoutines
-                select new DateTimeRange(
-                    DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.StartDate), TimeOnly.FromTimeSpan(routine.StartTime)),
-                    DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.EndDate), TimeOnly.FromTimeSpan(routine.EndTime))
-                );
-            currentRanges = currentRanges.OrderBy(r => r.StartDateTime);
-
-            if (!(routineRanges.Last().EndDateTime < currentRanges.First().StartDateTime
-                || routineRanges.First().StartDateTime > currentRanges.Last().EndDateTime
-                )
-                )
-            {
-                IList<DateTimeRange> finalRanges = routineRanges.Union(currentRanges)
-                .OrderBy(r => r.StartDateTime).ToList();
-                //int firstIndex = finalRanges.IndexOf(routineRanges.First());
-                //int secondIndex = finalRanges.IndexOf()
-
-                for (int i = 0; i < finalRanges.Count - 1; i++)
-                {
-                    DateTimeRange current = finalRanges[i];
-                    DateTimeRange added = finalRanges[i + 1];
-
-                    if (currentRanges.Contains(added))
-                    {
-                        // finalRanges[i + 1] is current
-                        current = finalRanges[i + 1];
-                        added = finalRanges[i];
-                    }
-                    current.IsOverlap(added,
-                        $"Hai khoảng thời gian lịch trình đã bị trùng lặp với lịch trình " +
-                        $"đã được lưu trước đó " +
-                        $"(Lịch trình đã được lưu trước đó: {current.StartDateTime} - {current.EndDateTime} và " +
-                        $"lịch trình mới: {added.StartDateTime} - {added.EndDateTime})");
-                }
-            }
-
         }
         #endregion
     }

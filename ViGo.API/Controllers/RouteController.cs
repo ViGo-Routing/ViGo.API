@@ -5,6 +5,7 @@ using ViGo.Models.Routes;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;
+using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
@@ -46,6 +47,10 @@ namespace ViGo.API.Controllers
                 Domain.Route route = await routeServices.CreateRouteAsync(dto);
 
                 return StatusCode(200, route);
+            }
+            catch (AccessDeniedException ex)
+            {
+                return StatusCode(403, ex.GeneratorErrorMessage());
             }
             catch (ApplicationException appEx)
             {
@@ -164,7 +169,7 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
-        /// Update Route's information for the current user
+        /// Update Route's information
         /// </summary>
         /// <remarks>
         ///  Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
@@ -195,6 +200,10 @@ namespace ViGo.API.Controllers
 
                 Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto);
                 return StatusCode(200, updatedRoute);
+            }
+            catch (AccessDeniedException ex)
+            {
+                return StatusCode(403, ex.GeneratorErrorMessage());
             }
             catch (ApplicationException appEx)
             {
@@ -235,6 +244,10 @@ namespace ViGo.API.Controllers
 
                 Domain.Route updatedRoute = await routeServices.ChangeRouteStatusAsync(dto.Id, dto.Status);
                 return StatusCode(200, updatedRoute);
+            }
+            catch (AccessDeniedException ex)
+            {
+                return StatusCode(403, ex.GeneratorErrorMessage());
             }
             catch (ApplicationException appEx)
             {

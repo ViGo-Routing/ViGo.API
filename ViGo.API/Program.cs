@@ -72,6 +72,7 @@ namespace ViGo.API
                 var xmlFileName = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFileName));
             });
+            builder.Services.AddSwaggerGenNewtonsoftSupport();
 
             // Authentication
             builder.Services.AddAuthentication(options =>

@@ -36,16 +36,22 @@ namespace ViGo.Domain
         public Guid UpdatedBy { get; set; }
 
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual Booking Booking { get; set; } = null!;
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual User? Driver { get; set; }
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual Route CustomerRoute { get; set; }
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual Route? DriverRoute { get; set; }
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual ICollection<Report> Reports { get; set; }
         [JsonIgnore]
+        //[System.Text.Json.Serialization.JsonIgnore]
         public virtual ICollection<WalletTransaction> WalletTransactions { get; set; }
     }
 }

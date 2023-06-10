@@ -88,7 +88,7 @@ namespace ViGo.Services
 
         }
 
-        public async Task<User> LoginAsync(MobileUserLoginModel loginModel)
+        public async Task<User?> LoginAsync(MobileUserLoginModel loginModel)
         {
             try
             {
@@ -103,6 +103,15 @@ namespace ViGo.Services
                     // Only Customer and Driver can login with Firebase
                     && (u.Role == UserRole.CUSTOMER || u.Role == UserRole.DRIVER));
 
+                if (user == null)
+                {
+                    return user;
+                }
+                if (!string.IsNullOrEmpty(user.Phone) 
+                    && !user.Phone.Equals(loginModel.Phone))
+                {
+                    throw new ApplicationException("Thông tin số điện thoại không trùng khớp!!");
+                }
                 return user;
 
             } catch (FirebaseAuthException ex)

@@ -128,7 +128,7 @@ namespace ViGo.API.Controllers
         {
             try
             {
-                User user = await userServices.LoginAsync(
+                User? user = await userServices.LoginAsync(
                     loginUser);
 
                 if (user == null)
