@@ -261,7 +261,7 @@ namespace ViGo.Services
                 }
                 if (userUpdate.Password != null
                     && !string.IsNullOrEmpty(userUpdate.Password)
-                    && !currentUser.Password.Decrypt().Equals(userUpdate.Password))
+                    && !currentUser.Password!.Decrypt().Equals(userUpdate.Password))
                 {
                     userUpdate.Password.StringValidate(
                         allowEmpty: false,
