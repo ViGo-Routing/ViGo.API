@@ -39,5 +39,7 @@ namespace ViGo.Utilities
 
         public static bool IsAdmin()
             => GetCurrentRole() == UserRole.ADMIN;
+        public static bool IsStaff()
+            => GetCurrentRole() == UserRole.STAFF;
     }
 }
