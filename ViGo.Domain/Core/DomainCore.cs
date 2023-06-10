@@ -64,9 +64,23 @@ namespace ViGo.Domain
     }
 
     public partial class RouteRoutine
-        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
+        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity,
+        IEquatable<RouteRoutine>
     {
-
+        public bool Equals(RouteRoutine? other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            return this.RoutineDate == other.RoutineDate
+                && this.StartTime == other.StartTime
+                && this.EndTime == other.EndTime;
+        }
     }
 
     public partial class RouteStation

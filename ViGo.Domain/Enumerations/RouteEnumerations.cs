@@ -17,7 +17,8 @@ namespace ViGo.Domain.Enumerations
         RANDOMLY = 0,
         WEEKLY = 1,
         MONTHLY = 2,
-        QUARTERLY = 3
+        QUARTERLY = 3,
+        YEARLY = 4
     }
 
     public enum RouteStationStatus : short
