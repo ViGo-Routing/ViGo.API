@@ -106,7 +106,7 @@ namespace ViGo.Repository.Core
         /// The task result contain the inserted entity entries
         /// </returns>
         Task<IEnumerable<TEntity>> InsertAsync(
-            IEnumerable<TEntity> entities,
+            IList<TEntity> entities,
             bool isSelfCreatedEntity = false,
             bool isManuallyAssignTracking = false);
 

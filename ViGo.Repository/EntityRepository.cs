@@ -323,7 +323,7 @@ namespace ViGo.Repository
         /// The task result contain the inserted entity entries
         /// </returns>
         public override async Task<IEnumerable<TEntity>> InsertAsync(
-            IEnumerable<TEntity> entities,
+            IList<TEntity> entities,
             bool isSelfCreatedEntity = false,
             bool isManuallyAssignTracking = false)
         {
