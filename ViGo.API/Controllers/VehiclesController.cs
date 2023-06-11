@@ -32,7 +32,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpGet("GetAllVehicle")]
+        [HttpGet]
         public async Task<IActionResult> GetAllVehiclesAsync()
         {
             try
@@ -62,7 +62,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpGet("GetVehicle/{id}")]
+        [HttpGet("{vehicleId}")]
         public async Task<IActionResult> GetVehicleByIdAsync(Guid id)
         {
             try
@@ -96,7 +96,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpPost("Create")]
+        [HttpPost]
         public async Task<IActionResult> CreateVehicleAsync([FromBody] VehiclesCreateModel vehicle)
         {
             try
@@ -130,7 +130,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpPut("UpdateVehicle/{id}")]
+        [HttpPut("{vehicleId}")]
         public async Task<IActionResult> UpdateVehicleAsync(Guid id, [FromBody] VehiclesUpdateModel vehiclesUpdate)
         {
             try

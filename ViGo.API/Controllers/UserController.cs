@@ -43,7 +43,6 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet]
-        [HttpGet("GetAllUsers")]
         public async Task<IActionResult> GetUsersAsync()
         {
             try
@@ -62,30 +61,30 @@ namespace ViGo.API.Controllers
             }
         }
 
-        ///// <summary>
-        ///// Get User information
-        ///// </summary>
-        ///// <remarks>Authorization required</remarks>
-        ///// <returns>User's information</returns>
-        [Authorize]
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserAsync(Guid userId)
-        {
-            try
-            {
-               User user =
-                    await userServices.GetUserByIdAsync(userId);
-                return StatusCode(200, user);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
-        }
+        /////// <summary>
+        /////// Get User information
+        /////// </summary>
+        /////// <remarks>Authorization required</remarks>
+        /////// <returns>User's information</returns>
+        //[Authorize]
+        //[HttpGet("User/{userId}")]
+        //public async Task<IActionResult> GetUserAsync(Guid userId)
+        //{
+        //    try
+        //    {
+        //        User user =
+        //             await userServices.GetUserByIdAsync(userId);
+        //        return StatusCode(200, user);
+        //    }
+        //    catch (ApplicationException ex)
+        //    {
+        //        return StatusCode(400, ex.GeneratorErrorMessage());
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, ex.GeneratorErrorMessage());
+        //    }
+        //}
 
         //[Authorize]
         //[HttpPost("Generate-Firebase")]
@@ -124,9 +123,9 @@ namespace ViGo.API.Controllers
             try
             {
                 string token = await firebaseServices.GenerateFirebaseToken(phone);
-                return StatusCode(200, new {token = token});
+                return StatusCode(200, new { token = token });
             }
-                catch (ApplicationException ex)
+            catch (ApplicationException ex)
             {
                 return StatusCode(400, ex.GeneratorErrorMessage());
             }
@@ -149,7 +148,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpGet("GetUser/{id}")]
+        [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserByIdAsync(Guid id)
         {
             try
@@ -183,7 +182,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpPut("UpdateUser/{id}")]
+        [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(Guid id, [FromBody] UserUpdateModel userUpdate)
         {
             try
