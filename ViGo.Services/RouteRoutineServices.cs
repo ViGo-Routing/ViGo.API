@@ -22,11 +22,11 @@ namespace ViGo.Services
         }
 
         public async Task<IEnumerable<RouteRoutineViewModel>> 
-            GetRouteRoutinesAsync(Guid routeId)
+            GetRouteRoutinesAsync(Guid routeId, CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
-                    r => r.RouteId.Equals(routeId)));
+                    r => r.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
 
             IEnumerable<RouteRoutineViewModel> models =
                 from routeRoutine in routeRoutines
@@ -37,9 +37,10 @@ namespace ViGo.Services
             return models;
         }
 
-        public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateEditModel model)
+        public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateEditModel model,
+            CancellationToken cancellationToken)
         {
-            Route? route = await work.Routes.GetAsync(model.RouteId);
+            Route? route = await work.Routes.GetAsync(model.RouteId, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
@@ -61,7 +62,7 @@ namespace ViGo.Services
 
             IEnumerable<RouteRoutine> currentRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
-                    r => r.RouteId.Equals(model.RouteId)));
+                    r => r.RouteId.Equals(model.RouteId)), cancellationToken: cancellationToken);
             if (currentRoutines.Any())
             {
                 throw new ApplicationException("Tuyến đường này đã được thiết lập lịch trình từ trước! " +
@@ -72,7 +73,8 @@ namespace ViGo.Services
             {
                 IsValidRoutine(routine);
             }
-            await IsValidRoutines(model.RouteRoutines, route);
+
+            await IsValidRoutines(model.RouteRoutines, route, cancellationToken: cancellationToken);
             IList<RouteRoutine> routeRoutines =
                 (from routine in model.RouteRoutines
                 select new RouteRoutine
@@ -83,17 +85,18 @@ namespace ViGo.Services
                     EndTime = routine.EndTime.ToTimeSpan(),
                     Status = RouteRoutineStatus.ACTIVE
                 }).ToList();
-            await work.RouteRoutines.InsertAsync(routeRoutines);
-            await work.SaveChangesAsync();
+            await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
+            await work.SaveChangesAsync(cancellationToken);
             routeRoutines = routeRoutines.OrderBy(r => r.RoutineDate)
                 .ThenBy(r => r.StartTime).ToList();
 
             return routeRoutines;
         }
 
-        public async Task<IEnumerable<RouteRoutine>> UpdateRouteRoutinesAsync(RouteRoutineCreateEditModel model)
+        public async Task<IEnumerable<RouteRoutine>> UpdateRouteRoutinesAsync(RouteRoutineCreateEditModel model,
+            CancellationToken cancellationToken)
         {
-            Route? route = await work.Routes.GetAsync(model.RouteId);
+            Route? route = await work.Routes.GetAsync(model.RouteId, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
@@ -121,7 +124,7 @@ namespace ViGo.Services
             // Check for existing Routines
             IEnumerable<RouteRoutine> currentRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
-                    r => r.RouteId.Equals(model.RouteId)));
+                    r => r.RouteId.Equals(model.RouteId)), cancellationToken: cancellationToken);
 
             if (!currentRoutines.Any())
             {
@@ -158,7 +161,7 @@ namespace ViGo.Services
             IEnumerable<RouteRoutineListItemModel> routinesModel = model.RouteRoutines;
             if (routinesModel.Any())
             {
-                await IsValidRoutines(routinesModel.ToList(), route, true);
+                await IsValidRoutines(routinesModel.ToList(), route, true, cancellationToken);
                 routeRoutines =
                     (from routine in routinesModel
                      select new RouteRoutine
@@ -169,14 +172,14 @@ namespace ViGo.Services
                         EndTime = routine.EndTime.ToTimeSpan(),
                         Status = RouteRoutineStatus.ACTIVE
                     }).ToList();
-                await work.RouteRoutines.InsertAsync(routeRoutines);
+                await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
             }
             
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             IEnumerable<RouteRoutine> updatedRouteRoutines = (await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
-                    r => r.RouteId.Equals(route.Id))))
+                    r => r.RouteId.Equals(route.Id)), cancellationToken: cancellationToken))
                     .OrderBy(r => r.RoutineDate)
                     .ThenBy(r => r.StartTime);
 
@@ -206,7 +209,7 @@ namespace ViGo.Services
         }
 
         private async Task IsValidRoutines(IList<RouteRoutineListItemModel> routines,
-            Route route, bool isUpdate = false)
+            Route route, bool isUpdate = false, CancellationToken cancellationToken = default)
         {
             IList<DateTimeRange> routineRanges =
                 (from routine in routines
@@ -237,7 +240,7 @@ namespace ViGo.Services
             IEnumerable<Route> routes = await work.Routes
                 .GetAllAsync(query => query.Where(
                     r => r.UserId.Equals(route.UserId)
-                    && r.Status == RouteStatus.ACTIVE));
+                    && r.Status == RouteStatus.ACTIVE), cancellationToken: cancellationToken);
             IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
 
             if (isUpdate)
@@ -251,11 +254,9 @@ namespace ViGo.Services
             }
 
             IEnumerable<RouteRoutine> currentRouteRoutines =
-                await work.RouteRoutines.GetAllAsync(
-                    query => query.Where(
+                await work.RouteRoutines.GetAllAsync(query => query.Where(
                         r => routeIds.Contains(r.RouteId)
-                        && r.Status == RouteRoutineStatus.ACTIVE)
-            );
+                        && r.Status == RouteRoutineStatus.ACTIVE), cancellationToken: cancellationToken);
 
             if (currentRouteRoutines.Any())
             {

@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
@@ -17,6 +18,23 @@ namespace ViGo.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Config log
+            var loggerConfig = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext();
+
+            if (!builder.Environment.IsProduction())
+            {
+                Console.OutputEncoding = Encoding.UTF8;
+                loggerConfig = loggerConfig.WriteTo.Console();
+            }
+
+            var logger = loggerConfig.CreateLogger();
+            builder.Logging.ClearProviders();
+            //builder.Logging.AddConsole();
+            builder.Logging.AddSerilog(logger);
+            builder.Services.AddLogging();
 
             // Initialize Configuration
             ViGoConfiguration.Initialize(builder.Configuration);
@@ -154,6 +172,7 @@ namespace ViGo.API
             app.UseAuthentication();
 
             app.UseMiddleware<InitializeIdentityMiddleware>();
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseAuthorization();
 

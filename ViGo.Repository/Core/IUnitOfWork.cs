@@ -35,6 +35,6 @@ namespace ViGo.Repository.Core
         /// Save changes to database
         /// </summary>
         /// <returns></returns>
-        Task<int> SaveChangesAsync();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

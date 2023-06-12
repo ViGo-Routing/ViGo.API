@@ -25,7 +25,8 @@ namespace ViGo.Services
         }
 
         #region VnPay
-        public async Task<Booking?> VnPayPaymentConfirmAsync(IQueryCollection vnPayData)
+        public async Task<Booking?> VnPayPaymentConfirmAsync(IQueryCollection vnPayData, 
+            CancellationToken cancellationToken)
         {
             if (vnPayData.Any())
             {
@@ -54,13 +55,13 @@ namespace ViGo.Services
                 {
                     if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
                     {
-                        Booking booking = await work.Bookings.GetAsync(bookingId);
+                        Booking booking = await work.Bookings.GetAsync(bookingId, cancellationToken: cancellationToken);
                         if (booking == null)
                         {
                             throw new ApplicationException("Không tìm thấy chuyến đi! Vui lòng kiểm tra lại...");
                         }
 
-                        Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(booking.CustomerId));
+                        Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(booking.CustomerId), cancellationToken: cancellationToken);
                         if (wallet == null)
                         {
                             throw new ApplicationException("Không tìm thấy ví của người dùng!");
@@ -81,9 +82,9 @@ namespace ViGo.Services
                         await work.Bookings.UpdateAsync(booking, 
                             isManuallyAssignTracking: true);
                         await work.WalletTransactions.InsertAsync(walletTransaction, 
-                            isManuallyAssignTracking: true);
+                            isManuallyAssignTracking: true, cancellationToken: cancellationToken);
 
-                        await work.SaveChangesAsync();
+                        await work.SaveChangesAsync(cancellationToken);
 
                         return booking;
                     } else

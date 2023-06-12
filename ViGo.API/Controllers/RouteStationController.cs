@@ -36,21 +36,22 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRouteStation(Guid routeStationId)
+        public async Task<IActionResult> GetRouteStation(Guid routeStationId,
+            CancellationToken cancellationToken)
         {
-            try
-            {
-                RouteStationViewModel? dto = await routeStationServices.GetRouteStationAsync(routeStationId);
+            //try
+            //{
+                RouteStationViewModel? dto = await routeStationServices.GetRouteStationAsync(routeStationId, cancellationToken);
                 return StatusCode(200, dto);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -69,22 +70,23 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRouteStations(Guid routeId)
+        public async Task<IActionResult> GetRouteStations(Guid routeId,
+            CancellationToken cancellationToken)
         {
-            try
-            {
+            //try
+            //{
                 IEnumerable<RouteStationViewModel> dtos = await routeStationServices.
-                    GetRouteStationsAsync(routeId);
+                    GetRouteStationsAsync(routeId, cancellationToken);
                 return StatusCode(200, dtos);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
     }
 }
