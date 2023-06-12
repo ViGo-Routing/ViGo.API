@@ -34,19 +34,19 @@ namespace ViGo.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllVehicleTypesAsync()
         {
-            try
-            {
+            //try
+            //{
                 IEnumerable<Domain.VehicleType> vehicleTypes = await vehicleTypeServices.GetAllVehicleTypesAsync();
                 return StatusCode(200, vehicleTypes);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -64,23 +64,23 @@ namespace ViGo.API.Controllers
         [HttpGet("{vehicleTypeId}")]
         public async Task<IActionResult> GetVehicleTypeByIdAsync(Guid id)
         {
-            try
-            {
+            //try
+            //{
                 VehicleType vehicleType = await vehicleTypeServices.GetVehicleTypeByIdAsync(id);
                 if(vehicleType == null)
                 {
                     throw new ApplicationException("Vehicle Type ID không tồn tại!");
                 }
                 return StatusCode(200, vehicleType);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -98,23 +98,23 @@ namespace ViGo.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateVehicleTypeAsync([FromBody] VehicleTypeCreateModel vehicleTypeCreate)
         {
-            try
-            {
+            //try
+            //{
                 VehicleType vehicleType = await vehicleTypeServices.CreateVehicleTypeAsync(vehicleTypeCreate);
                 if (vehicleType == null)
                 {
                     throw new ApplicationException("Tạo thất bại!");
                 }
                 return StatusCode(200, vehicleType);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -132,19 +132,19 @@ namespace ViGo.API.Controllers
         [HttpPut("{vehicleTypeId}")]
         public async Task<IActionResult> UpdateVehicleTypeAsync(Guid id, [FromBody] VehicleTypeUpdateModel vehicleTypeCreate)
         {
-            try
-            {
+            //try
+            //{
                 VehicleType vehicleType = await vehicleTypeServices.UpdateVehicleTypeAsync(id, vehicleTypeCreate);
                 return StatusCode(200, vehicleType);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
     }
 }

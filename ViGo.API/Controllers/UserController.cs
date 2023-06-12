@@ -45,20 +45,20 @@ namespace ViGo.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsersAsync()
         {
-            try
-            {
+            //try
+            //{
                 IEnumerable<Domain.User> users =
                     await userServices.GetUsersAsync();
                 return StatusCode(200, users);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /////// <summary>
@@ -118,21 +118,22 @@ namespace ViGo.API.Controllers
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost("Generate-Firebase-Token")]
-        public async Task<IActionResult> GenerateFirebaseToken(string phone)
+        public async Task<IActionResult> GenerateFirebaseToken(string phone,
+            CancellationToken cancellationToken)
         {
-            try
-            {
-                string token = await firebaseServices.GenerateFirebaseToken(phone);
+            //try
+            //{
+                string token = await firebaseServices.GenerateFirebaseToken(phone, cancellationToken);
                 return StatusCode(200, new { token = token });
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
 
@@ -151,23 +152,23 @@ namespace ViGo.API.Controllers
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserByIdAsync(Guid id)
         {
-            try
-            {
+            //try
+            //{
                 User user = await userServices.GetUserByIdAsync(id);
                 if (user == null)
                 {
                     throw new ApplicationException("UserID không tồn tại!");
                 }
                 return StatusCode(200, user);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -185,19 +186,19 @@ namespace ViGo.API.Controllers
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(Guid id, [FromBody] UserUpdateModel userUpdate)
         {
-            try
-            {
+            //try
+            //{
                 User user = await userServices.UpdateUserAsync(id, userUpdate);
                 return StatusCode(200, user);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
     }
 }

@@ -25,19 +25,19 @@ namespace ViGo.API.Controllers
         [HttpGet("FareCalculate")]
         public async Task<IActionResult> FareCalculate(double distance)
         {
-            try
-            {
+            //try
+            //{
                 double tripFare = await fareServices.TestCalculateTripFare(distance);
                 return StatusCode(200, tripFare);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -60,30 +60,31 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetBookings()
+        public async Task<IActionResult> GetBookings(CancellationToken cancellationToken)
         {
-            try
-            {
+            //try
+            //{
                 IEnumerable<BookingViewModel> dtos;
                 if (IdentityUtilities.IsAdmin())
                 {
                     // Get All Bookings
-                    dtos = await bookingServices.GetBookingsAsync();
+                    dtos = await bookingServices.GetBookingsAsync(null, cancellationToken);
                 } else
                 {
                     // Get current user's bookings
-                    dtos = await bookingServices.GetBookingsAsync(IdentityUtilities.GetCurrentUserId());
+                    dtos = await bookingServices.GetBookingsAsync(IdentityUtilities.GetCurrentUserId(),
+                        cancellationToken);
                 }
                 return StatusCode(200, dtos);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -102,25 +103,26 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetBooking(Guid bookingId)
+        public async Task<IActionResult> GetBooking(Guid bookingId,
+            CancellationToken cancellationToken)
         {
-            try
-            {
-                BookingViewModel? dto = await bookingServices.GetBookingAsync(bookingId);
+            //try
+            //{
+                BookingViewModel? dto = await bookingServices.GetBookingAsync(bookingId, cancellationToken);
                 if (dto == null)
                 {
                     throw new ApplicationException("Booking không tồn tại!");
                 }
                 return StatusCode(200, dto);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
     }

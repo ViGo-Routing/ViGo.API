@@ -42,19 +42,19 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GenerateVnPayTestPaymentUrl()
         {
-            try
-            {
+            //try
+            //{
                 string paymentUrl = paymentServices.GenerateVnPayTestPaymentUrl(HttpContext);
                 return StatusCode(200, paymentUrl);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -70,11 +70,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> VnPayCallback()
+        public async Task<IActionResult> VnPayCallback(CancellationToken cancellationToken)
         {
-            try
-            {
-                Booking? booking = await paymentServices.VnPayPaymentConfirmAsync(Request.Query);
+            //try
+            //{
+                Booking? booking = await paymentServices.VnPayPaymentConfirmAsync(Request.Query, cancellationToken);
                 if (booking != null)
                 {
                     // TODO Code
@@ -88,15 +88,15 @@ namespace ViGo.API.Controllers
                         });
                 }
                 return StatusCode(204);
-            }
-            catch (ApplicationException appEx)
-            {
-                return StatusCode(400, appEx.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException appEx)
+            //{
+            //    return StatusCode(400, appEx.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
     }
 }

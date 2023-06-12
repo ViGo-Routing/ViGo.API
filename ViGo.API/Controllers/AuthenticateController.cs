@@ -45,12 +45,13 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> WebLogin([FromBody] WebUserLoginModel loginUser)
+        public async Task<IActionResult> WebLogin([FromBody] WebUserLoginModel loginUser,
+            CancellationToken cancellationToken)
         {
-            try
-            {
+            //try
+            //{
                 User? user = await userServices.LoginAsync(
-                    loginUser);
+                    loginUser, cancellationToken);
 
                 if (user == null)
                 {
@@ -96,15 +97,15 @@ namespace ViGo.API.Controllers
                     token = new JwtSecurityTokenHandler().WriteToken(token)
                 });
 
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
         
         /// <summary>
@@ -124,12 +125,13 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(200)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> MobileLogin([FromBody] MobileUserLoginModel loginUser)
+        public async Task<IActionResult> MobileLogin([FromBody] MobileUserLoginModel loginUser,
+            CancellationToken cancellationToken)
         {
-            try
-            {
+            //try
+            //{
                 User? user = await userServices.LoginAsync(
-                    loginUser);
+                    loginUser, cancellationToken);
 
                 if (user == null)
                 {
@@ -174,15 +176,15 @@ namespace ViGo.API.Controllers
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token)
                 });
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
 
         /// <summary>
@@ -200,26 +202,27 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] UserRegisterModel registerDto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterModel registerDto,
+            CancellationToken cancellationToken)
         {
-            try
-            {
+            //try
+            //{
                 if (User.IsAuthenticated())
                 {
                     throw new ApplicationException("Bạn đã đăng nhập vào hệ thống!");
                 }
 
-                User user = await userServices.RegisterAsync(registerDto);
+                User user = await userServices.RegisterAsync(registerDto, cancellationToken);
                 return StatusCode(200, user);
-            }
-            catch (ApplicationException ex)
-            {
-                return StatusCode(400, ex.GeneratorErrorMessage());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.GeneratorErrorMessage());
-            }
+            //}
+            //catch (ApplicationException ex)
+            //{
+            //    return StatusCode(400, ex.GeneratorErrorMessage());
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, ex.GeneratorErrorMessage());
+            //}
         }
     }
 }
