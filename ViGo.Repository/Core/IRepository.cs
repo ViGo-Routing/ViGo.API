@@ -21,13 +21,15 @@ namespace ViGo.Repository.Core
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entry
         /// </returns>
         Task<TEntity> GetAsync(
             Expression<Func<TEntity, bool>> predicate,
-            bool includeDeleted = false);
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get the entity entry
@@ -36,13 +38,15 @@ namespace ViGo.Repository.Core
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entry
         /// </returns>
         Task<TEntity> GetAsync(
             Guid id,
-            bool includeDeleted = false);
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get all entity entries based on the query
@@ -51,13 +55,15 @@ namespace ViGo.Repository.Core
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entries
         /// </returns>
         Task<IEnumerable<TEntity>> GetAllAsync(
             Func<IQueryable<TEntity>, IQueryable<TEntity>> func,
-            bool includeDeleted = false);
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get all entity entries
@@ -65,12 +71,14 @@ namespace ViGo.Repository.Core
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entries
         /// </returns>
         Task<IEnumerable<TEntity>> GetAllAsync(
-            bool includeDeleted = false);
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Insert a new entity entry
@@ -82,13 +90,15 @@ namespace ViGo.Repository.Core
         /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entry
         /// </returns>
         Task<TEntity> InsertAsync(TEntity entity,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignTracking = false);
+            bool isManuallyAssignTracking = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Insert a number of entity entries
@@ -101,6 +111,7 @@ namespace ViGo.Repository.Core
         /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entries
@@ -108,7 +119,8 @@ namespace ViGo.Repository.Core
         Task<IEnumerable<TEntity>> InsertAsync(
             IList<TEntity> entities,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignTracking = false);
+            bool isManuallyAssignTracking = false,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Delete the entity entry
@@ -132,11 +144,13 @@ namespace ViGo.Repository.Core
         /// <param name="isSoftDelete">Boolean value which will determine whether or not 
         /// the Delete action should be a soft delete or not
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation
         /// </returns>
         Task DeleteAsync(Expression<Func<TEntity, bool>> predicate,
-            bool isSoftDelete = true);
+            bool isSoftDelete = true,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Update the entity entry

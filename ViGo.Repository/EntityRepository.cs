@@ -120,15 +120,17 @@ namespace ViGo.Repository
         /// <param name="isSoftDelete">Boolean value which will determine whether or not 
         /// the Delete action should be a soft delete or not
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation
         /// </returns>
         public override async Task DeleteAsync(
             Expression<Func<TEntity, bool>> predicate,
-            bool isSoftDelete = true)
+            bool isSoftDelete = true,
+            CancellationToken cancellationToken = default)
         {
             TEntity entity = await Table
-                .SingleOrDefaultAsync(predicate);
+                .SingleOrDefaultAsync(predicate, cancellationToken);
             if (entity != null)
             {
                 await DeleteAsync(entity, isSoftDelete);
@@ -152,19 +154,21 @@ namespace ViGo.Repository
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entries
         /// </returns>
         public override async Task<IEnumerable<TEntity>> GetAllAsync(
             Func<IQueryable<TEntity>, IQueryable<TEntity>> func,
-            bool includeDeleted = false)
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<TEntity> query = AddDeletedFilter(Table,
                 includeDeleted);
             query = func(query);
 
-            return await query.ToListAsync();
+            return await query.ToListAsync(cancellationToken);
         }
 
         /// <summary>
@@ -173,16 +177,18 @@ namespace ViGo.Repository
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entries
         /// </returns>
         public override async Task<IEnumerable<TEntity>> GetAllAsync(
-            bool includeDeleted = false)
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<TEntity> query = AddDeletedFilter(Table,
                 includeDeleted);
-            return await query.ToListAsync();
+            return await query.ToListAsync(cancellationToken);
         }
 
         /// <summary>
@@ -194,18 +200,20 @@ namespace ViGo.Repository
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entry
         /// </returns>
         public override async Task<TEntity> GetAsync(
             Expression<Func<TEntity, bool>> predicate,
-            bool includeDeleted = false)
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<TEntity> query = AddDeletedFilter(Table,
                 includeDeleted);
 
-            TEntity entity = await query.SingleOrDefaultAsync(predicate);
+            TEntity entity = await query.SingleOrDefaultAsync(predicate, cancellationToken);
             return entity;
         }
 
@@ -216,19 +224,21 @@ namespace ViGo.Repository
         /// <param name="includeDeleted">Boolean value which will determine whether or not the returned result should
         /// contain the soft-deleted entities
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contains the entity entry
         /// </returns>
         public override async Task<TEntity> GetAsync(
             Guid id,
-            bool includeDeleted = false)
+            bool includeDeleted = false,
+            CancellationToken cancellationToken = default)
         {
             IQueryable<TEntity> query = AddDeletedFilter(Table,
                 includeDeleted);
 
             TEntity entity = await query.SingleOrDefaultAsync(
-                e => e.Id.Equals(id));
+                e => e.Id.Equals(id), cancellationToken);
 
             return entity;
         }
@@ -243,13 +253,15 @@ namespace ViGo.Repository
         /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entry
         /// </returns>
         public override async Task<TEntity> InsertAsync(TEntity entity,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignTracking = false)
+            bool isManuallyAssignTracking = false,
+            CancellationToken cancellationToken = default)
         {
             if (entity == null)
             {
@@ -302,7 +314,7 @@ namespace ViGo.Repository
                 ((ISoftDeletedEntity)entity).IsDeleted = false;
             }
 
-            await Table.AddAsync(entity);
+            await Table.AddAsync(entity, cancellationToken);
 
             return entity;
         }
@@ -318,6 +330,7 @@ namespace ViGo.Repository
         /// <param name="isManuallyAssignTracking">Boolean value which will determine whether or not 
         /// the entity being inserted has CreatedDate and UpdatedDate manually assigned by model
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation.
         /// The task result contain the inserted entity entries
@@ -325,7 +338,8 @@ namespace ViGo.Repository
         public override async Task<IEnumerable<TEntity>> InsertAsync(
             IList<TEntity> entities,
             bool isSelfCreatedEntity = false,
-            bool isManuallyAssignTracking = false)
+            bool isManuallyAssignTracking = false,
+            CancellationToken cancellationToken = default)
         {
             if (entities == null)
             {
@@ -385,7 +399,7 @@ namespace ViGo.Repository
 
 
 
-                await Table.AddRangeAsync(entities);
+                await Table.AddRangeAsync(entities, cancellationToken);
             }
             return entities;
         }
