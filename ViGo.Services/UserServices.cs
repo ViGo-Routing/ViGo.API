@@ -21,13 +21,15 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<User?> LoginAsync(WebUserLoginModel loginModel)
+        public async Task<User?> LoginAsync(WebUserLoginModel loginModel,
+            CancellationToken cancellationToken)
         {
             User? user = await work.Users.GetAsync(u =>
                 !string.IsNullOrEmpty(u.Email) &&
                 u.Email.ToLower().Trim()
                 .Equals(loginModel.Email.ToLower().Trim())
-                && (u.Role == UserRole.ADMIN || u.Role == UserRole.STAFF));
+                && (u.Role == UserRole.ADMIN || u.Role == UserRole.STAFF), 
+                cancellationToken: cancellationToken);
 
             if (user == null)
             {
@@ -58,14 +60,14 @@ namespace ViGo.Services
                     user.LockedOutEnd = DateTimeUtilities.GetDateTimeVnNow().AddMinutes(30);
 
                     await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                    await work.SaveChangesAsync();
+                    await work.SaveChangesAsync(cancellationToken);
 
                     throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!");
                 } else
                 {
                     user.FailedLoginCount++;
                     await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                    await work.SaveChangesAsync();
+                    await work.SaveChangesAsync(cancellationToken);
                 }
 
                 return null;
@@ -80,7 +82,7 @@ namespace ViGo.Services
                     user.LockedOutEnd = null;
 
                     await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                    await work.SaveChangesAsync();
+                    await work.SaveChangesAsync(cancellationToken);
                 }
 
                 return user;
@@ -88,12 +90,14 @@ namespace ViGo.Services
 
         }
 
-        public async Task<User?> LoginAsync(MobileUserLoginModel loginModel)
+        public async Task<User?> LoginAsync(MobileUserLoginModel loginModel,
+            CancellationToken cancellationToken)
         {
             try
             {
                 FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
-                .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true);
+                .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true, 
+                    cancellationToken: cancellationToken);
 
                 string uid = decodedToken.Uid;
 
@@ -101,7 +105,8 @@ namespace ViGo.Services
                     u => !string.IsNullOrEmpty(u.FirebaseUid) &&
                         u.FirebaseUid.Equals(uid)
                     // Only Customer and Driver can login with Firebase
-                    && (u.Role == UserRole.CUSTOMER || u.Role == UserRole.DRIVER));
+                    && (u.Role == UserRole.CUSTOMER || u.Role == UserRole.DRIVER), 
+                    cancellationToken: cancellationToken);
 
                 if (user == null)
                 {
@@ -166,7 +171,8 @@ namespace ViGo.Services
             return users;
         }
 
-        public async Task<User> RegisterAsync(UserRegisterModel dto)
+        public async Task<User> RegisterAsync(UserRegisterModel dto,
+            CancellationToken cancellationToken)
         {
             dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
             //dto.Password.StringValidate(
@@ -193,7 +199,8 @@ namespace ViGo.Services
 
             User checkUser = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.Phone) &&
-                    u.Phone.Equals(dto.Phone));
+                    u.Phone.Equals(dto.Phone), 
+                cancellationToken: cancellationToken);
 
             if (checkUser != null)
             {
@@ -202,7 +209,8 @@ namespace ViGo.Services
 
             User checkFirebase = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.FirebaseUid)
-                && u.FirebaseUid.Equals(dto.FirebaseUid));
+                && u.FirebaseUid.Equals(dto.FirebaseUid), 
+                cancellationToken: cancellationToken);
 
             if (checkFirebase != null)
             {
@@ -221,7 +229,8 @@ namespace ViGo.Services
                     : UserStatus.ACTIVE
             };
 
-            await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true);
+            await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true, 
+                cancellationToken: cancellationToken);
 
             Wallet wallet = new Wallet
             {
@@ -233,9 +242,10 @@ namespace ViGo.Services
                 UpdatedBy = newUser.Id,
             };
 
-            await work.Wallets.InsertAsync(wallet, isManuallyAssignTracking: true);
+            await work.Wallets.InsertAsync(wallet, isManuallyAssignTracking: true, 
+                cancellationToken: cancellationToken);
 
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             newUser.Password = "";
 

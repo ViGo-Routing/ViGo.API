@@ -22,9 +22,9 @@ namespace ViGo.Services
         }
 
         public async Task<BookingDetailViewModel?> GetBookingDetailAsync(
-            Guid bookingDetailId)
+            Guid bookingDetailId, CancellationToken cancellationToken)
         {
-            BookingDetail bookingDetail = await work.BookingDetails.GetAsync(bookingDetailId);
+            BookingDetail bookingDetail = await work.BookingDetails.GetAsync(bookingDetailId, cancellationToken: cancellationToken);
             if (bookingDetail == null)
             {
                 return null;
@@ -33,11 +33,11 @@ namespace ViGo.Services
             UserViewModel? driverDto = null;
             if (bookingDetail.DriverId.HasValue)
             {
-                User driver = await work.Users.GetAsync(bookingDetail.DriverId.Value);
+                User driver = await work.Users.GetAsync(bookingDetail.DriverId.Value, cancellationToken: cancellationToken);
                 driverDto = new UserViewModel(driver);
             }
 
-            Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId);
+            Route customerRoute = await work.Routes.GetAsync(bookingDetail.CustomerRouteId, cancellationToken: cancellationToken);
 
             IEnumerable<Guid> stationIds = (new List<Guid>
             {
@@ -50,7 +50,7 @@ namespace ViGo.Services
             if (bookingDetail.DriverRouteId.HasValue)
             {
                 driverRoute = await work.Routes
-                    .GetAsync(bookingDetail.DriverRouteId.Value);
+                    .GetAsync(bookingDetail.DriverRouteId.Value, cancellationToken: cancellationToken);
                 stationIds = stationIds.Append(driverRoute.StartStationId)
                     .Append(driverRoute.EndStationId);
 
@@ -58,7 +58,7 @@ namespace ViGo.Services
 
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
             RouteViewModel customerRouteDto = new RouteViewModel(
                 customerRoute,
@@ -87,9 +87,9 @@ namespace ViGo.Services
         }
 
         public async Task<IEnumerable<BookingDetailViewModel>>
-            GetDriverAssignedBookingDetailsAsync(Guid driverId)
+            GetDriverAssignedBookingDetailsAsync(Guid driverId, CancellationToken cancellationToken)
         {
-            User driver = await work.Users.GetAsync(driverId);
+            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
             if (driver == null)
             {
                 throw new ApplicationException("Tài xế không tồn tại!!!");
@@ -98,7 +98,7 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
-                    bd.DriverId.Value.Equals(driverId)));
+                    bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
             if (!bookingDetails.Any())
             {
                 return new List<BookingDetailViewModel>();
@@ -113,14 +113,14 @@ namespace ViGo.Services
 
             IEnumerable<Route> routes = await work.Routes
                 .GetAllAsync(query => query.Where(
-                    r => routeIds.Contains(r.Id)));
+                    r => routeIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<Guid> stationIds = routes.Select(
                 r => r.StartStationId).Concat(routes.Select(
                     r => r.EndStationId)).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
 
             IEnumerable<BookingDetailViewModel> dtos =
@@ -153,17 +153,17 @@ namespace ViGo.Services
         }
 
         public async Task<IEnumerable<BookingDetailViewModel>>
-            GetBookingDetailsAsync(Guid bookingId)
+            GetBookingDetailsAsync(Guid bookingId, CancellationToken cancellationToken)
         {
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    d => d.BookingId.Equals(bookingId)));
+                    d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
 
             IEnumerable<Guid> driverIds = bookingDetails.Where(
                 d => d.DriverId.HasValue).Select(d => d.DriverId.Value);
             IEnumerable<User> drivers = await work.Users
                 .GetAllAsync(query => query.Where(
-                    u => driverIds.Contains(u.Id)));
+                    u => driverIds.Contains(u.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<BookingDetailViewModel> dtos =
                 from bookingDetail in bookingDetails
@@ -175,7 +175,7 @@ namespace ViGo.Services
         } 
 
         public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
-            BookingDetailUpdateStatusModel updateDto)
+            BookingDetailUpdateStatusModel updateDto, CancellationToken cancellationToken)
         {
             if (!Enum.IsDefined(updateDto.Status))
             {
@@ -183,7 +183,7 @@ namespace ViGo.Services
             }
 
             BookingDetail bookingDetail = await work.BookingDetails
-                .GetAsync(updateDto.BookingDetailId);
+                .GetAsync(updateDto.BookingDetailId, cancellationToken: cancellationToken);
             if (bookingDetail == null)
             {
                 throw new ApplicationException("Booking Detail không tồn tại!!");
@@ -222,22 +222,22 @@ namespace ViGo.Services
             }
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;
         }
 
-        public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverModel dto)
+        public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverModel dto, CancellationToken cancellationToken)
         {
             BookingDetail bookingDetail = await work.BookingDetails
-                .GetAsync(dto.BookingDetailId);
+                .GetAsync(dto.BookingDetailId, cancellationToken: cancellationToken);
             if (bookingDetail == null)
             {
                 throw new ApplicationException("Booking Detail không tồn tại!!");
             }
 
             User driver = await work.Users
-                .GetAsync(dto.DriverId);
+                .GetAsync(dto.DriverId, cancellationToken: cancellationToken);
             if (driver == null || driver.Role != UserRole.DRIVER)
             {
                 throw new ApplicationException("Tài xế không tồn tại!!");
@@ -248,7 +248,7 @@ namespace ViGo.Services
             bookingDetail.Status = BookingDetailStatus.ASSIGNED;
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;
         }

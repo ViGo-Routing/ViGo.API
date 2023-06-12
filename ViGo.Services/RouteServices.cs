@@ -25,15 +25,22 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<Route> CreateRouteAsync(RouteCreateEditModel dto)
+        public async Task<Route> CreateRouteAsync(RouteCreateEditModel dto,
+            CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin()
                 && !IdentityUtilities.IsStaff())
             {
                 if (!dto.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
                 {
-                    throw new AccessDeniedException();
+                    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
                 }
+            }
+
+            User user = await work.Users.GetAsync(dto.UserId, cancellationToken: cancellationToken);
+            if (user.Role != UserRole.DRIVER && user.Role != UserRole.CUSTOMER)
+            {
+                throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
             }
 
             dto.Name.StringValidate(
@@ -69,7 +76,8 @@ namespace ViGo.Services
             Station startStation = await work.Stations.GetAsync(
                 s => s.Longtitude == dto.StartStation.Longtitude
                 && s.Latitude == dto.StartStation.Latitude
-                && s.Status == StationStatus.ACTIVE);
+                && s.Status == StationStatus.ACTIVE, 
+                cancellationToken: cancellationToken);
             if (startStation == null)
             {
                 startStation = new Station
@@ -80,14 +88,15 @@ namespace ViGo.Services
                     Address = dto.StartStation.Address,
                     Status = StationStatus.ACTIVE
                 };
-                await work.Stations.InsertAsync(startStation);
+                await work.Stations.InsertAsync(startStation, cancellationToken: cancellationToken);
             }
 
             // Find End Station existance
             Station endStation = await work.Stations.GetAsync(
                 s => s.Longtitude == dto.EndStation.Longtitude
                 && s.Latitude == dto.EndStation.Latitude
-                && s.Status == StationStatus.ACTIVE);
+                && s.Status == StationStatus.ACTIVE, 
+                cancellationToken: cancellationToken);
             if (endStation == null)
             {
                 endStation = new Station
@@ -98,13 +107,13 @@ namespace ViGo.Services
                     Address = dto.EndStation.Address,
                     Status = StationStatus.ACTIVE
                 };
-                await work.Stations.InsertAsync(endStation);
+                await work.Stations.InsertAsync(endStation, cancellationToken: cancellationToken);
             }
 
             // Create Route
             Route route = new Route
             {
-                UserId = IdentityUtilities.GetCurrentUserId(),
+                UserId = dto.UserId,
                 Name = dto.Name,
                 StartStationId = startStation.Id,
                 EndStationId = endStation.Id,
@@ -112,7 +121,7 @@ namespace ViGo.Services
                 Duration = dto.Duration,
                 Status = RouteStatus.ACTIVE
             };
-            await work.Routes.InsertAsync(route);
+            await work.Routes.InsertAsync(route, cancellationToken: cancellationToken);
 
             // Create RouteStations
             IList<RouteStation> routeStations = new List<RouteStation>()
@@ -139,7 +148,7 @@ namespace ViGo.Services
                     Status = RouteStationStatus.ACTIVE
                 }
             };
-            await work.RouteStations.InsertAsync(routeStations);
+            await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
 
             // Create RouteRoutine
             //IList<RouteRoutine> routeRoutines =
@@ -155,7 +164,7 @@ namespace ViGo.Services
             //     }).ToList();
             //await work.RouteRoutines.InsertAsync(routeRoutines);
 
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
@@ -169,7 +178,8 @@ namespace ViGo.Services
             return route;
         }
 
-        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId = null)
+        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId,
+            CancellationToken cancellationToken)
         {
             IEnumerable<Route> routes = new List<Route>();
 
@@ -177,11 +187,11 @@ namespace ViGo.Services
             {
                 routes = await work.Routes
                 .GetAllAsync(query => query.Where(
-                    r => r.UserId.Equals(userId)));
+                    r => r.UserId.Equals(userId)), cancellationToken: cancellationToken);
             } else
             {
                 routes = await work.Routes
-                    .GetAllAsync();
+                    .GetAllAsync(cancellationToken: cancellationToken);
             }
 
             if (routes.Any())
@@ -190,12 +200,14 @@ namespace ViGo.Services
 
                 IEnumerable<RouteStation> routeStations = await work.RouteStations
                     .GetAllAsync(query => query.Where(
-                        s => routeIds.Contains(s.RouteId)));
+                        s => routeIds.Contains(s.RouteId)), 
+                        cancellationToken: cancellationToken);
 
                 IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
                 IEnumerable<Station> stations = await work.Stations
                     .GetAllAsync(query => query.Where(
-                        s => stationIds.Contains(s.Id)));
+                        s => stationIds.Contains(s.Id)), 
+                        cancellationToken: cancellationToken);
 
                 //IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 //    .GetAllAsync(query => query.Where(
@@ -206,14 +218,15 @@ namespace ViGo.Services
 
                 if (userId.HasValue)
                 {
-                    user = await work.Users.GetAsync(userId.Value);
+                    user = await work.Users.GetAsync(userId.Value, cancellationToken: cancellationToken);
                 }
                 else
                 {
                     IEnumerable<Guid> userIds = routes.Select(r => r.UserId).Distinct();
                     users = await work.Users.GetAllAsync(
                         query => query.Where(
-                            u => userIds.Contains(u.Id)));
+                            u => userIds.Contains(u.Id)), 
+                        cancellationToken: cancellationToken);
                 }
 
                 IList<RouteViewModel> dtos = new List<RouteViewModel>();
@@ -275,9 +288,10 @@ namespace ViGo.Services
 
         }
 
-        public async Task<RouteViewModel> GetRouteAsync(Guid routeId)
+        public async Task<RouteViewModel> GetRouteAsync(Guid routeId,
+            CancellationToken cancellationToken)
         {
-            Route route = await work.Routes.GetAsync(routeId);
+            Route route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
@@ -285,16 +299,16 @@ namespace ViGo.Services
 
             IEnumerable<RouteStation> routeStations = await work.RouteStations
                 .GetAllAsync(query => query.Where(
-                    s => s.RouteId.Equals(routeId)));
+                    s => s.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
 
             IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)));
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
-                    r => r.RouteId.Equals(routeId)));
+                    r => r.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
 
 
             // Routine
@@ -326,7 +340,7 @@ namespace ViGo.Services
                  .OrderBy(s => s.StationIndex);
 
             // User
-            User user = await work.Users.GetAsync(route.UserId);
+            User user = await work.Users.GetAsync(route.UserId, cancellationToken: cancellationToken);
             UserViewModel userViewModel = new UserViewModel(user);
             return new RouteViewModel(
                     route,
@@ -339,14 +353,15 @@ namespace ViGo.Services
 
         }
 
-        public async Task<Route> UpdateRouteAsync(RouteCreateEditModel updateDto)
+        public async Task<Route> UpdateRouteAsync(RouteCreateEditModel updateDto,
+            CancellationToken cancellationToken)
         {
             if (!updateDto.Id.HasValue)
             {
                 throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
             }
 
-            Route route = await work.Routes.GetAsync(updateDto.Id.Value);
+            Route route = await work.Routes.GetAsync(updateDto.Id.Value, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
@@ -373,7 +388,7 @@ namespace ViGo.Services
                     b => (b.DriverRouteId.Equals(updateDto.Id)
                     || (b.CustomerRouteId.Equals(updateDto.Id)
                         && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED));
+                    && b.Status != BookingDetailStatus.CANCELLED), cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
@@ -412,7 +427,8 @@ namespace ViGo.Services
             Station startStation = await work.Stations.GetAsync(
                 s => s.Longtitude == updateDto.StartStation.Longtitude
                 && s.Latitude == updateDto.StartStation.Latitude
-                && s.Status == StationStatus.ACTIVE);
+                && s.Status == StationStatus.ACTIVE, 
+                cancellationToken: cancellationToken);
             if (startStation == null)
             {
                 startStation = new Station
@@ -423,14 +439,15 @@ namespace ViGo.Services
                     Address = updateDto.StartStation.Address,
                     Status = StationStatus.ACTIVE
                 };
-                await work.Stations.InsertAsync(startStation);
+                await work.Stations.InsertAsync(startStation, cancellationToken: cancellationToken);
             }
 
             // Find End Station existance
             Station endStation = await work.Stations.GetAsync(
                 s => s.Longtitude == updateDto.EndStation.Longtitude
                 && s.Latitude == updateDto.EndStation.Latitude
-                && s.Status == StationStatus.ACTIVE);
+                && s.Status == StationStatus.ACTIVE, 
+                cancellationToken: cancellationToken);
             if (endStation == null)
             {
                 endStation = new Station
@@ -441,7 +458,7 @@ namespace ViGo.Services
                     Address = updateDto.EndStation.Address,
                     Status = StationStatus.ACTIVE
                 };
-                await work.Stations.InsertAsync(endStation);
+                await work.Stations.InsertAsync(endStation, cancellationToken: cancellationToken);
             }
 
             // Update Route
@@ -456,7 +473,7 @@ namespace ViGo.Services
             // Update RouteStations
             IEnumerable<RouteStation> currentRouteStations
                 = await work.RouteStations.GetAllAsync(query => query.Where(
-                    s => s.RouteId.Equals(route.Id)));
+                    s => s.RouteId.Equals(route.Id)), cancellationToken: cancellationToken);
             foreach (RouteStation routeStation in currentRouteStations)
             {
                 await work.RouteStations.DeleteAsync(routeStation, isSoftDelete: false);
@@ -486,7 +503,7 @@ namespace ViGo.Services
                     Status = RouteStationStatus.ACTIVE
                 }
             };
-            await work.RouteStations.InsertAsync(routeStations);
+            await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
 
             // Update RouteRoutine
             //IEnumerable<RouteRoutine> currentRoutines
@@ -510,7 +527,7 @@ namespace ViGo.Services
             //     }).ToList();
             //await work.RouteRoutines.InsertAsync(routeRoutines);
 
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             routeStations.ToList()
                 .ForEach(rs => rs.Station = null);
@@ -524,14 +541,15 @@ namespace ViGo.Services
 
         }
 
-        public async Task<Route> ChangeRouteStatusAsync(Guid routeId, RouteStatus newStatus)
+        public async Task<Route> ChangeRouteStatusAsync(Guid routeId, RouteStatus newStatus,
+            CancellationToken cancellationToken)
         {
             if (!Enum.IsDefined(newStatus))
             {
                 throw new ApplicationException("Trạng thái tuyến đường không hợp lệ!");
             }
 
-            Route route = await work.Routes.GetAsync(routeId);
+            Route route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường được chỉ định!!");
@@ -554,7 +572,8 @@ namespace ViGo.Services
                     b => (b.DriverRouteId.Equals(route.Id)
                     || (b.CustomerRouteId.Equals(route.Id)
                         && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED));
+                    && b.Status != BookingDetailStatus.CANCELLED), 
+                    cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
@@ -564,15 +583,16 @@ namespace ViGo.Services
             {
                 route.Status = newStatus;
                 await work.Routes.UpdateAsync(route);
-                await work.SaveChangesAsync();
+                await work.SaveChangesAsync(cancellationToken);
             }
 
             return route;
         }
 
-        public async Task<Route> DeleteRouteAsync(Guid routeId)
+        public async Task<Route> DeleteRouteAsync(Guid routeId, 
+            CancellationToken cancellationToken)
         {
-            Route route = await work.Routes.GetAsync(routeId);
+            Route route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường được chỉ định!!");
@@ -586,7 +606,8 @@ namespace ViGo.Services
                     b => (b.DriverRouteId.Equals(route.Id)
                     || (b.CustomerRouteId.Equals(route.Id)
                         && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED));
+                    && b.Status != BookingDetailStatus.CANCELLED), 
+                    cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể xóa tuyến đường");
@@ -598,7 +619,8 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> deleteBookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     b => b.DriverRouteId.Equals(route.Id)
-                    || b.CustomerRouteId.Equals(route.Id)));
+                    || b.CustomerRouteId.Equals(route.Id)), 
+                    cancellationToken: cancellationToken);
             IEnumerable<Guid> bookingIds = deleteBookingDetails.Select(d => d.BookingId).Distinct();
             IEnumerable<Guid> deletedBookingDetailIds = deleteBookingDetails.Select(d => d.Id);
             foreach (BookingDetail bookingDetail in deleteBookingDetails)
@@ -610,16 +632,18 @@ namespace ViGo.Services
                 IEnumerable<BookingDetail> checkBookingDetails = await work.BookingDetails
                     .GetAllAsync(query => query.Where(
                         bd => bd.BookingId.Equals(bookingId)
-                        && !deletedBookingDetailIds.Contains(bd.Id)));
+                        && !deletedBookingDetailIds.Contains(bd.Id)), 
+                        cancellationToken: cancellationToken);
                 if (!checkBookingDetails.Any())
                 {
-                    await work.Bookings.DeleteAsync(b => b.Id.Equals(bookingId));
+                    await work.Bookings.DeleteAsync(b => b.Id.Equals(bookingId), 
+                        cancellationToken: cancellationToken);
                 }
             }
 
             await work.Routes.DeleteAsync(route);
 
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
             return route;
         }

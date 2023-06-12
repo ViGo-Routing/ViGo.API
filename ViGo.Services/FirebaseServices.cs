@@ -59,18 +59,17 @@ namespace ViGo.Services
             await work.SaveChangesAsync();
         }
 
-        public async Task<string> GenerateFirebaseToken(string phone)
+        public async Task<string> GenerateFirebaseToken(string phone, CancellationToken cancellationToken)
         {
             User user = await work.Users.GetAsync(
-                    u => !string.IsNullOrEmpty(u.Phone) &&
+                u => !string.IsNullOrEmpty(u.Phone) &&
                     u.Phone.ToLower().Trim()
-                    .Equals(phone.ToLower().Trim())
-                    /*&& u.Password.Equals(loginModel.Password.Encrypt())*/);
+                    .Equals(phone.ToLower().Trim()), cancellationToken: cancellationToken);
 
             if (user != null)
             {
                 string customToken = await FirebaseAuth.DefaultInstance
-                    .CreateCustomTokenAsync(user.FirebaseUid);
+                    .CreateCustomTokenAsync(user.FirebaseUid, cancellationToken);
 
                 using HttpClient client = new HttpClient();
                 string endpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=" 
@@ -86,11 +85,11 @@ namespace ViGo.Services
                 {
                     Token = customToken,
                     ReturnSecureToken = true
-                });
+                }, cancellationToken: cancellationToken);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    string result = await response.Content.ReadAsStringAsync();
+                    string result = await response.Content.ReadAsStringAsync(cancellationToken);
                     FirebaseIdTokenResponse? data = 
                         JsonConvert.DeserializeObject<FirebaseIdTokenResponse>(result);
 

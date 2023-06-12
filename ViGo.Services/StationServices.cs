@@ -16,9 +16,10 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<StationViewModel?> GetStationAsync(Guid stationId)
+        public async Task<StationViewModel?> GetStationAsync(Guid stationId,
+            CancellationToken cancellationToken)
         {
-            Station station = await work.Stations.GetAsync(stationId);
+            Station station = await work.Stations.GetAsync(stationId, cancellationToken: cancellationToken);
             if (station == null)
             {
                 return null;
