@@ -34,8 +34,10 @@ namespace ViGo.Domain
         public virtual Station StartStation { get; set; } = null!;
         [JsonIgnore]
         public virtual User User { get; set; } = null!;
+        //[JsonIgnore]
+        //public virtual ICollection<BookingDetail> CustomerBookingDetails { get; set; }
         [JsonIgnore]
-        public virtual ICollection<BookingDetail> CustomerBookingDetails { get; set; }
+        public virtual ICollection<Booking> CustomerBookings { get; set; }
         [JsonIgnore]
         public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
         [JsonIgnore]

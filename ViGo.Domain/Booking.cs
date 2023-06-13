@@ -15,8 +15,10 @@ namespace ViGo.Domain
 
         public override Guid Id { get; set; }
         public Guid CustomerId { get; set; }
-        public Guid StartRouteStationId { get; set; }
-        public Guid EndRouteStationId { get; set; }
+        //public Guid StartRouteStationId { get; set; }
+        //public Guid EndRouteStationId { get; set; }
+
+        public Guid CustomerRouteId { get; set; }
         public TimeSpan? StartTime { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
@@ -38,12 +40,15 @@ namespace ViGo.Domain
 
         [JsonIgnore]
         public virtual User Customer { get; set; } = null!;
-        [JsonIgnore]
-        public virtual RouteStation EndRouteStation { get; set; } = null!;
+        //[JsonIgnore]
+        //public virtual RouteStation EndRouteStation { get; set; } = null!;
         [JsonIgnore]
         public virtual Promotion? Promotion { get; set; }
+        //[JsonIgnore]
+        //public virtual RouteStation StartRouteStation { get; set; } = null!;
         [JsonIgnore]
-        public virtual RouteStation StartRouteStation { get; set; } = null!;
+        public virtual Route CustomerRoute { get; set; } = null!;
+
         [JsonIgnore]
         public virtual VehicleType VehicleType { get; set; } = null!;
         [JsonIgnore]
