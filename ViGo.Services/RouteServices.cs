@@ -383,12 +383,18 @@ namespace ViGo.Services
             // Not tested yet
             // TODO Code
             // Check for Booking
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(updateDto.Id)),
+                    cancellationToken: cancellationToken);
+            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => (b.DriverRouteId.Equals(updateDto.Id)
-                    || (b.CustomerRouteId.Equals(updateDto.Id)
-                        && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED), cancellationToken: cancellationToken);
+                    b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
+                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    && b.Status != BookingDetailStatus.CANCELLED)),
+                    cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
@@ -567,12 +573,17 @@ namespace ViGo.Services
             // Check for Booking
             // Not tested yet
             // TODO Code
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(routeId)),
+                    cancellationToken: cancellationToken);
+            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => (b.DriverRouteId.Equals(route.Id)
-                    || (b.CustomerRouteId.Equals(route.Id)
-                        && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED), 
+                    b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
+                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    && b.Status != BookingDetailStatus.CANCELLED)), 
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
@@ -601,12 +612,17 @@ namespace ViGo.Services
             // Check for Booking
             // Not tested yet
             // TODO Code
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(routeId)),
+                    cancellationToken: cancellationToken);
+            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => (b.DriverRouteId.Equals(route.Id)
-                    || (b.CustomerRouteId.Equals(route.Id)
-                        && b.DriverId.HasValue))
-                    && b.Status != BookingDetailStatus.CANCELLED), 
+                    b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
+                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    && b.Status != BookingDetailStatus.CANCELLED)),
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
@@ -618,10 +634,11 @@ namespace ViGo.Services
             // TODO code
             IEnumerable<BookingDetail> deleteBookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    b => b.DriverRouteId.Equals(route.Id)
-                    || b.CustomerRouteId.Equals(route.Id)), 
+                    b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
+                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    )),
                     cancellationToken: cancellationToken);
-            IEnumerable<Guid> bookingIds = deleteBookingDetails.Select(d => d.BookingId).Distinct();
+            IEnumerable<Guid> deleteBookingIds = deleteBookingDetails.Select(d => d.BookingId).Distinct();
             IEnumerable<Guid> deletedBookingDetailIds = deleteBookingDetails.Select(d => d.Id);
             foreach (BookingDetail bookingDetail in deleteBookingDetails)
             {

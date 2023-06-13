@@ -16,8 +16,8 @@ namespace ViGo.Models.BookingDetails
         public Guid? BookingId { get; set; }
         //public Guid? DriverId { get; set; }
         public UserViewModel? Driver { get; set; }
-        public Guid CustomerRouteId { get; set; }
-        public RouteViewModel? CustomerRoute { get; set; }
+        //public Guid CustomerRouteId { get; set; }
+        //public RouteViewModel? CustomerRoute { get; set; }
         public Guid? DriverRouteId { get; set; }
         public RouteViewModel? DriverRoute { get; set; }
         public DateTime? AssignedTime { get; set; }
@@ -42,7 +42,7 @@ namespace ViGo.Models.BookingDetails
         {
             Id = bookingDetail.Id;
             Driver = driver;
-            CustomerRouteId = bookingDetail.CustomerRouteId;
+            //CustomerRouteId = bookingDetail.CustomerRouteId;
             DriverRouteId = bookingDetail.DriverRouteId;
             AssignedTime = bookingDetail.AssignedTime;
             Date = bookingDetail.Date;
@@ -64,11 +64,11 @@ namespace ViGo.Models.BookingDetails
         
         public BookingDetailViewModel(BookingDetail bookingDetail,
             UserViewModel? driver,
-            RouteViewModel customerRoute,
+            //RouteViewModel customerRoute,
             RouteViewModel driverRoute)
             : this(bookingDetail, driver)
         {
-            CustomerRoute = customerRoute;
+            //CustomerRoute = customerRoute;
             DriverRoute = driverRoute;
         }
     }
