@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class FarePolicyServices : BaseServices<FarePolicy>
+    public class FarePolicyServices : BaseServices
     {
         public FarePolicyServices(IUnitOfWork work) : base(work)
         {

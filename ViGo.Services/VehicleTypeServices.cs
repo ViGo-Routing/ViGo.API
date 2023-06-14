@@ -11,7 +11,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class VehicleTypeServices : BaseServices<VehicleType>
+    public class VehicleTypeServices : BaseServices
     {
         public VehicleTypeServices(IUnitOfWork work) : base(work)
         {

@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class WalletServices : BaseServices<Wallet>
+    public class WalletServices : BaseServices
     {
         public WalletServices(IUnitOfWork work) : base(work)
         {

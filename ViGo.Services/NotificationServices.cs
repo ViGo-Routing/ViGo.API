@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class NotificationServices : BaseServices<Notification>
+    public class NotificationServices : BaseServices
     {
         public NotificationServices(IUnitOfWork work) : base(work)
         {

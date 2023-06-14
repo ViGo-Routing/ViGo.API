@@ -15,7 +15,7 @@ using ViGo.Utilities.Exceptions;
 
 namespace ViGo.Services
 {
-    public class RouteRoutineServices : BaseServices<RouteRoutine>
+    public class RouteRoutineServices : BaseServices
     {
         public RouteRoutineServices(IUnitOfWork work) : base(work)
         {

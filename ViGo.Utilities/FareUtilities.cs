@@ -9,6 +9,8 @@ namespace ViGo.Utilities
 {
     public static class FareUtilities
     {
+        public const double DriverWagePercent = 0.65;
+
         //private static async Task<IEnumerable<FareDiscount>>
         //    GetFareDiscountsAsync(IUnitOfWork)
         public static double RoundToThousands(double fee)

@@ -19,7 +19,7 @@ using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public class RouteServices : BaseServices<Route>
+    public class RouteServices : BaseServices
     {
         public RouteServices(IUnitOfWork work) : base(work)
         {

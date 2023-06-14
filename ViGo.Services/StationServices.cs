@@ -10,7 +10,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class StationServices : BaseServices<Station>
+    public class StationServices : BaseServices
     {
         public StationServices(IUnitOfWork work) : base(work)
         {

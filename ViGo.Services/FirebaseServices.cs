@@ -10,18 +10,16 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.Services
 {
-    public class FirebaseServices
+    public class FirebaseServices : BaseServices
     {
-        private IUnitOfWork work;
-
-        public FirebaseServices (IUnitOfWork work)
+        public FirebaseServices (IUnitOfWork work) : base(work)
         {
-            this.work = work;
         }
 
         // Run once, test only

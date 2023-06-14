@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class ReportServices : BaseServices<Report>
+    public class ReportServices : BaseServices
     {
         public ReportServices(IUnitOfWork work) : base(work)
         {

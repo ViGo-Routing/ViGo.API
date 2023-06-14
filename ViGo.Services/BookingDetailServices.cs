@@ -15,7 +15,7 @@ using ViGo.Utilities;
 
 namespace ViGo.Services
 {
-    public class BookingDetailServices : BaseServices<BookingDetail>
+    public class BookingDetailServices : BaseServices
     {
         public BookingDetailServices(IUnitOfWork work) : base(work)
         {

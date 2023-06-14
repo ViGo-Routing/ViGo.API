@@ -11,7 +11,7 @@ using ViGo.Utilities;
 
 namespace ViGo.Services
 {
-    public class FareServices : BaseServices<Fare>
+    public class FareServices : BaseServices
     {
         public FareServices(IUnitOfWork work) : base(work)
         {

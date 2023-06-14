@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class UserLicenseServices : BaseServices<UserLicense>
+    public class UserLicenseServices : BaseServices
     {
         public UserLicenseServices(IUnitOfWork work) : base(work)
         {
