@@ -20,8 +20,8 @@ namespace ViGo.Domain
 
         public Guid CustomerRouteId { get; set; }
         public TimeSpan? StartTime { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         public string? DaysOfWeek { get; set; }
         public double? TotalPrice { get; set; }
         public double? PriceAfterDiscount { get; set; }
