@@ -17,13 +17,13 @@ namespace ViGo.Models.Routes
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string Name { get; set; }
-        public Guid StartStationId { get; set; }
-        public Guid EndStationId { get; set; }
-        public double Distance { get; set; }
-        public double Duration { get; set; }
+        public Guid? StartStationId { get; set; }
+        public Guid? EndStationId { get; set; }
+        public double? Distance { get; set; }
+        public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
-        public StationViewModel StartStation { get; set; }
-        public StationViewModel EndStation { get; set; }
+        public StationViewModel? StartStation { get; set; }
+        public StationViewModel? EndStation { get; set; }
         //public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
         //public IList<RouteStationViewModel> RouteStations { get; set; }
         public UserViewModel? User { get; set; }
@@ -48,8 +48,8 @@ namespace ViGo.Models.Routes
         //    RouteStations = routeStations.ToList();
         //}
 
-        public RouteViewModel(Route route, StationViewModel startStation,
-            StationViewModel endStation, UserViewModel? user = null)
+        public RouteViewModel(Route route, StationViewModel? startStation,
+            StationViewModel? endStation, UserViewModel? user = null)
         {
             Id = route.Id;
             UserId = route.UserId;

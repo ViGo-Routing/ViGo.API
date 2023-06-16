@@ -66,22 +66,28 @@ namespace ViGo.Domain
                     .HasForeignKey(d => d.CustomerId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
 
-                entity.HasOne(d => d.EndRouteStation)
-                    .WithMany(p => p.BookingEndRouteStations)
-                    .HasForeignKey(d => d.EndRouteStationId)
+                //entity.HasOne(d => d.EndRouteStation)
+                //    .WithMany(p => p.BookingEndRouteStations)
+                //    .HasForeignKey(d => d.EndRouteStationId)
+                //    .OnDelete(DeleteBehavior.ClientSetNull)
+                //    .HasConstraintName("FK_Booking_RouteStation_EndStation");
+
+                entity.HasOne(d => d.CustomerRoute)
+                    .WithMany(p => p.CustomerBookings)
+                    .HasForeignKey(d => d.CustomerRouteId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Booking_RouteStation_EndStation");
+                    .HasConstraintName("FK_Booking_Route");
 
                 entity.HasOne(d => d.Promotion)
                     .WithMany(p => p.Bookings)
                     .HasForeignKey(d => d.PromotionId)
                     .HasConstraintName("FK_Booking_Promotion");
 
-                entity.HasOne(d => d.StartRouteStation)
-                    .WithMany(p => p.BookingStartRouteStations)
-                    .HasForeignKey(d => d.StartRouteStationId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Booking_RouteStation_StartStation");
+                //entity.HasOne(d => d.StartRouteStation)
+                //    .WithMany(p => p.BookingStartRouteStations)
+                //    .HasForeignKey(d => d.StartRouteStationId)
+                //    .OnDelete(DeleteBehavior.ClientSetNull)
+                //    .HasConstraintName("FK_Booking_RouteStation_StartStation");
 
                 entity.HasOne(d => d.VehicleType)
                     .WithMany(p => p.Bookings)
@@ -120,11 +126,11 @@ namespace ViGo.Domain
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_BookingDetail_Booking");
 
-                entity.HasOne(d => d.CustomerRoute)
-                    .WithMany(p => p.CustomerBookingDetails)
-                    .HasForeignKey(d => d.CustomerRouteId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_BookingDetail_CustomerRoute");
+                //entity.HasOne(d => d.CustomerRoute)
+                //    .WithMany(p => p.CustomerBookingDetails)
+                //    .HasForeignKey(d => d.CustomerRouteId)
+                //    .OnDelete(DeleteBehavior.ClientSetNull)
+                //    .HasConstraintName("FK_BookingDetail_CustomerRoute");
 
                 entity.HasOne(d => d.DriverRoute)
                     .WithMany(p => p.DriverBookingDetails)

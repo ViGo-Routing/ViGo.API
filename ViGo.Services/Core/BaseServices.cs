@@ -8,7 +8,7 @@ using ViGo.Repository.Core;
 
 namespace ViGo.Services.Core
 {
-    public abstract class BaseServices<T> where T : BaseEntity
+    public abstract class BaseServices
     {
         protected IUnitOfWork work;
 

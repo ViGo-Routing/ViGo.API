@@ -30,6 +30,8 @@ namespace ViGo.Domain
         public DateTime? DateOfBirth { get; set; }
         public string? AvatarUrl { get; set; }
         public UserRole Role { get; set; }
+
+        public double? Rating { get; set; }
         public UserStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }

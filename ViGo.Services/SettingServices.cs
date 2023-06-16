@@ -10,7 +10,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class SettingServices : BaseServices<Setting>
+    public class SettingServices : BaseServices
     {
         private const string TICKETS_DISCOUNT_10 = "10TicketsDiscount";
         private const string TICKETS_DISCOUNT_25 = "25TicketsDiscount";

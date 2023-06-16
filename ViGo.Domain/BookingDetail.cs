@@ -16,7 +16,7 @@ namespace ViGo.Domain
         public override Guid Id { get; set; }
         public Guid BookingId { get; set; }
         public Guid? DriverId { get; set; }
-        public Guid CustomerRouteId { get; set; }
+        //public Guid CustomerRouteId { get; set; }
         public Guid? DriverRouteId { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime? Date { get; set; }
@@ -41,9 +41,9 @@ namespace ViGo.Domain
         [JsonIgnore]
         //[System.Text.Json.Serialization.JsonIgnore]
         public virtual User? Driver { get; set; }
-        [JsonIgnore]
-        //[System.Text.Json.Serialization.JsonIgnore]
-        public virtual Route CustomerRoute { get; set; }
+        //[JsonIgnore]
+        ////[System.Text.Json.Serialization.JsonIgnore]
+        //public virtual Route CustomerRoute { get; set; }
         [JsonIgnore]
         //[System.Text.Json.Serialization.JsonIgnore]
         public virtual Route? DriverRoute { get; set; }

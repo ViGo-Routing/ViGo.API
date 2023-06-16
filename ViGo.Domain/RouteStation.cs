@@ -9,8 +9,8 @@ namespace ViGo.Domain
     {
         public RouteStation()
         {
-            BookingEndRouteStations = new HashSet<Booking>();
-            BookingStartRouteStations = new HashSet<Booking>();
+            //BookingEndRouteStations = new HashSet<Booking>();
+            //BookingStartRouteStations = new HashSet<Booking>();
         }
 
         public override Guid Id { get; set; }
@@ -30,9 +30,9 @@ namespace ViGo.Domain
         public virtual Route Route { get; set; } = null!;
         [JsonIgnore]
         public virtual Station Station { get; set; } = null!;
-        [JsonIgnore]
-        public virtual ICollection<Booking> BookingEndRouteStations { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<Booking> BookingStartRouteStations { get; set; }
+        //[JsonIgnore]
+        //public virtual ICollection<Booking> BookingEndRouteStations { get; set; }
+        //[JsonIgnore]
+        //public virtual ICollection<Booking> BookingStartRouteStations { get; set; }
     }
 }

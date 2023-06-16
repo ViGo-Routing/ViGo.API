@@ -10,7 +10,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class RouteStationServices : BaseServices<RouteStation>
+    public class RouteStationServices : BaseServices
     {
         public RouteStationServices(IUnitOfWork work) : base(work)
         {

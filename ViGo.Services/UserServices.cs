@@ -15,7 +15,7 @@ using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public class UserServices : BaseServices<User>
+    public class UserServices : BaseServices
     {
         public UserServices(IUnitOfWork work) : base(work)
         {

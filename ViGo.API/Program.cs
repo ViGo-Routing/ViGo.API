@@ -7,6 +7,7 @@ using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
+using ViGo.API.BackgroundTasks;
 using ViGo.API.Middlewares;
 using ViGo.API.SignalR;
 using ViGo.Utilities.Configuration;
@@ -149,6 +150,9 @@ namespace ViGo.API
                 //    };
                 //});
             builder.Services.AddAuthorization();
+
+            builder.Services.AddHostedService<QueuedHostedServices>();
+            builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
 
             // CORS
             builder.Services.AddCors(c =>

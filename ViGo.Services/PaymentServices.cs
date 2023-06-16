@@ -9,19 +9,18 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Repository.Core;
+using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 using ViGo.Utilities.Payments;
 
 namespace ViGo.Services
 {
-    public class PaymentServices
+    public class PaymentServices : BaseServices
     {
-        private IUnitOfWork work;
 
-        public PaymentServices(IUnitOfWork work)
+        public PaymentServices(IUnitOfWork work) : base(work)
         {
-            this.work = work;
         }
 
         #region VnPay

@@ -9,7 +9,7 @@ using ViGo.Services.Core;
 
 namespace ViGo.Services
 {
-    public class EventServices : BaseServices<Event>
+    public class EventServices : BaseServices
     {
         public EventServices(IUnitOfWork work) : base(work)
         {
