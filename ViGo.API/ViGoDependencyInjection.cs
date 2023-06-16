@@ -1,6 +1,7 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
+using ViGo.API.BackgroundTasks;
 using ViGo.API.SignalR;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
@@ -74,6 +75,20 @@ namespace ViGo.API
 
             #region UnitOfWork
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            #endregion
+
+            #region Background Task
+            services.AddHostedService<QueuedHostedServices>();
+            services.AddSingleton<IBackgroundTaskQueue>(context =>
+            {
+                try
+                {
+                    return new BackgroundTaskQueue(ViGoConfiguration.QueueCapacity);
+                } catch (Exception)
+                {
+                    return new BackgroundTaskQueue(100);
+                }
+            });
             #endregion
 
             return services;
