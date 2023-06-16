@@ -444,7 +444,7 @@ namespace ViGo.Services
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
-                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
+                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể cập nhật thông tin tuyến đường");
             }
 
             if (!string.IsNullOrEmpty(updateDto.Name))
