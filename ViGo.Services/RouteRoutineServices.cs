@@ -21,7 +21,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<RouteRoutineViewModel>> 
+        public async Task<IEnumerable<RouteRoutineViewModel>>
             GetRouteRoutinesAsync(Guid routeId, CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
@@ -77,14 +77,14 @@ namespace ViGo.Services
             await IsValidRoutines(model.RouteRoutines, route, cancellationToken: cancellationToken);
             IList<RouteRoutine> routeRoutines =
                 (from routine in model.RouteRoutines
-                select new RouteRoutine
-                {
-                    RouteId = model.RouteId,
-                    RoutineDate = routine.RoutineDate.ToDateTime(TimeOnly.MinValue),
-                    StartTime = routine.StartTime.ToTimeSpan(),
-                    EndTime = routine.EndTime.ToTimeSpan(),
-                    Status = RouteRoutineStatus.ACTIVE
-                }).ToList();
+                 select new RouteRoutine
+                 {
+                     RouteId = model.RouteId,
+                     RoutineDate = routine.RoutineDate?.ToDateTime(TimeOnly.MinValue),
+                     StartTime = routine.StartTime?.ToTimeSpan(),
+                     EndTime = routine.EndTime?.ToTimeSpan(),
+                     Status = RouteRoutineStatus.ACTIVE
+                 }).ToList();
             await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
             routeRoutines = routeRoutines.OrderBy(r => r.RoutineDate)
@@ -100,6 +100,12 @@ namespace ViGo.Services
             if (route == null)
             {
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
+            }
+
+            if (route.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME
+                && model.RouteRoutines.Count > 0)
+            {
+                throw new ApplicationException("Tuyến đường này không cần thiết lập lịch trình đi!!");
             }
 
             if (model.RouteRoutines.Count == 0)
@@ -146,7 +152,8 @@ namespace ViGo.Services
 
                     //routineToDelete.Add(oldRoutine.Id);
                     await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: false);
-                } else
+                }
+                else
                 {
                     model.RouteRoutines.Remove(routineModel);
                 }
@@ -165,16 +172,16 @@ namespace ViGo.Services
                 routeRoutines =
                     (from routine in routinesModel
                      select new RouteRoutine
-                    {
-                        RouteId = model.RouteId,
-                        RoutineDate = routine.RoutineDate.ToDateTime(TimeOnly.MinValue),
-                        StartTime = routine.StartTime.ToTimeSpan(),
-                        EndTime = routine.EndTime.ToTimeSpan(),
-                        Status = RouteRoutineStatus.ACTIVE
-                    }).ToList();
+                     {
+                         RouteId = model.RouteId,
+                         RoutineDate = routine.RoutineDate?.ToDateTime(TimeOnly.MinValue),
+                         StartTime = routine.StartTime?.ToTimeSpan(),
+                         EndTime = routine.EndTime?.ToTimeSpan(),
+                         Status = RouteRoutineStatus.ACTIVE
+                     }).ToList();
                 await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
             }
-            
+
             await work.SaveChangesAsync(cancellationToken);
 
             IEnumerable<RouteRoutine> updatedRouteRoutines = (await work.RouteRoutines
@@ -190,116 +197,148 @@ namespace ViGo.Services
 
         private void IsValidRoutine(RouteRoutineListItemModel routine)
         {
-            DateTime startDateTime = DateTimeUtilities
-                .ToDateTime(routine.RoutineDate, routine.StartTime);
-            DateTime endDateTime = DateTimeUtilities.
-                ToDateTime(routine.RoutineDate, routine.EndTime);
+            if (routine.RoutineDate.HasValue && routine.StartTime.HasValue
+                && routine.EndTime.HasValue)
+            {
+                DateTime startDateTime = DateTimeUtilities
+                .ToDateTime(routine.RoutineDate.Value, routine.StartTime.Value);
+                DateTime endDateTime = DateTimeUtilities.
+                    ToDateTime(routine.RoutineDate.Value, routine.EndTime.Value);
 
-            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
-            startDateTime.DateTimeValidate(
-                minimum: vnNow,
-                minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
-                $"{routine.RoutineDate.ToShortDateString()}, " +
-                $"giờ: {routine.StartTime.ToShortTimeString()})",
-                maximum: endDateTime,
-                maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
-                $"{routine.RoutineDate.ToShortDateString()}, " +
-                $"giờ: {routine.EndTime.ToShortTimeString()})"
-                );
+                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                startDateTime.DateTimeValidate(
+                    minimum: vnNow,
+                    minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
+                    $"{routine.RoutineDate.Value.ToShortDateString()}, " +
+                    $"giờ: {routine.StartTime.Value.ToShortTimeString()})",
+                    maximum: endDateTime,
+                    maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
+                    $"{routine.RoutineDate.Value.ToShortDateString()}, " +
+                    $"giờ: {routine.EndTime.Value.ToShortTimeString()})"
+                    );
+            }
+
         }
 
         private async Task IsValidRoutines(IList<RouteRoutineListItemModel> routines,
             Route route, bool isUpdate = false, CancellationToken cancellationToken = default)
         {
-            IList<DateTimeRange> routineRanges =
-                (from routine in routines
-                 select new DateTimeRange(
-                     DateTimeUtilities
-                 .ToDateTime(routine.RoutineDate, routine.StartTime),
-                     DateTimeUtilities.
-                 ToDateTime(routine.RoutineDate, routine.EndTime)
-                     )).ToList();
-            routineRanges = routineRanges.OrderBy(r => r.StartDateTime).ToList();
-
-            for (int i = 0; i < routineRanges.Count - 1; i++)
-            {
-                DateTimeRange first = routineRanges[i];
-                DateTimeRange second = routineRanges[i + 1];
-
-                first.IsOverlap(second,
-                    $"Hai khoảng thời gian lịch trình đã bị trùng lặp " +
-                    $"({first.StartDateTime} - {first.EndDateTime} và " +
-                    $"{second.StartDateTime} - {second.EndDateTime})");
-            }
-
             if (route == null)
             {
                 throw new Exception("Thiếu thông tin tuyến đường! Vui lòng kiểm tra lại");
             }
 
-            IEnumerable<Route> routes = await work.Routes
-                .GetAllAsync(query => query.Where(
-                    r => r.UserId.Equals(route.UserId)
-                    && r.Status == RouteStatus.ACTIVE), cancellationToken: cancellationToken);
-            IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
-
-            if (isUpdate)
+            if (route.RouteType == RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME ||
+                route.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME)
             {
-                routeIds = routeIds.Where(r => !r.Equals(route.Id));
-            }
+                IList<DateTimeRange> routineRanges = new List<DateTimeRange>();
 
-            if (!routeIds.Any())
-            {
-                return;
-            }
-
-            IEnumerable<RouteRoutine> currentRouteRoutines =
-                await work.RouteRoutines.GetAllAsync(query => query.Where(
-                        r => routeIds.Contains(r.RouteId)
-                        && r.Status == RouteRoutineStatus.ACTIVE), cancellationToken: cancellationToken);
-
-            if (currentRouteRoutines.Any())
-            {
-                IEnumerable<DateTimeRange> currentRanges =
-                from routine in currentRouteRoutines
-                select new DateTimeRange(
-                    DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.StartTime)),
-                    DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.EndTime))
-                );
-                currentRanges = currentRanges.OrderBy(r => r.StartDateTime);
-
-                if (!(routineRanges.Last().EndDateTime < currentRanges.First().StartDateTime
-                    || routineRanges.First().StartDateTime > currentRanges.Last().EndDateTime
-                    )
-                    )
+                foreach (RouteRoutineListItemModel routine in routines)
                 {
-                    IList<DateTimeRange> finalRanges = routineRanges.Union(currentRanges)
-                    .OrderBy(r => r.StartDateTime).ToList();
-                    //int firstIndex = finalRanges.IndexOf(routineRanges.First());
-                    //int secondIndex = finalRanges.IndexOf()
-
-                    for (int i = 0; i < finalRanges.Count - 1; i++)
+                    if (routine.RoutineDate is null
+                        || routine.StartTime is null
+                        || routine.EndTime is null)
                     {
-                        DateTimeRange current = finalRanges[i];
-                        DateTimeRange added = finalRanges[i + 1];
+                        throw new ApplicationException("Lịch trình thiếu các khung thời gian cụ thể!!");
+                    }
+                    routineRanges.Add(new DateTimeRange(
+                     DateTimeUtilities
+                     .ToDateTime(routine.RoutineDate.Value, routine.StartTime.Value),
+                         DateTimeUtilities.
+                     ToDateTime(routine.RoutineDate.Value, routine.EndTime.Value)
+                     ));
+                }
 
-                        if (currentRanges.Contains(added))
+                for (int i = 0; i < routineRanges.Count - 1; i++)
+                {
+                    DateTimeRange first = routineRanges[i];
+                    DateTimeRange second = routineRanges[i + 1];
+
+                    first.IsOverlap(second,
+                        $"Hai khoảng thời gian lịch trình đã bị trùng lặp " +
+                        $"({first.StartDateTime} - {first.EndDateTime} và " +
+                        $"{second.StartDateTime} - {second.EndDateTime})");
+                }
+
+                IEnumerable<Route> routes = await work.Routes
+                    .GetAllAsync(query => query.Where(
+                        r => r.UserId.Equals(route.UserId)
+                        && r.Status == RouteStatus.ACTIVE), cancellationToken: cancellationToken);
+                IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
+
+                if (isUpdate)
+                {
+                    routeIds = routeIds.Where(r => !r.Equals(route.Id));
+                }
+
+                if (!routeIds.Any())
+                {
+                    return;
+                }
+
+                IEnumerable<RouteRoutine> currentRouteRoutines =
+                    await work.RouteRoutines.GetAllAsync(query => query.Where(
+                            r => routeIds.Contains(r.RouteId)
+                            && r.Status == RouteRoutineStatus.ACTIVE), cancellationToken: cancellationToken);
+
+                if (currentRouteRoutines.Any())
+                {
+                    IEnumerable<DateTimeRange> currentRanges =
+                    from routine in currentRouteRoutines
+                    select new DateTimeRange(
+                        DateTimeUtilities
+                     .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate.Value), TimeOnly.FromTimeSpan(routine.StartTime.Value)),
+                        DateTimeUtilities
+                     .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate.Value), TimeOnly.FromTimeSpan(routine.EndTime.Value))
+                    );
+                    currentRanges = currentRanges.OrderBy(r => r.StartDateTime);
+
+                    if (!(routineRanges.Last().EndDateTime < currentRanges.First().StartDateTime
+                        || routineRanges.First().StartDateTime > currentRanges.Last().EndDateTime
+                        )
+                        )
+                    {
+                        IList<DateTimeRange> finalRanges = routineRanges.Union(currentRanges)
+                        .OrderBy(r => r.StartDateTime).ToList();
+                        //int firstIndex = finalRanges.IndexOf(routineRanges.First());
+                        //int secondIndex = finalRanges.IndexOf()
+
+                        for (int i = 0; i < finalRanges.Count - 1; i++)
                         {
-                            // finalRanges[i + 1] is current
-                            current = finalRanges[i + 1];
-                            added = finalRanges[i];
+                            DateTimeRange current = finalRanges[i];
+                            DateTimeRange added = finalRanges[i + 1];
+
+                            if (currentRanges.Contains(added))
+                            {
+                                // finalRanges[i + 1] is current
+                                current = finalRanges[i + 1];
+                                added = finalRanges[i];
+                            }
+                            current.IsOverlap(added,
+                                $"Hai khoảng thời gian lịch trình đã bị trùng lặp với lịch trình " +
+                                $"đã được lưu trước đó " +
+                                $"(Lịch trình đã được lưu trước đó: {current.StartDateTime} - {current.EndDateTime} và " +
+                                $"lịch trình mới: {added.StartDateTime} - {added.EndDateTime})");
                         }
-                        current.IsOverlap(added,
-                            $"Hai khoảng thời gian lịch trình đã bị trùng lặp với lịch trình " +
-                            $"đã được lưu trước đó " +
-                            $"(Lịch trình đã được lưu trước đó: {current.StartDateTime} - {current.EndDateTime} và " +
-                            $"lịch trình mới: {added.StartDateTime} - {added.EndDateTime})");
                     }
                 }
             }
-            
+            else if (route.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
+            {
+                throw new ApplicationException("Tuyến đường này không cẩn thiết lập lịch trình!!");
+            }
+            {
+                // SPECIFIC_ROUTE_EVERY_TIME
+                foreach (RouteRoutineListItemModel routine in routines)
+                {
+                    if (routine.RoutineDate.HasValue
+                        || routine.StartTime.HasValue
+                        || routine.EndTime.HasValue)
+                    {
+                        throw new ApplicationException("Tuyến đường được thiết lập không cần khung thời gian!!");
+                    }
+                }
+            }
         }
         #endregion
     }

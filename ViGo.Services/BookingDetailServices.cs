@@ -53,8 +53,11 @@ namespace ViGo.Services
             {
                 driverRoute = await work.Routes
                     .GetAsync(bookingDetail.DriverRouteId.Value, cancellationToken: cancellationToken);
-                stationIds = stationIds.Append(driverRoute.StartStationId)
-                    .Append(driverRoute.EndStationId);
+                if (driverRoute.StartStationId.HasValue && driverRoute.EndStationId.HasValue)
+                {
+                    stationIds = stationIds.Append(driverRoute.StartStationId.Value)
+                        .Append(driverRoute.EndStationId.Value);
+                }
 
             }
 
@@ -74,10 +77,12 @@ namespace ViGo.Services
             {
                 driverRouteDto = new RouteViewModel(
                 driverRoute,
+                driverRoute.StartStationId.HasValue ?
                 new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId)), 1),
+                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId.Value)), 1) : null,
+                driverRoute.EndStationId.HasValue ?
                 new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2));
+                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2) : null) ;
             }
 
             BookingDetailViewModel dto = new BookingDetailViewModel(
@@ -115,9 +120,9 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     r => routeIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
-            IEnumerable<Guid> stationIds = routes.Select(
-                r => r.StartStationId).Concat(routes.Select(
-                    r => r.EndStationId)).Distinct();
+            IEnumerable<Guid> stationIds = routes.Where(r => r.StartStationId.HasValue).Select(
+                r => r.StartStationId.Value).Concat(routes.Where(r => r.EndStationId.HasValue).Select(
+                    r => r.EndStationId.Value)).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);

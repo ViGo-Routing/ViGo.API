@@ -10,11 +10,11 @@ namespace ViGo.Models.RouteRoutines
 {
     public class RouteRoutineListItemModel : IEquatable<RouteRoutineListItemModel>
     {
-        public DateOnly RoutineDate { get; set; }
+        public DateOnly? RoutineDate { get; set; }
         //public DateOnly StartDate { get; set; }
-        public TimeOnly StartTime { get; set; }
+        public TimeOnly? StartTime { get; set; }
         //public DateOnly EndDate { get; set; }
-        public TimeOnly EndTime { get; set; }
+        public TimeOnly? EndTime { get; set; }
         public RouteRoutineStatus Status { get; set; } = RouteRoutineStatus.ACTIVE;
 
         public RouteRoutineListItemModel()
@@ -24,9 +24,12 @@ namespace ViGo.Models.RouteRoutines
 
         public RouteRoutineListItemModel(RouteRoutine routeRoutine)
         {
-            RoutineDate = DateOnly.FromDateTime(routeRoutine.RoutineDate);
-            StartTime = TimeOnly.FromTimeSpan(routeRoutine.StartTime);
-            EndTime = TimeOnly.FromTimeSpan(routeRoutine.EndTime);
+            RoutineDate = routeRoutine.RoutineDate.HasValue ?
+                DateOnly.FromDateTime(routeRoutine.RoutineDate.Value) : null;
+            StartTime = routeRoutine.StartTime.HasValue ?
+                TimeOnly.FromTimeSpan(routeRoutine.StartTime.Value) : null;
+            EndTime = routeRoutine.EndTime.HasValue ?
+                TimeOnly.FromTimeSpan(routeRoutine.EndTime.Value) : null;
             Status = routeRoutine.Status;
         }
 

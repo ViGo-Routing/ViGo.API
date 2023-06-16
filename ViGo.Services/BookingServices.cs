@@ -14,10 +14,11 @@ using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public class BookingServices : BaseServices<Booking>
+    public class BookingServices : BaseServices
     {
         public BookingServices(IUnitOfWork work) : base(work)
         {
@@ -129,10 +130,18 @@ namespace ViGo.Services
             //    endStation, stations.SingleOrDefault(s => s.Id.Equals(endStation.StationId)));
             Route route = await work.Routes.GetAsync(booking.CustomerRouteId,
                 cancellationToken: cancellationToken);
-            Station startStation = await work.Stations.GetAsync(route.StartStationId,
-                cancellationToken: cancellationToken);
-            Station endStation = await work.Stations.GetAsync(route.EndStationId,
-                cancellationToken: cancellationToken);
+            Station? startStation = null;
+            if (route.StartStationId.HasValue)
+            {
+                startStation = await work.Stations.GetAsync(route.StartStationId.Value,
+                    cancellationToken: cancellationToken);
+            }
+            Station? endStation = null;
+            if (route.EndStationId.HasValue)
+            {
+                endStation = await work.Stations.GetAsync(route.EndStationId.Value,
+                    cancellationToken: cancellationToken);
+            }
 
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId, cancellationToken: cancellationToken);
 
@@ -167,93 +176,164 @@ namespace ViGo.Services
 
             return dto;
         }
-    
-        //public async Task<Booking> CreateBookingAsync(
-        //    BookingCreateModel model, CancellationToken cancellationToken)
-        //{
-        //    if (!Enum.IsDefined(model.PaymentMethod))
-        //    {
-        //        throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
-        //    }
-        //    if (model.Distance <= 0)
-        //    {
-        //        throw new ApplicationException("Khoảng cách phải lớn hơn 0!");
-        //    }
-        //    if (model.Duration <= 0)
-        //    {
-        //        throw new ApplicationException("Thời gian di chuyển phải lớn hơn 0!");
-        //    }
 
-        //    User user = await work.Users.GetAsync(model.CustomerId, 
-        //        cancellationToken: cancellationToken);
-        //    if (user is null ||
-        //        user.Role != UserRole.CUSTOMER)
-        //    {
-        //        throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
-        //    }
+        public async Task<Booking> CreateBookingAsync(
+            BookingCreateModel model, CancellationToken cancellationToken)
+        {
+            if (!Enum.IsDefined(model.PaymentMethod))
+            {
+                throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
+            }
+            if (model.Distance <= 0)
+            {
+                throw new ApplicationException("Khoảng cách phải lớn hơn 0!");
+            }
+            if (model.Duration <= 0)
+            {
+                throw new ApplicationException("Thời gian di chuyển phải lớn hơn 0!");
+            }
 
-        //    Route route = await work.Routes.GetAsync(model.CustomerRouteId,
-        //        cancellationToken: cancellationToken);
-        //    if (route is null ||
-        //        !route.UserId.Equals(user.Id))
-        //    {
-        //        throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
-        //    }
+            User user = await work.Users.GetAsync(model.CustomerId,
+                cancellationToken: cancellationToken);
+            if (user is null ||
+                user.Role != UserRole.CUSTOMER)
+            {
+                throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
+            }
 
-        //    VehicleType vehicleType = await work.VehicleTypes
-        //        .GetAsync(model.VehicleTypeId, cancellationToken: cancellationToken);
-        //    if (vehicleType is null)
-        //    {
-        //        throw new ApplicationException("Loại phương tiện di chuyển không hợp lệ!!");
-        //    }
+            Route route = await work.Routes.GetAsync(model.CustomerRouteId,
+                cancellationToken: cancellationToken);
+            if (route is null ||
+                !route.UserId.Equals(user.Id))
+            {
+                throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
+            }
 
-        //    if (model.PromotionId.HasValue)
-        //    {
-        //        Promotion promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
-        //            cancellationToken: cancellationToken);
-        //        if (promotion is null ||
-        //            promotion.Status == PromotionStatus.UNAVAILABLE ||
-        //            (promotion.ExpireTime.HasValue && promotion.ExpireTime < DateTimeUtilities.GetDateTimeVnNow())
-        //            || (promotion.StartTime > DateTimeUtilities.GetDateTimeVnNow())
-        //            )
-        //        {
-        //            throw new ApplicationException("Thông tin khuyến mãi không hợp lệ hoặc đã hết hạn sử dụng!");
-        //        }
+            VehicleType vehicleType = await work.VehicleTypes
+                .GetAsync(model.VehicleTypeId, cancellationToken: cancellationToken);
+            if (vehicleType is null)
+            {
+                throw new ApplicationException("Loại phương tiện di chuyển không hợp lệ!!");
+            }
 
-        //        if (!promotion.VehicleTypeId.Equals(vehicleType.Id))
-        //        {
-        //            throw new ApplicationException("Loại phương tiện và thông tin khuyến mãi không hợp lệ!!");
-        //        }
-        //        if (promotion.MinTotalPrice.HasValue &&
-        //            promotion.MinTotalPrice < model.TotalPrice)
-        //        {
-        //            throw new ApplicationException("Booking chuyến đi chưa đạt giá trị tối thiểu để áp dụng khuyến mãi!!");
-        //        }
+            if (model.PromotionId.HasValue)
+            {
+                Promotion promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
+                    cancellationToken: cancellationToken);
+                if (promotion is null ||
+                    promotion.Status == PromotionStatus.UNAVAILABLE ||
+                    (promotion.ExpireTime.HasValue && promotion.ExpireTime < DateTimeUtilities.GetDateTimeVnNow())
+                    || (promotion.StartTime > DateTimeUtilities.GetDateTimeVnNow())
+                    )
+                {
+                    throw new ApplicationException("Thông tin khuyến mãi không hợp lệ hoặc đã hết hạn sử dụng!");
+                }
 
-        //        // Check Max Usage per user
-        //        if (promotion.UsagePerUser.HasValue)
-        //        {
-        //            int usageCount = (await work.Bookings
-        //                .GetAllAsync(query => query.Where(
-        //                    b => b.CustomerId.Equals(user.Id)
-        //                    && b.PromotionId.Equals(promotion.Id)),
-        //                    cancellationToken: cancellationToken)).Count();
-        //            if (usageCount > promotion.UsagePerUser.Value)
-        //            {
-        //                throw new ApplicationException("Mã khuyến mãi đã vượt quá số lần sử dụng!!");
-        //            }
-        //        }
-        //    }
+                if (!promotion.VehicleTypeId.Equals(vehicleType.Id))
+                {
+                    throw new ApplicationException("Loại phương tiện và thông tin khuyến mãi không hợp lệ!!");
+                }
+                if (promotion.MinTotalPrice.HasValue &&
+                    promotion.MinTotalPrice < model.TotalPrice)
+                {
+                    throw new ApplicationException("Booking chuyến đi chưa đạt giá trị tối thiểu để áp dụng khuyến mãi!!");
+                }
 
-        //    // TODO Code
-        //    // Check Start Date and End Date
-        //    //IEnumerable<RouteRoutine> routeRoutines = await
-        //    //    work.RouteRoutines.GetAllAsync(query => query.Where(
-        //    //        r => r.RouteId.Equals(route.Id)), cancellationToken: cancellationToken);
+                // Check Max Usage per user
+                if (promotion.UsagePerUser.HasValue)
+                {
+                    int usageCount = (await work.Bookings
+                        .GetAllAsync(query => query.Where(
+                            b => b.CustomerId.Equals(user.Id)
+                            && b.PromotionId.Equals(promotion.Id)),
+                            cancellationToken: cancellationToken)).Count();
+                    if (usageCount > promotion.UsagePerUser.Value)
+                    {
+                        throw new ApplicationException("Mã khuyến mãi đã vượt quá số lần sử dụng!!");
+                    }
+                }
+            }
 
-        //    //IEnumerable<Booking> currentBookings = await
-        //    //    work.Bookings.GetAllAsync(query => query.Where(
-        //    //        b => b.))
-        //}
+            //TODO Code
+            // Check Start Date and End Date
+            //IEnumerable<RouteRoutine> routeRoutines = await
+            //    work.RouteRoutines.GetAllAsync(query => query.Where(
+            //        r => r.RouteId.Equals(route.Id)), cancellationToken: cancellationToken);
+
+            DateTimeRange newRange = new DateTimeRange(
+                model.StartDate, model.EndDate);
+
+            IEnumerable<Booking> currentBookings = await
+                work.Bookings.GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(model.CustomerRouteId)),
+                    cancellationToken: cancellationToken);
+            foreach (Booking currentBooking in currentBookings)
+            {
+                DateTimeRange currentRange = new DateTimeRange(
+                    currentBooking.StartDate, currentBooking.EndDate);
+                newRange.IsOverlap(currentRange, $"Khoảng thời gian bắt đầu và kết thúc " +
+                    $"của Booking ({newRange.StartDateTime.Date} - {newRange.EndDateTime.Date}) " +
+                    $"đã bị trùng lặp với một Booking khác cho cùng tuyến đường này " +
+                    $"({currentRange.StartDateTime.Date} - {currentRange.EndDateTime.Date}");
+            }
+
+            IEnumerable<RouteRoutine> routeRoutines = await
+                work.RouteRoutines.GetAllAsync(query => query.Where(
+                    r => r.RouteId.Equals(route.Id)
+                    && r.RoutineDate >= model.StartDate
+                    && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken);
+
+            int bookingDetailCount = routeRoutines.Count();
+
+            if (bookingDetailCount == 0)
+            {
+                throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
+                    "của chuyến đi đã được thiết lập!!");
+            }
+
+            // All is valid
+            Booking booking = new Booking()
+            {
+                CustomerId = model.CustomerId,
+                CustomerRouteId = model.CustomerRouteId,
+                StartDate = model.StartDate,
+                EndDate = model.EndDate,
+                TotalPrice = model.TotalPrice,
+                PriceAfterDiscount = model.PriceAfterDiscount,
+                PaymentMethod = model.PaymentMethod,
+                IsShared = model.IsShared,
+                Duration = model.Duration,
+                Distance = model.Distance,
+                PromotionId = model.PromotionId,
+                VehicleTypeId = model.VehicleTypeId,
+                Status = model.Status
+            };
+            await work.Bookings.InsertAsync(booking,
+                cancellationToken: cancellationToken);
+
+            // Generate BookingDetails
+
+            double priceEachTrip = booking.TotalPrice.Value / bookingDetailCount;
+            double priceAfterDiscountEachTrip = booking.PriceAfterDiscount.Value / bookingDetailCount;
+
+            foreach (RouteRoutine routeRoutine in routeRoutines)
+            {
+                BookingDetail bookingDetail = new BookingDetail
+                {
+                    BookingId = booking.Id,
+                    Date = routeRoutine.RoutineDate,
+                    Price = priceEachTrip,
+                    PriceAfterDiscount = priceAfterDiscountEachTrip,
+                    DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                    BeginTime = routeRoutine.StartTime,
+                    Status = BookingDetailStatus.PENDING
+                };
+                await work.BookingDetails.InsertAsync(bookingDetail,
+                    cancellationToken: cancellationToken);
+            }
+
+            await work.SaveChangesAsync(cancellationToken);
+            return booking;
+        }
     }
 }
