@@ -100,5 +100,10 @@ namespace ViGo.Utilities.Configuration
         public static string VnPayHashSecret
             => Configuration["Payments:VnPay:SecretKey"];
         #endregion
+
+        #region Background Task
+        public static int QueueCapacity
+            => int.Parse(Configuration["BackgroundTask:QueueCapacity"]);
+        #endregion
     }
 }

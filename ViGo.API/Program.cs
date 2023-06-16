@@ -151,9 +151,6 @@ namespace ViGo.API
                 //});
             builder.Services.AddAuthorization();
 
-            builder.Services.AddHostedService<QueuedHostedServices>();
-            builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-
             // CORS
             builder.Services.AddCors(c =>
             {
