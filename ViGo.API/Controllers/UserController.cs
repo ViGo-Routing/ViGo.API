@@ -45,20 +45,9 @@ namespace ViGo.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUsersAsync()
         {
-            //try
-            //{
-                IEnumerable<Domain.User> users =
-                    await userServices.GetUsersAsync();
-                return StatusCode(200, users);
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<Domain.User> users =
+                await userServices.GetUsersAsync();
+            return StatusCode(200, users);
         }
 
         /////// <summary>
@@ -121,19 +110,8 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GenerateFirebaseToken(string phone,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                string token = await firebaseServices.GenerateFirebaseToken(phone, cancellationToken);
-                return StatusCode(200, new { token = token });
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            string token = await firebaseServices.GenerateFirebaseToken(phone, cancellationToken);
+            return StatusCode(200, new { token = token });
         }
 
 
@@ -152,23 +130,12 @@ namespace ViGo.API.Controllers
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
-            //try
-            //{
-                User user = await userServices.GetUserByIdAsync(userId);
-                if (user == null)
-                {
-                    throw new ApplicationException("UserID không tồn tại!");
-                }
-                return StatusCode(200, user);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            User user = await userServices.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ApplicationException("UserID không tồn tại!");
+            }
+            return StatusCode(200, user);
         }
 
         /// <summary>
@@ -178,7 +145,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<User>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -186,19 +153,33 @@ namespace ViGo.API.Controllers
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
         {
-            //try
-            //{
-                User user = await userServices.UpdateUserAsync(userId, userUpdate);
-                return StatusCode(200, user);
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            User user = await userServices.UpdateUserAsync(userId, userUpdate);
+            return StatusCode(200, user);
+        }
+
+        /// <summary>
+        /// Update FCM Token for User
+        /// </summary>
+        /// <response code="401">Update failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Update successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(IEnumerable<User>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpPut("UpdateFcm/{userId}")]
+        public async Task<IActionResult> UpdateUserFcmTokenAsync(Guid userId,
+            [FromBody] UserUpdateFcmTokenModel model, CancellationToken cancellationToken)
+        {
+            if (!userId.Equals(model.Id))
+            {
+                throw new ApplicationException("Thông tin ID người dùng không hợp lệ!!");
+            }
+            User user = await userServices.UpdateUserFcmToken(model, cancellationToken);
+
+            return StatusCode(200, user);
         }
     }
 }

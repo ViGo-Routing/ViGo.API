@@ -171,10 +171,18 @@ namespace ViGo.Services
                     u => driverIds.Contains(u.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<BookingDetailViewModel> dtos =
-                from bookingDetail in bookingDetails
-                join driver in drivers
-                    on bookingDetail.DriverId equals driver.Id
-                select new BookingDetailViewModel(bookingDetail, new UserViewModel(driver));
+                new List<BookingDetailViewModel>();
+            foreach (BookingDetail bookingDetail in bookingDetails)
+            {
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    User driver = drivers.SingleOrDefault(u => u.Id.Equals(bookingDetail.DriverId));
+                    dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, new UserViewModel(driver)));
+                } else
+                {
+                    dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, null));
+                }
+            }
 
             return dtos;
         } 

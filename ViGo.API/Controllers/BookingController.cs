@@ -1,7 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ViGo.API.BackgroundTasks;
+using ViGo.Domain;
 using ViGo.Models.Bookings;
+using ViGo.Models.Fares;
+using ViGo.Models.Routes;
+using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;
@@ -15,29 +20,41 @@ namespace ViGo.API.Controllers
     {
         private BookingServices bookingServices;
         private FareServices fareServices;
+        //private TripMappingServices tripMappingServices;
+
 
         public BookingController(IUnitOfWork work)
         {
             bookingServices = new BookingServices(work);
             fareServices = new FareServices(work);
+
         }
 
-        [HttpGet("FareCalculate")]
-        public async Task<IActionResult> FareCalculate(double distance)
+        /// <summary>
+        /// Calculate Fare for a specific setting of booking
+        /// </summary>
+        /// <remarks>
+        /// All properties are required, except for RoutineType for now.
+        /// </remarks>
+        /// <returns>
+        /// Calculated Fare
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Calculate fare successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("FareCalculate")]
+        [ProducesResponseType(typeof(FareCalculateResponseModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> FareCalculate([FromBody] FareCalculateRequestModel model,
+            CancellationToken cancellationToken)
         {
-            //try
-            //{
-                double tripFare = await fareServices.TestCalculateTripFare(distance);
-                return StatusCode(200, tripFare);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            FareCalculateResponseModel response = await
+                fareServices.CalculateFareBasedOnDistance(model, cancellationToken);
+            return StatusCode(200, response);
         }
 
         /// <summary>
@@ -62,29 +79,19 @@ namespace ViGo.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetBookings(CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<BookingViewModel> dtos;
-                if (IdentityUtilities.IsAdmin())
-                {
-                    // Get All Bookings
-                    dtos = await bookingServices.GetBookingsAsync(null, cancellationToken);
-                } else
-                {
-                    // Get current user's bookings
-                    dtos = await bookingServices.GetBookingsAsync(IdentityUtilities.GetCurrentUserId(),
-                        cancellationToken);
-                }
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<BookingViewModel> dtos;
+            if (IdentityUtilities.IsAdmin())
+            {
+                // Get All Bookings
+                dtos = await bookingServices.GetBookingsAsync(null, cancellationToken);
+            }
+            else
+            {
+                // Get current user's bookings
+                dtos = await bookingServices.GetBookingsAsync(IdentityUtilities.GetCurrentUserId(),
+                    cancellationToken);
+            }
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -106,23 +113,52 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetBooking(Guid bookingId,
             CancellationToken cancellationToken)
         {
-            //try
+            BookingViewModel? dto = await bookingServices.GetBookingAsync(bookingId, cancellationToken);
+            if (dto == null)
+            {
+                throw new ApplicationException("Booking không tồn tại!");
+            }
+            return StatusCode(200, dto);
+        }
+
+        /// <summary>
+        /// Create new Booking for User's Route and Routine
+        /// </summary>
+        /// <param name="dto">Booking information to be created</param>
+        /// <returns>
+        /// The newly added booking
+        /// </returns>
+        /// <response code="400">Booking information is not valid</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Create Booking successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
+        [ProducesResponseType(typeof(Domain.Booking), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> CreateBooking(BookingCreateModel dto,
+            CancellationToken cancellationToken)
+        {
+            Booking booking = await bookingServices.CreateBookingAsync(dto, cancellationToken);
+
+            //if (booking != null)
             //{
-                BookingViewModel? dto = await bookingServices.GetBookingAsync(bookingId, cancellationToken);
-                if (dto == null)
-                {
-                    throw new ApplicationException("Booking không tồn tại!");
-                }
-                return StatusCode(200, dto);
+            //    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+            //    {
+            //        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+            //        {
+            //            IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
+            //            TripMappingServices tripMappingServices = new TripMappingServices(work);
+            //            await tripMappingServices.MapBooking(booking, _logger);
+            //        }
+            //    });
             //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+
+            return StatusCode(200, booking);
         }
 
     }

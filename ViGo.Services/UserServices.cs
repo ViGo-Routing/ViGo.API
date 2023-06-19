@@ -183,8 +183,8 @@ namespace ViGo.Services
             //    maxLength: 20,
             //    maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
             if (!Enum.IsDefined<UserRole>(dto.Role)
-                || dto.Role != UserRole.CUSTOMER ||
-                dto.Role != UserRole.DRIVER) {
+                || (dto.Role != UserRole.CUSTOMER &&
+                dto.Role != UserRole.DRIVER)) {
                 throw new ApplicationException("Vai trò người dùng không hợp lệ!");
             }
 
@@ -311,6 +311,44 @@ namespace ViGo.Services
             await work.Users.UpdateAsync(currentUser!);
             await work.SaveChangesAsync();
             return currentUser!;
+        }
+
+        public async Task<User> UpdateUserFcmToken(UserUpdateFcmTokenModel model,
+            CancellationToken cancellationToken)
+        {
+            User? user = await work.Users.GetAsync(model.Id, cancellationToken: cancellationToken);
+            if (user is null)
+            {
+                throw new ApplicationException("Thông tin người dùng không hợp lệ! Vui lòng kiểm tra lại!!");
+            }
+
+            if (string.IsNullOrEmpty(model.FcmToken))
+            {
+                throw new ApplicationException("FCM Token không được bỏ trống!!");
+            }
+
+            if (!IdentityUtilities.IsAdmin() && !IdentityUtilities.IsStaff()
+                && !IdentityUtilities.GetCurrentUserId().Equals(model.Id))
+            {
+                // Only Admin, Staff or current logged in user can update user's fcm token
+                throw new ApplicationException("Bạn không được phép thực hiện hành động này!!");
+            }
+
+            user.FcmToken = model.FcmToken;
+
+            await work.Users.UpdateAsync(user);
+
+            return user;
+        }
+
+        public async Task<string?> GetUserFcmToken(Guid userId, CancellationToken cancellationToken)
+        {
+            User? user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            if (user is null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!!");
+            }
+            return user.FcmToken;
         }
     }
 }

@@ -36,4 +36,18 @@ namespace ViGo.Domain.Enumerations
         TIME = 8,
         MB = 9
     }
+
+    public static class SettingKeys
+    {
+        public static string NightTripExtraFeeCar = "NightTripExtraFeeCar";
+        public static string NightTripExtraFeeBike = "NightTripExtraFeeBike";
+
+        public static string TicketsDiscount_10 = "10TicketsDiscount";
+        public static string TicketsDiscount_25 = "25TicketsDiscount";
+        public static string TicketsDiscount_50 = "50TicketsDiscount";
+
+        public static string WeeklyTicketsDiscount_2 = "2WeeklyTicketsDiscount";
+        public static string MonthlyTicketsDiscount_2 = "2MonthlyTicketsDiscount";
+        public static string QuarterlyTicketsDiscount_2 = "2QuarterlyTicketsDiscount";
+    }
 }

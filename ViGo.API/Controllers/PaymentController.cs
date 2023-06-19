@@ -1,13 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Data;
+using ViGo.API.BackgroundTasks;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
+using ViGo.Utilities.Google.Firebase;
 
 namespace ViGo.API.Controllers
 {
@@ -17,11 +21,25 @@ namespace ViGo.API.Controllers
     {
         private PaymentServices paymentServices;
         private ISignalRService signalRService;
+        private UserServices userServices;
 
-        public PaymentController(IUnitOfWork work, ISignalRService signalRService)
+        private IServiceScopeFactory _serviceScopeFactory;
+        private ILogger<BookingController> _logger;
+        private IBackgroundTaskQueue _backgroundQueue;
+
+        public PaymentController(IUnitOfWork work, ISignalRService signalRService,
+            IServiceScopeFactory serviceScopeFactory,
+            ILogger<BookingController> logger,
+            IBackgroundTaskQueue queue)
         {
             paymentServices = new PaymentServices(work);
             this.signalRService = signalRService;
+            userServices = new UserServices(work);
+
+            _serviceScopeFactory = serviceScopeFactory;
+            //tripMappingServices = new TripMappingServices(work);
+            _logger = logger;
+            _backgroundQueue = queue;
         }
 
         /// <summary>
@@ -42,19 +60,8 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GenerateVnPayTestPaymentUrl()
         {
-            //try
-            //{
-                string paymentUrl = paymentServices.GenerateVnPayTestPaymentUrl(HttpContext);
-                return StatusCode(200, paymentUrl);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            string paymentUrl = paymentServices.GenerateVnPayTestPaymentUrl(HttpContext);
+            return StatusCode(200, paymentUrl);
         }
 
         /// <summary>
@@ -72,31 +79,48 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> VnPayCallback(CancellationToken cancellationToken)
         {
-            //try
-            //{
-                Booking? booking = await paymentServices.VnPayPaymentConfirmAsync(Request.Query, cancellationToken);
-                if (booking != null)
+            Booking? booking = await paymentServices.VnPayPaymentConfirmAsync(Request.Query, cancellationToken);
+            if (booking != null)
+            {
+                try
                 {
                     // TODO Code
-                    await signalRService.SendToUserAsync(booking.CustomerId, "BookingPaymentResult",
-                        new
+
+                    // Send notification to user
+                    string? fcmToken = await userServices.GetUserFcmToken(booking.CustomerId, cancellationToken);
+                    if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+                    {
+                        await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
+                            "Quý khách đã thực hiện thanh toán đơn đặt chuyến đi bằng VNPay thành công!!", cancellationToken: cancellationToken);
+
+                        // Send data to mobile application
+                        await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                         {
-                            BookingId = booking.Id,
-                            PaymentMethod = PaymentMethod.VNPAY,
-                            IsSuccess = true,
-                            Message = "Thanh toán bằng VNPay thành công!"
+                            { "bookingId", booking.Id.ToString() },
+                            { "paymentMethod", PaymentMethod.VNPAY.ToString() },
+                            { "isSuccess", "true" },
+                            { "message", "Thanh toán bằng VNPay thành công!" }
+                        }, cancellationToken);
+
+                        await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                        {
+                            await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                            {
+                                IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
+                                TripMappingServices tripMappingServices = new TripMappingServices(work);
+                                await tripMappingServices.MapBooking(booking, _logger);
+                            }
                         });
+                    }
+
                 }
-                return StatusCode(204);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Payment VNPAY Callback Error - {ex.GeneratorErrorMessage()}");
+                }
+            }
+
+            return StatusCode(204);
         }
     }
 }

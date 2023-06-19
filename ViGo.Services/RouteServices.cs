@@ -37,8 +37,10 @@ namespace ViGo.Services
                 }
             }
 
-            User user = await work.Users.GetAsync(dto.UserId, cancellationToken: cancellationToken);
-            if (user.Role != UserRole.DRIVER && user.Role != UserRole.CUSTOMER)
+            User user = await work.Users.GetAsync(
+                u => u.Id.Equals(dto.UserId) && u.Status == UserStatus.ACTIVE, 
+                cancellationToken: cancellationToken);
+            if (user is null || (user.Role != UserRole.DRIVER && user.Role != UserRole.CUSTOMER))
             {
                 throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
             }
@@ -51,13 +53,12 @@ namespace ViGo.Services
                 maxLength: 255,
                 maxLengthErrorMessage: "Tên tuyến đường không được vượt quá 255 kí tự!"
                 );
-            if (dto.Distance.HasValue && dto.Distance <= 0)
+            
+            if (!Enum.IsDefined(dto.RouteType) ||
+                (user.Role == UserRole.CUSTOMER &&
+                (dto.RouteType != RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME)))
             {
-                throw new ApplicationException("Khoảng cách tuyến đường phải lớn hơn 0!");
-            }
-            if (dto.Duration.HasValue && dto.Distance <= 0)
-            {
-                throw new ApplicationException("Thời gian di chuyển của tuyến đường phải lớn hơn 0!");
+                throw new ApplicationException("Loại Tuyến đường của khách hàng không hợp lệ!!");
             }
 
             if (dto.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME ||
@@ -68,12 +69,30 @@ namespace ViGo.Services
                 {
                     throw new ApplicationException("Tuyến đường này không cần thiết lập điểm bắt đầu và kết thúc!");
                 }
+
+                if (dto.Distance.HasValue && dto.Distance.Value != 0)
+                {
+                    throw new ApplicationException("Tuyến đường này không cần thiết thiết lập khoảng cách!");
+                }
+                if (dto.Duration.HasValue && dto.Duration.Value != 0)
+                {
+                    throw new ApplicationException("Tuyến đường này không cần thiết thiết lập thời gian di chuyển!");
+                }
             }
             else
             {
                 if (dto.StartStation == null || dto.EndStation == null)
                 {
                     throw new ApplicationException("Tuyến đường chưa được thiết lập điểm bắt đầu và kết thúc!!");
+                }
+
+                if (!dto.Distance.HasValue || dto.Distance <= 0)
+                {
+                    throw new ApplicationException("Khoảng cách tuyến đường phải lớn hơn 0!");
+                }
+                if (!dto.Duration.HasValue || dto.Distance <= 0)
+                {
+                    throw new ApplicationException("Thời gian di chuyển của tuyến đường phải lớn hơn 0!");
                 }
                 IsValidStation(dto.StartStation, "Điểm bắt đầu");
                 IsValidStation(dto.EndStation, "Điểm kết thúc");
@@ -444,7 +463,7 @@ namespace ViGo.Services
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
-                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
+                throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể cập nhật thông tin tuyến đường");
             }
 
             if (!string.IsNullOrEmpty(updateDto.Name))

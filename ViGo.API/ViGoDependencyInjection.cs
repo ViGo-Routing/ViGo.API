@@ -74,7 +74,10 @@ namespace ViGo.API
             #endregion
 
             #region UnitOfWork
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IUnitOfWork>(ctx =>
+            {
+                return new UnitOfWork(ctx.CreateAsyncScope().ServiceProvider);
+            });
             #endregion
 
             #region Background Task

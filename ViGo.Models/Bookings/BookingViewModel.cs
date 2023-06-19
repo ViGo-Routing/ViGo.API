@@ -24,15 +24,15 @@ namespace ViGo.Models.Bookings
         //public RouteStationViewModel EndRouteStation { get; set; }
         public RouteViewModel? CustomerRoute { get; set; }
         public TimeSpan? StartTime { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
         public string? DaysOfWeek { get; set; }
         public double? TotalPrice { get; set; }
         public double? PriceAfterDiscount { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public bool IsShared { get; set; }
-        public double? Duration { get; set; }
-        public double? Distance { get; set; }
+        public double Duration { get; set; }
+        public double Distance { get; set; }
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public string VehicleName { get; set; }

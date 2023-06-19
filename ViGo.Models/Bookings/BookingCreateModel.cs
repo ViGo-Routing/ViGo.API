@@ -26,6 +26,6 @@ namespace ViGo.Models.Bookings
         public double Distance { get; set; }
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
-        public BookingStatus Status { get; set; } = BookingStatus.UNPAID;
+        //public BookingStatus Status { get; set; } = BookingStatus.UNPAID;
     }
 }

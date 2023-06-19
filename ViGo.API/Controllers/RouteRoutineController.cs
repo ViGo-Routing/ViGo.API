@@ -42,19 +42,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetRouteStation(Guid routeId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices.GetRouteRoutinesAsync(routeId, cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+
+            IEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices.GetRouteRoutinesAsync(routeId, cancellationToken);
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -83,24 +73,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CreateRouteRoutines(RouteRoutineCreateEditModel model,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<RouteRoutine> routines = await routeRoutineServices.CreateRouteRoutinesAsync(model, cancellationToken);
+            IEnumerable<RouteRoutine> routines = await routeRoutineServices.CreateRouteRoutinesAsync(model, cancellationToken);
 
-                return StatusCode(200, routines);
-            //}
-            //catch (AccessDeniedException ex)
-            //{
-            //    return StatusCode(403, ex.GeneratorErrorMessage());
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            return StatusCode(200, routines);
         }
 
         /// <summary>
@@ -128,28 +103,13 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> UpdateRouteRoutines(Guid routeId, RouteRoutineCreateEditModel model,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (!routeId.Equals(model.RouteId))
-                {
-                    throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
-                }
+            if (!routeId.Equals(model.RouteId))
+            {
+                throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
+            }
 
-                IEnumerable<RouteRoutine> updatedRoutines = await routeRoutineServices.UpdateRouteRoutinesAsync(model, cancellationToken);
-                return StatusCode(200, updatedRoutines);
-            //}
-            //catch (AccessDeniedException ex)
-            //{
-            //    return StatusCode(403, ex.GeneratorErrorMessage());
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<RouteRoutine> updatedRoutines = await routeRoutineServices.UpdateRouteRoutinesAsync(model, cancellationToken);
+            return StatusCode(200, updatedRoutines);
         }
     }
 }
