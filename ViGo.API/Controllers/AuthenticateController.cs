@@ -48,28 +48,26 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> WebLogin([FromBody] WebUserLoginModel loginUser,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                User? user = await userServices.LoginAsync(
-                    loginUser, cancellationToken);
+            User? user = await userServices.LoginAsync(
+                loginUser, cancellationToken);
 
-                if (user == null)
-                {
-                    return StatusCode(401, "Đăng nhập không thành công!");
-                }
+            if (user == null)
+            {
+                return StatusCode(401, "Đăng nhập không thành công!");
+            }
 
-                if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
-                {
-                    return StatusCode(401, "Tài khoản chưa được xác minh!");
-                }
-                if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
-                {
-                    return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
-                }
+            if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+            {
+                return StatusCode(401, "Tài khoản chưa được xác minh!");
+            }
+            if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+            {
+                return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
+            }
 
-                user.Password = "";
+            user.Password = "";
 
-                var authClaims = new List<Claim>
+            var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Name ?? ""),
@@ -78,36 +76,26 @@ namespace ViGo.API.Controllers
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
-                var authSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
+            var authSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
 
-                // Token
-                var token = new JwtSecurityToken(
-                    issuer: ViGoConfiguration.ValidIssuer,
-                    audience: ViGoConfiguration.ValidAudience,
-                    expires: DateTime.Now.AddHours(1),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(
-                        authSigningKey, SecurityAlgorithms.HmacSha256));
+            // Token
+            var token = new JwtSecurityToken(
+                issuer: ViGoConfiguration.ValidIssuer,
+                audience: ViGoConfiguration.ValidAudience,
+                expires: DateTime.Now.AddHours(1),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(
+                    authSigningKey, SecurityAlgorithms.HmacSha256));
 
-                var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
+            var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
 
-                return StatusCode(200, new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token)
-                });
-
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            return StatusCode(200, new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token)
+            });
         }
-        
+
         /// <summary>
         /// Generates JWT token for Customer and Driver
         /// </summary>
@@ -128,27 +116,25 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> MobileLogin([FromBody] MobileUserLoginModel loginUser,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                User? user = await userServices.LoginAsync(
-                    loginUser, cancellationToken);
+            User? user = await userServices.LoginAsync(
+                loginUser, cancellationToken);
 
-                if (user == null)
-                {
-                    return StatusCode(401, "Đăng nhập không thành công!");
-                }
-                if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
-                {
-                    return StatusCode(401, "Tài khoản chưa được xác minh!");
-                }
-                if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
-                {
-                    return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
-                }
+            if (user == null)
+            {
+                return StatusCode(401, "Đăng nhập không thành công!");
+            }
+            if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+            {
+                return StatusCode(401, "Tài khoản chưa được xác minh!");
+            }
+            if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+            {
+                return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
+            }
 
-                user.Password = "";
+            user.Password = "";
 
-                var authClaims = new List<Claim>
+            var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.Name ?? ""),
@@ -158,33 +144,24 @@ namespace ViGo.API.Controllers
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
-                var authSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
+            var authSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(ViGoConfiguration.Secret));
 
-                // Token
-                var token = new JwtSecurityToken(
-                    issuer: ViGoConfiguration.ValidIssuer,
-                    audience: ViGoConfiguration.ValidAudience,
-                    expires: DateTime.Now.AddHours(1),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(
-                        authSigningKey, SecurityAlgorithms.HmacSha256));
+            // Token
+            var token = new JwtSecurityToken(
+                issuer: ViGoConfiguration.ValidIssuer,
+                audience: ViGoConfiguration.ValidAudience,
+                expires: DateTime.Now.AddHours(1),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(
+                    authSigningKey, SecurityAlgorithms.HmacSha256));
 
-                var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
+            var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
 
-                return StatusCode(200, new
-                {
-                    token = new JwtSecurityTokenHandler().WriteToken(token)
-                });
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            return StatusCode(200, new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token)
+            });
         }
 
         /// <summary>
@@ -205,24 +182,13 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> Register([FromBody] UserRegisterModel registerDto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (User.IsAuthenticated())
-                {
-                    throw new ApplicationException("Bạn đã đăng nhập vào hệ thống!");
-                }
+            if (User.IsAuthenticated())
+            {
+                throw new ApplicationException("Bạn đã đăng nhập vào hệ thống!");
+            }
 
-                User user = await userServices.RegisterAsync(registerDto, cancellationToken);
-                return StatusCode(200, user);
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            User user = await userServices.RegisterAsync(registerDto, cancellationToken);
+            return StatusCode(200, user);
         }
     }
 }
