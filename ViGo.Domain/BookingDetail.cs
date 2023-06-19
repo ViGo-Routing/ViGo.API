@@ -19,11 +19,11 @@ namespace ViGo.Domain
         //public Guid CustomerRouteId { get; set; }
         public Guid? DriverRouteId { get; set; }
         public DateTime? AssignedTime { get; set; }
-        public DateTime? Date { get; set; }
+        public DateTime Date { get; set; }
         public double? Price { get; set; }
         public double? PriceAfterDiscount { get; set; }
         public double? DriverWage { get; set; }
-        public TimeSpan? BeginTime { get; set; }
+        public TimeSpan BeginTime { get; set; }
         public DateTime? ArriveAtPickupTime { get; set; }
         public DateTime? PickupTime { get; set; }
         public DateTime? DropoffTime { get; set; }

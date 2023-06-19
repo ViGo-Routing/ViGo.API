@@ -22,7 +22,7 @@ namespace ViGo.Domain
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
-        public RouteType RouteType { get; set; }
+        public RouteType RouteType { get; set; } = RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME;
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }

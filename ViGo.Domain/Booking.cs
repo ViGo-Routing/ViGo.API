@@ -27,8 +27,8 @@ namespace ViGo.Domain
         public double? PriceAfterDiscount { get; set; }
         public PaymentMethod? PaymentMethod { get; set; }
         public bool IsShared { get; set; }
-        public double? Duration { get; set; }
-        public double? Distance { get; set; }
+        public double Duration { get; set; }
+        public double Distance { get; set; }
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public BookingStatus Status { get; set; }
