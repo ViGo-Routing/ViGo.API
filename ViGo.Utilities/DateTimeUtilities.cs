@@ -21,5 +21,10 @@ namespace ViGo.Utilities
         {
             return date.ToDateTime(time);
         }
+
+        public static TimeSpan CalculateTripEndTime(TimeSpan beginTime, double duration)
+        {
+            return beginTime.Add(new TimeSpan(0, (int)Math.Ceiling(duration), 0));
+        }
     }
 }
