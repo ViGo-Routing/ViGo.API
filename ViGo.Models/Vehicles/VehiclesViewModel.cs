@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Domain;
 using ViGo.Models.Users;
+using ViGo.Models.VehicleTypes;
 
 namespace ViGo.Models.Vehicles
 {
@@ -20,6 +22,21 @@ namespace ViGo.Models.Vehicles
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
         public UserViewModel User { get; set; }
+        public VehicleTypeViewModel VehicleType { get; set; }
 
+        public VehiclesViewModel(Vehicle vehicle, UserViewModel user, VehicleTypeViewModel vehicleType) {
+            Id = vehicle.Id;
+            Name = vehicle.Name;
+            LicensePlate = vehicle.LicensePlate;
+            VehicleTypeId = vehicle.VehicleTypeId;
+            UserId = vehicle.UserId;
+            CreatedBy = vehicle.CreatedBy;
+            UpdatedTime = vehicle.UpdatedTime;
+            UpdatedBy = vehicle.UpdatedBy;
+            IsDeleted = vehicle.IsDeleted;
+            User = user;
+            VehicleType = vehicleType;
+
+        }
     }
 }

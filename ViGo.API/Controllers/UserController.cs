@@ -150,11 +150,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserByIdAsync(Guid id)
+        public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
             //try
             //{
-                User user = await userServices.GetUserByIdAsync(id);
+                User user = await userServices.GetUserByIdAsync(userId);
                 if (user == null)
                 {
                     throw new ApplicationException("UserID không tồn tại!");
@@ -184,11 +184,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUserAsync(Guid id, [FromBody] UserUpdateModel userUpdate)
+        public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
         {
             //try
             //{
-                User user = await userServices.UpdateUserAsync(id, userUpdate);
+                User user = await userServices.UpdateUserAsync(userId, userUpdate);
                 return StatusCode(200, user);
             //}
             //catch (ApplicationException ex)
