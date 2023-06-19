@@ -130,7 +130,7 @@ namespace ViGo.API.Controllers
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
-            User user = await userServices.GetUserByIdAsync(id);
+            User user = await userServices.GetUserByIdAsync(userId);
             if (user == null)
             {
                 throw new ApplicationException("UserID không tồn tại!");
@@ -153,7 +153,7 @@ namespace ViGo.API.Controllers
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
         {
-            User user = await userServices.UpdateUserAsync(id, userUpdate);
+            User user = await userServices.UpdateUserAsync(userId, userUpdate);
             return StatusCode(200, user);
         }
 
