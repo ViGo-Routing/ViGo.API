@@ -39,25 +39,14 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetBookingDetail(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                BookingDetailViewModel? dto = await bookingDetailServices
-                    .GetBookingDetailAsync(bookingDetailId, cancellationToken);
-                if (dto == null)
-                {
-                    throw new ApplicationException("Booking Detail không tồn tại!!");
-                }
+            BookingDetailViewModel? dto = await bookingDetailServices
+                .GetBookingDetailAsync(bookingDetailId, cancellationToken);
+            if (dto == null)
+            {
+                throw new ApplicationException("Booking Detail không tồn tại!!");
+            }
 
-                return StatusCode(200, dto);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            return StatusCode(200, dto);
         }
 
         /// <summary>
@@ -79,20 +68,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetDriverAssignedBookingDetails(Guid driverId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<BookingDetailViewModel> dtos =
-                    await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(driverId, cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(driverId, cancellationToken);
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -114,20 +92,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetBookingDetails(Guid bookingId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<BookingDetailViewModel> dtos =
-                    await bookingDetailServices.GetBookingDetailsAsync(bookingId, cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetBookingDetailsAsync(bookingId, cancellationToken);
+            return StatusCode(200, dtos);
         }
 
 
@@ -154,25 +121,14 @@ namespace ViGo.API.Controllers
             Guid bookingDetailId, BookingDetailUpdateStatusModel dto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (!bookingDetailId.Equals(dto.BookingDetailId))
-                {
-                    throw new ApplicationException("Request không hợp lệ!!");
-                }
+            if (!bookingDetailId.Equals(dto.BookingDetailId))
+            {
+                throw new ApplicationException("Request không hợp lệ!!");
+            }
 
-                BookingDetail bookingDetail = await bookingDetailServices
-                    .UpdateBookingDetailStatusAsync(dto, cancellationToken);
-                return StatusCode(200, bookingDetail);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            BookingDetail bookingDetail = await bookingDetailServices
+                .UpdateBookingDetailStatusAsync(dto, cancellationToken);
+            return StatusCode(200, bookingDetail);
         }
 
         /// <summary>
@@ -200,25 +156,14 @@ namespace ViGo.API.Controllers
             Guid bookingDetailId, BookingDetailAssignDriverModel dto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (!bookingDetailId.Equals(dto.BookingDetailId))
-                {
-                    throw new ApplicationException("Request không hợp lệ!!");
-                }
+            if (!bookingDetailId.Equals(dto.BookingDetailId))
+            {
+                throw new ApplicationException("Request không hợp lệ!!");
+            }
 
-                BookingDetail bookingDetail = await bookingDetailServices
-                    .AssignDriverAsync(dto, cancellationToken);
-                return StatusCode(200, bookingDetail);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            BookingDetail bookingDetail = await bookingDetailServices
+                .AssignDriverAsync(dto, cancellationToken);
+            return StatusCode(200, bookingDetail);
         }
     }
 }

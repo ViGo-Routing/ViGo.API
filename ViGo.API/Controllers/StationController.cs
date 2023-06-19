@@ -39,19 +39,8 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetStation(Guid stationId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                StationViewModel? dto = await stationServices.GetStationAsync(stationId, cancellationToken);
-                return StatusCode(200, dto);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            StationViewModel? dto = await stationServices.GetStationAsync(stationId, cancellationToken);
+            return StatusCode(200, dto);
         }
     }
 }

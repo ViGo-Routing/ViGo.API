@@ -43,24 +43,6 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CreateRoute(RouteCreateEditModel dto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-            //    Domain.Route route = await routeServices.CreateRouteAsync(dto);
-
-            //    return StatusCode(200, route);
-            //}
-            //catch (AccessDeniedException ex)
-            //{
-            //    return StatusCode(403, ex.GeneratorErrorMessage());
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
             Domain.Route route = await routeServices.CreateRouteAsync(dto, cancellationToken);
 
             return StatusCode(200, route);
@@ -86,20 +68,34 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRoutesCurrentUser(CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<RouteViewModel> dtos = await
-                    routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId(), cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId(), cancellationToken);
+            return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get Routes information for the a specific user
+        /// </summary>
+        /// <returns>
+        /// List of the user's saved routes
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Get List of routes successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("User/{userId}")]
+        [Authorize(Roles = "ADMIN")]
+        [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRoutes(Guid userId, CancellationToken cancellationToken)
+        {
+            IEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(userId, cancellationToken);
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -123,20 +119,9 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRoutes(CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<RouteViewModel> dtos = await
-                    routeServices.GetRoutesAsync(null, cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(null, cancellationToken);
+            return StatusCode(200, dtos);
         }
 
         /// <summary>
@@ -158,19 +143,8 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetRoute(Guid routeId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                RouteViewModel dto = await routeServices.GetRouteAsync(routeId, cancellationToken);
-                return StatusCode(200, dto);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            RouteViewModel dto = await routeServices.GetRouteAsync(routeId, cancellationToken);
+            return StatusCode(200, dto);
         }
 
         /// <summary>
@@ -197,28 +171,13 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> UpdateRoute(Guid routeId, RouteCreateEditModel dto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (!routeId.Equals(dto.Id))
-                {
-                    throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
-                }
+            if (!routeId.Equals(dto.Id))
+            {
+                throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
+            }
 
-                Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto, cancellationToken);
-                return StatusCode(200, updatedRoute);
-            //}
-            //catch (AccessDeniedException ex)
-            //{
-            //    return StatusCode(403, ex.GeneratorErrorMessage());
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto, cancellationToken);
+            return StatusCode(200, updatedRoute);
         }
 
         /// <summary>
@@ -242,28 +201,13 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> ChangeRouteStatus(Guid routeId, RouteChangeStatusModel dto,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                if (!routeId.Equals(dto.Id))
-                {
-                    throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
-                }
+            if (!routeId.Equals(dto.Id))
+            {
+                throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
+            }
 
-                Domain.Route updatedRoute = await routeServices.ChangeRouteStatusAsync(dto.Id, dto.Status, cancellationToken);
-                return StatusCode(200, updatedRoute);
-            //}
-            //catch (AccessDeniedException ex)
-            //{
-            //    return StatusCode(403, ex.GeneratorErrorMessage());
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            Domain.Route updatedRoute = await routeServices.ChangeRouteStatusAsync(dto.Id, dto.Status, cancellationToken);
+            return StatusCode(200, updatedRoute);
         }
 
         /// <summary>
@@ -292,20 +236,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> DeleteRoute(Guid routeId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
 
-                Domain.Route deletedRoute = await routeServices.DeleteRouteAsync(routeId, cancellationToken);
-                return StatusCode(200, deletedRoute);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            Domain.Route deletedRoute = await routeServices.DeleteRouteAsync(routeId, cancellationToken);
+            return StatusCode(200, deletedRoute);
         }
     }
 }

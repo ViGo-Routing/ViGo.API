@@ -39,19 +39,8 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetRouteStation(Guid routeStationId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                RouteStationViewModel? dto = await routeStationServices.GetRouteStationAsync(routeStationId, cancellationToken);
-                return StatusCode(200, dto);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            RouteStationViewModel? dto = await routeStationServices.GetRouteStationAsync(routeStationId, cancellationToken);
+            return StatusCode(200, dto);
         }
 
         /// <summary>
@@ -73,20 +62,9 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetRouteStations(Guid routeId,
             CancellationToken cancellationToken)
         {
-            //try
-            //{
-                IEnumerable<RouteStationViewModel> dtos = await routeStationServices.
-                    GetRouteStationsAsync(routeId, cancellationToken);
-                return StatusCode(200, dtos);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            IEnumerable<RouteStationViewModel> dtos = await routeStationServices.
+                GetRouteStationsAsync(routeId, cancellationToken);
+            return StatusCode(200, dtos);
         }
     }
 }
