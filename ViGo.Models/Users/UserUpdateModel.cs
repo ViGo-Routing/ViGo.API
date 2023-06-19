@@ -16,4 +16,10 @@ namespace ViGo.DTOs.Users
         public DateTime? DateOfBirth { get; set; }
         public string? AvatarUrl { get; set; }
     }
+
+    public class UserUpdateFcmTokenModel
+    {
+        public Guid Id { get; set; }
+        public string FcmToken { get; set; }
+    }
 }

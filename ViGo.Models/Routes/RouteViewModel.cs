@@ -22,6 +22,7 @@ namespace ViGo.Models.Routes
         public double? Distance { get; set; }
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
+        public RouteType RouteType { get; set; }
         public StationViewModel? StartStation { get; set; }
         public StationViewModel? EndStation { get; set; }
         //public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
@@ -58,6 +59,7 @@ namespace ViGo.Models.Routes
             EndStationId = route.EndStationId;
             Distance = route.Distance;
             Duration = route.Duration;
+            RouteType = route.RouteType;
             Status = route.Status;
             StartStation = startStation;
             EndStation = endStation;
