@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
+using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 
@@ -16,24 +18,73 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<Vehicle>> GetAllVehiclesAsync()
+        public async Task<IEnumerable<VehiclesViewModel>> GetAllVehiclesAsync()
         {
             IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync();
+            IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
+            IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);
+            IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)));
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(q => q.Where(items => vehicleTypeIds.Contains(items.Id)));
 
-            return vehicles;
+            IEnumerable<UserViewModel> userViewModels = from user in users 
+                                                        select new UserViewModel(user);
+
+            IEnumerable<VehicleTypeViewModel> vehicleTypeViewModels = from vehicleType in vehicleTypes
+                                                                      select new VehicleTypeViewModel(vehicleType);
+
+            IEnumerable<VehiclesViewModel> listVehicle = from vehicle in vehicles
+                                                         join userModel in userViewModels
+                                                            on vehicle.UserId equals userModel.Id
+                                                         join vehicleTypeModel in vehicleTypeViewModels
+                                                            on vehicle.VehicleTypeId equals vehicleTypeModel.Id
+                                                         select new VehiclesViewModel(vehicle, userModel, vehicleTypeModel);
+            return listVehicle;
         }
 
-        public async Task<Vehicle> GetVehicleByIdAsync(Guid id)
+        public async Task<VehiclesViewModel> GetVehicleByIdAsync(Guid id)
         {
             Vehicle vehicle = await work.Vehicles.GetAsync(id);
+            Guid userId = vehicle.UserId;
+            Guid vehicleTypeId = vehicle.VehicleTypeId;
 
-            return vehicle;
+            User user = await work.Users.GetAsync(userId);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicleTypeId);
+            UserViewModel userViewModel = new UserViewModel(user);
+            VehicleTypeViewModel vehicleTypeViewModel = new VehicleTypeViewModel(vehicleType);
+
+            VehiclesViewModel vehicleModel = new VehiclesViewModel(vehicle, userViewModel, vehicleTypeViewModel);
+
+            return vehicleModel;
+            //return vehicle;
         }
 
-        public async Task<Vehicle> CreateVehicleAsync(VehiclesCreateModel vehicle)
+        public async Task<IEnumerable<VehiclesViewModel>> GetVehicleByUserIdAsync(Guid userId)
+        {
+            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(v => v.Where(q => q.UserId.Equals(userId)));
+            IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
+            IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);
+            IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)));
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(q => q.Where(items => vehicleTypeIds.Contains(items.Id)));
+
+            IEnumerable<UserViewModel> userViewModels = from user in users
+                                                        select new UserViewModel(user);
+
+            IEnumerable<VehicleTypeViewModel> vehicleTypeViewModels = from vehicleType in vehicleTypes
+                                                                      select new VehicleTypeViewModel(vehicleType);
+
+            IEnumerable<VehiclesViewModel> listVehicle = from vehicle in vehicles
+                                                         join userModel in userViewModels
+                                                            on vehicle.UserId equals userModel.Id
+                                                         join vehicleTypeModel in vehicleTypeViewModels
+                                                            on vehicle.VehicleTypeId equals vehicleTypeModel.Id
+                                                         select new VehiclesViewModel(vehicle, userModel, vehicleTypeModel);
+            return listVehicle;
+        }
+
+        public async Task<VehiclesViewModel> CreateVehicleAsync(VehiclesCreateModel vehicle)
         {
             //check vehicle type id exist 
-            Vehicle entry = new Vehicle
+            Vehicle newVehicle = new Vehicle
             {
                 Name = vehicle.Name,
                 LicensePlate = vehicle.LicensePlate,
@@ -42,18 +93,25 @@ namespace ViGo.Services
                 IsDeleted = false,
             };
 
-            await work.Vehicles.InsertAsync(entry);
+
+            await work.Vehicles.InsertAsync(newVehicle);
             var result = await work.SaveChangesAsync();
+
+            User user = await work.Users.GetAsync(vehicle.UserId);
+            UserViewModel userViewModel = new UserViewModel(user);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicle.VehicleTypeId);
+            VehicleTypeViewModel vehicleTypeViewModel = new VehicleTypeViewModel(vehicleType);
+            VehiclesViewModel vehicleView = new VehiclesViewModel(newVehicle, userViewModel, vehicleTypeViewModel);
             if (result > 0)
             {
-                return entry;
+                return vehicleView;
             }
             return null!;
         }
 
-        public async Task<Vehicle> UpdateVehicleAsync(Guid id, VehiclesUpdateModel vehiclesUpdate)
+        public async Task<VehiclesViewModel> UpdateVehicleAsync(Guid id, VehiclesUpdateModel vehiclesUpdate)
         {
-            var currentVehicle = await GetVehicleByIdAsync(id);
+            var currentVehicle = await work.Vehicles.GetAsync(id);
 
             if (currentVehicle != null)
             {
@@ -77,7 +135,13 @@ namespace ViGo.Services
 
             await work.Vehicles.UpdateAsync(currentVehicle!);
             await work.SaveChangesAsync();
-            return currentVehicle!;
+            User user = await work.Users.GetAsync(currentVehicle.UserId);
+            UserViewModel userViewModel = new UserViewModel(user);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(currentVehicle.VehicleTypeId);
+            VehicleTypeViewModel vehicleTypeViewModel = new VehicleTypeViewModel(vehicleType);
+            VehiclesViewModel vehicleView = new VehiclesViewModel(currentVehicle, userViewModel, vehicleTypeViewModel);
+
+            return vehicleView!;
         }
     }
 }

@@ -26,7 +26,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehicleTypeViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<VehicleType>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -56,12 +56,12 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehicleTypeViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<VehicleType>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpGet("{vehicleTypeId}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleTypeByIdAsync(Guid id)
         {
             //try
@@ -90,7 +90,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehicleTypeViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<VehicleType>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -124,12 +124,12 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehicleTypeViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<VehicleType>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
-        [HttpPut("{vehicleTypeId}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVehicleTypeAsync(Guid id, [FromBody] VehicleTypeUpdateModel vehicleTypeCreate)
         {
             //try
