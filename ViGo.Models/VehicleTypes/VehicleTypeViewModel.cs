@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 
 namespace ViGo.Models.VehicleTypes
@@ -18,5 +19,18 @@ namespace ViGo.Models.VehicleTypes
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
+
+        public VehicleTypeViewModel(VehicleType vehicleType) { 
+            Id = vehicleType.Id;
+            Name = vehicleType.Name;
+            Slot = vehicleType.Slot;
+            Type = vehicleType.Type;
+            CreatedTime = vehicleType.CreatedTime;
+            CreatedBy = vehicleType.CreatedBy;
+            UpdatedTime = vehicleType.UpdatedTime;
+            UpdatedBy = vehicleType.UpdatedBy;
+            IsDeleted = vehicleType.IsDeleted;
+
+        }
     }
 }

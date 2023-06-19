@@ -128,7 +128,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUserByIdAsync(Guid id)
+        public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
             User user = await userServices.GetUserByIdAsync(id);
             if (user == null)
@@ -151,7 +151,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUserAsync(Guid id, [FromBody] UserUpdateModel userUpdate)
+        public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
         {
             User user = await userServices.UpdateUserAsync(id, userUpdate);
             return StatusCode(200, user);
