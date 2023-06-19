@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -78,6 +79,30 @@ namespace ViGo.Repository
             VehicleTypes = vehicleTypes;
             Wallets = wallets;
             WalletTransactions = walletTransactions;
+        }
+
+        public UnitOfWork(IServiceProvider serviceProvider)
+        {
+            context = serviceProvider.GetRequiredService<ViGoDBContext>();
+            Bookings = serviceProvider.GetRequiredService<IRepository<Booking>>();
+            BookingDetails = serviceProvider.GetRequiredService<IRepository<BookingDetail>>(); ;
+            Events = serviceProvider.GetRequiredService<IRepository<Event>>();
+            Fares = serviceProvider.GetRequiredService<IRepository<Fare>>();
+            FarePolicies = serviceProvider.GetRequiredService<IRepository<FarePolicy>>();
+            Notifications = serviceProvider.GetRequiredService<IRepository<Notification>>();
+            Promotions = serviceProvider.GetRequiredService<IRepository<Promotion>>();
+            Reports = serviceProvider.GetRequiredService<IRepository<Report>>();
+            Routes = serviceProvider.GetRequiredService<IRepository<Route>>();
+            RouteRoutines = serviceProvider.GetRequiredService<IRepository<RouteRoutine>>();
+            RouteStations = serviceProvider.GetRequiredService<IRepository<RouteStation>>();
+            Settings = serviceProvider.GetRequiredService<IRepository<Setting>>();
+            Stations = serviceProvider.GetRequiredService<IRepository<Station>>();
+            Users = serviceProvider.GetRequiredService<IRepository<User>>();
+            UserLicenses = serviceProvider.GetRequiredService<IRepository<UserLicense>>();
+            Vehicles = serviceProvider.GetRequiredService<IRepository<Vehicle>>();
+            VehicleTypes = serviceProvider.GetRequiredService<IRepository<VehicleType>>();
+            Wallets = serviceProvider.GetRequiredService<IRepository<Wallet>>();
+            WalletTransactions = serviceProvider.GetRequiredService<IRepository<WalletTransaction>>();
         }
         #endregion
 
