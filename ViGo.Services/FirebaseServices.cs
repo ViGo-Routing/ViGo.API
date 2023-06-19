@@ -23,38 +23,45 @@ namespace ViGo.Services
         }
 
         // Run once, test only
-        private async Task CreateFirebaseUsersAsync()
+        public async Task<string> CreateFirebaseUserAsync(string phone, CancellationToken cancellationToken)
         {
-            IEnumerable<User> users = await work.Users.GetAllAsync();
-            foreach (User user in users)
+            //IEnumerable<User> users = await work.Users.GetAllAsync();
+            //foreach (User user in users)
+            //{
+            //    if (!string.IsNullOrEmpty(user.Phone))
+            //    {
+            //        UserRecordArgs args = new UserRecordArgs()
+            //        {
+            //            PhoneNumber = user.Phone,
+            //            DisplayName = user.Name,
+            //            PhotoUrl = string.IsNullOrEmpty(user.AvatarUrl) ? null : user.AvatarUrl,
+            //            Disabled = false
+            //        };
+            //        try
+            //        {
+            //            UserRecord checkRecord = await FirebaseAuth.DefaultInstance
+            //            .GetUserByPhoneNumberAsync(user.Phone);
+            //            continue;
+
+            //        }
+            //        catch (FirebaseAuthException authException)
+            //        {
+            //            UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
+            //            user.FirebaseUid = userRecord.Uid;
+            //            await work.Users.UpdateAsync(user);
+            //        }
+            //    }
+
+            //}
+
+            //await work.SaveChangesAsync();
+            UserRecordArgs recordArgs = new UserRecordArgs
             {
-                if (!string.IsNullOrEmpty(user.Phone))
-                {
-                    UserRecordArgs args = new UserRecordArgs()
-                    {
-                        PhoneNumber = user.Phone,
-                        DisplayName = user.Name,
-                        PhotoUrl = string.IsNullOrEmpty(user.AvatarUrl) ? null : user.AvatarUrl,
-                        Disabled = false
-                    };
-                    try
-                    {
-                        UserRecord checkRecord = await FirebaseAuth.DefaultInstance
-                        .GetUserByPhoneNumberAsync(user.Phone);
-                        continue;
-
-                    }
-                    catch (FirebaseAuthException authException)
-                    {
-                        UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(args);
-                        user.FirebaseUid = userRecord.Uid;
-                        await work.Users.UpdateAsync(user);
-                    }
-                }
-
-            }
-
-            await work.SaveChangesAsync();
+                PhoneNumber = phone,
+                Disabled = false
+            };
+            UserRecord userRecord = await FirebaseAuth.DefaultInstance.CreateUserAsync(recordArgs, cancellationToken);
+            return userRecord.Uid;
         }
 
         public async Task<string> GenerateFirebaseToken(string phone, CancellationToken cancellationToken)

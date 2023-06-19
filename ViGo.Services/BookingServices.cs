@@ -298,6 +298,7 @@ namespace ViGo.Services
                 CustomerRouteId = model.CustomerRouteId,
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
+                StartTime = routeRoutines.First().StartTime,
                 TotalPrice = model.TotalPrice,
                 PriceAfterDiscount = model.PriceAfterDiscount,
                 PaymentMethod = model.PaymentMethod,
@@ -306,7 +307,7 @@ namespace ViGo.Services
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
-                Status = model.Status
+                Status = BookingStatus.UNPAID // TODO Code
             };
             await work.Bookings.InsertAsync(booking,
                 cancellationToken: cancellationToken);
@@ -321,11 +322,11 @@ namespace ViGo.Services
                 BookingDetail bookingDetail = new BookingDetail
                 {
                     BookingId = booking.Id,
-                    Date = routeRoutine.RoutineDate,
+                    Date = routeRoutine.RoutineDate.Value,
                     Price = priceEachTrip,
                     PriceAfterDiscount = priceAfterDiscountEachTrip,
                     DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
-                    BeginTime = routeRoutine.StartTime,
+                    BeginTime = routeRoutine.StartTime.Value,
                     Status = BookingDetailStatus.PENDING
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,

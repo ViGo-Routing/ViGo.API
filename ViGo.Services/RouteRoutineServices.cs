@@ -284,7 +284,12 @@ namespace ViGo.Services
                 if (currentRouteRoutines.Any())
                 {
                     IEnumerable<DateTimeRange> currentRanges =
-                    from routine in currentRouteRoutines
+                    from routine in currentRouteRoutines.Where(rr =>
+                    {
+                        Route route = routes.SingleOrDefault(r => r.Id.Equals(rr.RouteId));
+                        return route.RouteType == RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME ||
+                            route.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME;
+                    })
                     select new DateTimeRange(
                         DateTimeUtilities
                      .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate.Value), TimeOnly.FromTimeSpan(routine.StartTime.Value)),
@@ -323,22 +328,38 @@ namespace ViGo.Services
                     }
                 }
             }
-            else if (route.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
+            else 
+            //if (route.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
             {
-                throw new ApplicationException("Tuyến đường này không cẩn thiết lập lịch trình!!");
-            }
-            {
-                // SPECIFIC_ROUTE_EVERY_TIME
+                // Every time
+                if (routines.Count == 0)
+                {
+                    throw new ApplicationException("Không có lịch trình nào được thiết lập!!");
+                }
                 foreach (RouteRoutineListItemModel routine in routines)
                 {
-                    if (routine.RoutineDate.HasValue
-                        || routine.StartTime.HasValue
-                        || routine.EndTime.HasValue)
+                    if (routine.RoutineDate == null)
                     {
-                        throw new ApplicationException("Tuyến đường được thiết lập không cần khung thời gian!!");
+                        throw new ApplicationException("Lịch trình cần được thiết lập ngày đi!!");
+                    }
+                    if (routine.StartTime.HasValue || routine.EndTime.HasValue)
+                    {
+                        throw new ApplicationException("Lịch trình không cần thiết lập khung thời gian!!");
                     }
                 }
             }
+            //{
+            //    // SPECIFIC_ROUTE_EVERY_TIME
+            //    foreach (RouteRoutineListItemModel routine in routines)
+            //    {
+            //        if (routine.RoutineDate.HasValue
+            //            || routine.StartTime.HasValue
+            //            || routine.EndTime.HasValue)
+            //        {
+            //            throw new ApplicationException("Tuyến đường được thiết lập không cần khung thời gian!!");
+            //        }
+            //    }
+            //}
         }
         #endregion
     }
