@@ -21,9 +21,9 @@ namespace ViGo.API.Controllers
 
         public TestController(IUnitOfWork work, ILogger<TestController> logger)
         {
-            bookingServices = new BookingServices(work);
-            tripMappingServices = new TripMappingServices(work);
-            firebaseServices = new FirebaseServices(work);
+            bookingServices = new BookingServices(work, logger);
+            tripMappingServices = new TripMappingServices(work, logger);
+            firebaseServices = new FirebaseServices(work, logger);
             _logger = logger;
         }
         /// <summary>

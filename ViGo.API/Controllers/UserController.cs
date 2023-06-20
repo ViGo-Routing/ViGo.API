@@ -24,10 +24,13 @@ namespace ViGo.API.Controllers
         private UserServices userServices;
         private FirebaseServices firebaseServices;
 
-        public UserController(IUnitOfWork work)
+        private ILogger<UserController> _logger;
+
+        public UserController(IUnitOfWork work, ILogger<UserController> logger)
         {
-            userServices = new UserServices(work);
-            firebaseServices = new FirebaseServices(work);
+            userServices = new UserServices(work, logger);
+            firebaseServices = new FirebaseServices(work, logger);
+            _logger = logger;
         }
 
         /// <summary>

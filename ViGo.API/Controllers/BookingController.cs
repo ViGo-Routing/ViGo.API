@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViGo.API.BackgroundTasks;
 using ViGo.Domain;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
@@ -22,12 +21,13 @@ namespace ViGo.API.Controllers
         private FareServices fareServices;
         //private TripMappingServices tripMappingServices;
 
+        private ILogger<BookingController> _logger;
 
-        public BookingController(IUnitOfWork work)
+        public BookingController(IUnitOfWork work, ILogger<BookingController> logger)
         {
-            bookingServices = new BookingServices(work);
-            fareServices = new FareServices(work);
-
+            bookingServices = new BookingServices(work, logger);
+            fareServices = new FareServices(work, logger);
+            _logger = logger;
         }
 
         /// <summary>

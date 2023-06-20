@@ -14,9 +14,12 @@ namespace ViGo.API.Controllers
     {
         private VehicleTypeServices vehicleTypeServices;
 
-        public VehicleTypeController(IUnitOfWork work)
+        private ILogger<VehicleTypeController> _logger;
+
+        public VehicleTypeController(IUnitOfWork work, ILogger<VehicleTypeController> logger)
         {
-            vehicleTypeServices = new VehicleTypeServices(work);
+            vehicleTypeServices = new VehicleTypeServices(work, logger);
+            _logger = logger;
         }
 
         /// <summary>

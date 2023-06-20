@@ -15,9 +15,12 @@ namespace ViGo.API.Controllers
     {
         private BookingDetailServices bookingDetailServices;
 
-        public BookingDetailController(IUnitOfWork work)
+        private ILogger<BookingDetailController> _logger;
+
+        public BookingDetailController(IUnitOfWork work, ILogger<BookingDetailController> logger)
         {
-            bookingDetailServices = new BookingDetailServices(work);
+            bookingDetailServices = new BookingDetailServices(work, logger);
+            _logger = logger;
         }
 
         /// <summary>
