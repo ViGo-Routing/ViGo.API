@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace ViGo.Services
         private const string TICKETS_DISCOUNT_10 = "10TicketsDiscount";
         private const string TICKETS_DISCOUNT_25 = "25TicketsDiscount";
         private const string TICKETS_DISCOUNT_50 = "50TicketsDiscount";
-        public SettingServices(IUnitOfWork work) : base(work)
+        public SettingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

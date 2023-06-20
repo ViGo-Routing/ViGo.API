@@ -12,12 +12,13 @@ using ViGo.Services.Core;
 using ViGo.Utilities.Validator;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace ViGo.Services
 {
     public class RouteRoutineServices : BaseServices
     {
-        public RouteRoutineServices(IUnitOfWork work) : base(work)
+        public RouteRoutineServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

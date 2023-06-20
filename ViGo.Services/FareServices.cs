@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ namespace ViGo.Services
 {
     public class FareServices : BaseServices
     {
-        public FareServices(IUnitOfWork work) : base(work)
+        public FareServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 
