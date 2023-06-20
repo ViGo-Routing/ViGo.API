@@ -12,6 +12,7 @@ namespace ViGo.Domain
         public double Amount { get; set; }
         public Guid? BookingId { get; set; }
         public Guid? BookingDetailId { get; set; }
+        public string? ExternalTransactionId { get; set; }
         public WalletTransactionType Type { get; set; }
         public WalletTransactionStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }

@@ -479,6 +479,8 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.ExternalTransactionId).HasMaxLength(50);
+
                 entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
                 entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
