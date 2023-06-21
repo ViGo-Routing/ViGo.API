@@ -59,9 +59,9 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GenerateVnPayTestPaymentUrl()
+        public async Task<IActionResult> GenerateVnPayTestPaymentUrl(Guid bookingId)
         {
-            string paymentUrl = paymentServices.GenerateVnPayTestPaymentUrl(HttpContext);
+            string paymentUrl = paymentServices.GenerateVnPayTestPaymentUrl(HttpContext, bookingId);
             return StatusCode(200, paymentUrl);
         }
 

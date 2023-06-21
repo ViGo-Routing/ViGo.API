@@ -28,6 +28,9 @@ namespace ViGo.API
             {
                 Console.OutputEncoding = Encoding.UTF8;
                 loggerConfig = loggerConfig.WriteTo.Console();
+            } else
+            {
+                loggerConfig = loggerConfig.WriteTo.AzureApp();
             }
 
             var logger = loggerConfig.CreateLogger();
