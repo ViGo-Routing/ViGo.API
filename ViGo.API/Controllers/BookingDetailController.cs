@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Models.BookingDetails;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
 
@@ -63,16 +64,23 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get list of booking details successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Driver/{driverId}")]
-        [ProducesResponseType(typeof(IEnumerable<BookingDetailViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetDriverAssignedBookingDetails(Guid driverId,
+        public async Task<IActionResult> GetDriverAssignedBookingDetails(
+            Guid driverId, [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
-            IEnumerable<BookingDetailViewModel> dtos =
-                await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(driverId, cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+            IPagedEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(
+                    driverId, pagination, HttpContext,
+                    cancellationToken);
             return StatusCode(200, dtos);
         }
 
@@ -87,16 +95,25 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get list of booking details successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Booking/{bookingId}")]
-        [ProducesResponseType(typeof(IEnumerable<BookingDetailViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
         public async Task<IActionResult> GetBookingDetails(Guid bookingId,
+            [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
-            IEnumerable<BookingDetailViewModel> dtos =
-                await bookingDetailServices.GetBookingDetailsAsync(bookingId, cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetBookingDetailsAsync(
+                    bookingId, 
+                    pagination, HttpContext,
+                    cancellationToken);
             return StatusCode(200, dtos);
         }
 
@@ -167,6 +184,35 @@ namespace ViGo.API.Controllers
             BookingDetail bookingDetail = await bookingDetailServices
                 .AssignDriverAsync(dto, cancellationToken);
             return StatusCode(200, bookingDetail);
+        }
+
+        /// <summary>
+        /// Calculate driver wage for a Booking Detail
+        /// </summary>
+        /// <remarks>
+        /// Customer cannot perform this action
+        /// </remarks>
+        /// <returns>
+        /// The calculated driver wage
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Wage is calculated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("DriverWage/{bookingDetailId}")]
+        [ProducesResponseType(typeof(double), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,STAFF,DRIVER")]
+        public async Task<IActionResult> CalculateDriverWage(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            double driverWage = await bookingDetailServices.CalculateDriverWageAsync(bookingDetailId, cancellationToken);
+            return StatusCode(200, driverWage);
         }
     }
 }

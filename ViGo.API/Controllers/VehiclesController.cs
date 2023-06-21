@@ -4,6 +4,7 @@ using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
 
@@ -30,27 +31,24 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehiclesViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<VehiclesViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllVehiclesAsync()
+        public async Task<IActionResult> GetAllVehiclesAsync(
+            [FromQuery] PaginationParameter? pagination)
         {
-            //try
-            //{
-                IEnumerable<VehiclesViewModel> vehicles = await vehicleServices.GetAllVehiclesAsync();
-                return StatusCode(200, vehicles);
-            //}
-            //catch (ApplicationException ex)
-            //{
-            //    return StatusCode(400, ex.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<VehiclesViewModel> vehicles = await
+                vehicleServices.GetAllVehiclesAsync(pagination, HttpContext);
+
+            return StatusCode(200, vehicles);
         }
 
         /// <summary>
@@ -70,12 +68,12 @@ namespace ViGo.API.Controllers
         {
             //try
             //{
-                VehiclesViewModel vehicle = await vehicleServices.GetVehicleByIdAsync(id);
-                if (vehicle == null)
-                {
-                    throw new ApplicationException("VehicleID không tồn tại!");
-                }
-                return StatusCode(200, vehicle);
+            VehiclesViewModel vehicle = await vehicleServices.GetVehicleByIdAsync(id);
+            if (vehicle == null)
+            {
+                throw new ApplicationException("VehicleID không tồn tại!");
+            }
+            return StatusCode(200, vehicle);
             //}
             //catch (ApplicationException appEx)
             //{
@@ -123,12 +121,12 @@ namespace ViGo.API.Controllers
         {
             //try
             //{
-                VehiclesViewModel vehi = await vehicleServices.CreateVehicleAsync(vehicle);
-                if (vehi == null)
-                {
-                    throw new ApplicationException("Tạo thất bại!");
-                }
-                return StatusCode(200, vehi);
+            VehiclesViewModel vehi = await vehicleServices.CreateVehicleAsync(vehicle);
+            if (vehi == null)
+            {
+                throw new ApplicationException("Tạo thất bại!");
+            }
+            return StatusCode(200, vehi);
             //}
             //catch (ApplicationException appEx)
             //{
@@ -157,8 +155,8 @@ namespace ViGo.API.Controllers
         {
             //try
             //{
-                VehiclesViewModel vehicle = await vehicleServices.UpdateVehicleAsync(id, vehiclesUpdate);
-                return StatusCode(200, vehicle);
+            VehiclesViewModel vehicle = await vehicleServices.UpdateVehicleAsync(id, vehiclesUpdate);
+            return StatusCode(200, vehicle);
             //}
             //catch (ApplicationException appEx)
             //{

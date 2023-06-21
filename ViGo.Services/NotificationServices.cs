@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,11 @@ using ViGo.Models.Events;
 using ViGo.Models.Notifications;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -23,8 +26,11 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<NotificationViewModel>>
-            GetNotificationsAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<NotificationViewModel>>
+            GetNotificationsAsync(Guid userId,
+            PaginationParameter pagination,
+            HttpContext context, 
+            CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin() && !IdentityUtilities.IsStaff()
                 && !userId.Equals(IdentityUtilities.GetCurrentUserId())) 
@@ -35,6 +41,11 @@ namespace ViGo.Services
             IEnumerable<Notification> notifications = await work.Notifications
                 .GetAllAsync(query => query.Where(
                     n => n.UserId.HasValue && n.UserId.Equals(userId)), cancellationToken: cancellationToken);
+
+            int totalRecords = notifications.Count();
+
+            notifications = notifications.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize).Data;
 
             IEnumerable<Guid> eventIds = notifications.Where(n => n.EventId.HasValue)
                 .Select(n => n.EventId.Value);
@@ -53,7 +64,8 @@ namespace ViGo.Services
                 models.Add(new NotificationViewModel(notification, eventModel));
             }
 
-            return models;
+            return models.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize, totalRecords, context);
         }
 
         public async Task<NotificationViewModel>
@@ -189,9 +201,21 @@ namespace ViGo.Services
             await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
 
-            if (model.IsSentToUser)
+            if (model.IsSentToUser && model.UserId.HasValue)
             {
                 // Send Push Notification to user
+                User? user = await work.Users.GetAsync(model.UserId.Value, cancellationToken: cancellationToken);
+                if (user is null)
+                {
+                    throw new ApplicationException("Thông tin người dùng không tồn tại!!");
+                }
+
+                string? fcmToken = user.FcmToken;
+                if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+                {
+                    await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken,
+                        model.Title, model.Description, cancellationToken: cancellationToken);
+                }
             }
 
             return notification;

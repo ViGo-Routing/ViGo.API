@@ -13,6 +13,8 @@ using ViGo.Utilities.Validator;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using Microsoft.Extensions.Logging;
+using ViGo.Repository.Pagination;
+using Microsoft.AspNetCore.Http;
 
 namespace ViGo.Services
 {
@@ -22,12 +24,20 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<RouteRoutineViewModel>>
-            GetRouteRoutinesAsync(Guid routeId, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<RouteRoutineViewModel>>
+            GetRouteRoutinesAsync(Guid routeId,
+            PaginationParameter pagination,
+            HttpContext context, 
+            CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
+
+            int totalRecords = routeRoutines.Count();
+            
+            routeRoutines = routeRoutines.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize).Data;
 
             IEnumerable<RouteRoutineViewModel> models =
                 from routeRoutine in routeRoutines
@@ -35,7 +45,8 @@ namespace ViGo.Services
             models = models.OrderBy(r => r.RoutineDate)
                 .ThenBy(r => r.StartTime);
 
-            return models;
+            return models.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize, totalRecords, context);
         }
 
         public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateEditModel model,

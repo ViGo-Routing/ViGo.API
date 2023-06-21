@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 
 namespace ViGo.Services
@@ -19,9 +21,17 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<VehiclesViewModel>> GetAllVehiclesAsync()
+        public async Task<IPagedEnumerable<VehiclesViewModel>> GetAllVehiclesAsync(
+            PaginationParameter pagination,
+            HttpContext context)
         {
             IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync();
+
+            int totalRecords = vehicles.Count();
+            
+            vehicles = vehicles.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize).Data;
+
             IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
             IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);
             IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)));
@@ -39,7 +49,8 @@ namespace ViGo.Services
                                                          join vehicleTypeModel in vehicleTypeViewModels
                                                             on vehicle.VehicleTypeId equals vehicleTypeModel.Id
                                                          select new VehiclesViewModel(vehicle, userModel, vehicleTypeModel);
-            return listVehicle;
+            return listVehicle.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize, totalRecords, context);
         }
 
         public async Task<VehiclesViewModel> GetVehicleByIdAsync(Guid id)

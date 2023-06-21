@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
@@ -96,8 +98,11 @@ namespace ViGo.Services
 
         }
 
-        public async Task<IEnumerable<BookingDetailViewModel>>
-            GetDriverAssignedBookingDetailsAsync(Guid driverId, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<BookingDetailViewModel>>
+            GetDriverAssignedBookingDetailsAsync(Guid driverId, 
+            PaginationParameter pagination,
+            HttpContext context,
+            CancellationToken cancellationToken)
         {
             User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
             if (driver == null)
@@ -109,9 +114,16 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
+
+            int totalRecords = bookingDetails.Count();
+
+            bookingDetails = bookingDetails.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize).Data;
+            
             if (!bookingDetails.Any())
             {
-                return new List<BookingDetailViewModel>();
+                return new List<BookingDetailViewModel>().ToPagedEnumerable(pagination.PageNumber,
+                    pagination.PageSize, 0, context);
             }
 
             IEnumerable<Guid> routeIds = (bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
@@ -157,15 +169,24 @@ namespace ViGo.Services
             //    from bookingDetail in bookingDetails
             //    select new BookingDetailViewModel(bookingDetail);
 
-            return dtos;
+            return dtos.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<IEnumerable<BookingDetailViewModel>>
-            GetBookingDetailsAsync(Guid bookingId, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<BookingDetailViewModel>>
+            GetBookingDetailsAsync(Guid bookingId,
+            PaginationParameter pagination,
+            HttpContext context, 
+            CancellationToken cancellationToken)
         {
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
+
+            int totalRecords = bookingDetails.Count();
+
+            bookingDetails = bookingDetails
+                .ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
             IEnumerable<Guid> driverIds = bookingDetails.Where(
                 d => d.DriverId.HasValue).Select(d => d.DriverId.Value);
@@ -188,7 +209,8 @@ namespace ViGo.Services
                 }
             }
 
-            return dtos;
+            return dtos.ToPagedEnumerable(pagination.PageNumber, 
+                pagination.PageSize, totalRecords, context);
         }
 
         public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
@@ -318,7 +340,7 @@ namespace ViGo.Services
         {
             BookingDetail bookingDetail = await work.BookingDetails
                 .GetAsync(dto.BookingDetailId, cancellationToken: cancellationToken);
-            if (bookingDetail == null)
+            if (bookingDetail is null)
             {
                 throw new ApplicationException("Booking Detail không tồn tại!!");
             }
@@ -338,6 +360,21 @@ namespace ViGo.Services
             await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;
+        }
+
+        public async Task<double> CalculateDriverWageAsync(Guid bookingDetailId, 
+            CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Booking Detail không tồn tại!!");
+            }
+
+            FareServices fareServices = new FareServices(work, _logger);
+            double driverWage = await fareServices.CalculateDriverWage(bookingDetail.PriceAfterDiscount.Value, cancellationToken);
+            return driverWage;
         }
     }
 }

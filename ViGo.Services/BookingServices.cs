@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Validator;
@@ -24,8 +26,11 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<BookingViewModel>>
-            GetBookingsAsync(Guid? userId, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<BookingViewModel>>
+            GetBookingsAsync(Guid? userId,
+            PaginationParameter pagination,
+            HttpContext context,
+            CancellationToken cancellationToken)
         {
             IEnumerable<Booking> bookings =
                 await work.Bookings.GetAllAsync(
@@ -34,6 +39,10 @@ namespace ViGo.Services
                         (userId != null && userId.HasValue) ?
                         b.CustomerId.Equals(userId.Value)
                         : true), cancellationToken: cancellationToken);
+
+            int totalRecords = bookings.Count();
+
+            bookings = bookings.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
             IEnumerable<Guid> customerIds = bookings.Select(b => b.CustomerId).Distinct();
             //IEnumerable<Guid> routeStationIds = bookings.Select(
@@ -96,7 +105,8 @@ namespace ViGo.Services
             //    = from booking in bookings
             //      select new BookingViewModel(booking);
 
-            return dtos;
+            return dtos.ToPagedEnumerable(pagination.PageNumber, 
+                pagination.PageSize, totalRecords, context);
         }
 
         public async Task<BookingViewModel?> GetBookingAsync(Guid bookingId, CancellationToken cancellationToken)
