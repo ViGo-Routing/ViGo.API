@@ -10,6 +10,7 @@ using ViGo.Domain;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
@@ -40,16 +41,23 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<UserViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetUsersAsync()
+        public async Task<IActionResult> GetUsersAsync(
+            [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<Domain.User> users =
-                await userServices.GetUsersAsync();
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<Domain.User> users =
+                await userServices.GetUsersAsync(pagination, HttpContext, cancellationToken);
             return StatusCode(200, users);
         }
 

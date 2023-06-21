@@ -5,6 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.Fares;
 using ViGo.Models.Notifications;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -63,16 +64,25 @@ namespace ViGo.API.Controllers
         /// <response code="200">List of notifications are fetched successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("User/{userId}")]
-        [ProducesResponseType(typeof(IEnumerable<NotificationViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<NotificationViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetUserNotificationsAsync(Guid userId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetUserNotificationsAsync(Guid userId,
+            [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<NotificationViewModel> models = await notificationServices
-                .GetNotificationsAsync(userId, cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<NotificationViewModel> models = await notificationServices
+                .GetNotificationsAsync(userId, 
+                pagination, HttpContext,
+                cancellationToken);
             return StatusCode(200, models);
         }
 

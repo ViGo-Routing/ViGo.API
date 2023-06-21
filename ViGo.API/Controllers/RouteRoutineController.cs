@@ -6,6 +6,7 @@ using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.RouteStations;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Extensions;
@@ -37,15 +38,23 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet("Route/{routeId}")]
         [Authorize]
-        [ProducesResponseType(typeof(IEnumerable<RouteRoutineViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<RouteRoutineViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRouteStation(Guid routeId,
+            [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
 
-            IEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices.GetRouteRoutinesAsync(routeId, cancellationToken);
+            IPagedEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices
+                .GetRouteRoutinesAsync(routeId, 
+                pagination, HttpContext,
+                cancellationToken);
             return StatusCode(200, dtos);
         }
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
@@ -64,15 +65,24 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet("CurrentUser")]
         [Authorize(Roles = "CUSTOMER,DRIVER")]
-        [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<RouteViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRoutesCurrentUser(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRoutesCurrentUser(
+            [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<RouteViewModel> dtos = await
-                routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId(), cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId(),
+                pagination, HttpContext,
+                cancellationToken);
             return StatusCode(200, dtos);
         }
 
@@ -89,15 +99,24 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet("User/{userId}")]
         [Authorize(Roles = "ADMIN")]
-        [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<RouteViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRoutes(Guid userId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRoutes(Guid userId,
+            [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<RouteViewModel> dtos = await
-                routeServices.GetRoutesAsync(userId, cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(userId, 
+                pagination, HttpContext,
+                cancellationToken);
             return StatusCode(200, dtos);
         }
 
@@ -115,15 +134,23 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
-        [ProducesResponseType(typeof(IEnumerable<RouteViewModel>), 200)]
+        [ProducesResponseType(typeof(IPagedEnumerable<RouteViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRoutes(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRoutes(
+            [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<RouteViewModel> dtos = await
-                routeServices.GetRoutesAsync(null, cancellationToken);
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+
+            IPagedEnumerable<RouteViewModel> dtos = await
+                routeServices.GetRoutesAsync(null, pagination, HttpContext,
+                cancellationToken);
             return StatusCode(200, dtos);
         }
 
