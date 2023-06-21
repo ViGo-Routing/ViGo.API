@@ -318,7 +318,7 @@ namespace ViGo.Services
         {
             BookingDetail bookingDetail = await work.BookingDetails
                 .GetAsync(dto.BookingDetailId, cancellationToken: cancellationToken);
-            if (bookingDetail == null)
+            if (bookingDetail is null)
             {
                 throw new ApplicationException("Booking Detail không tồn tại!!");
             }
@@ -338,6 +338,21 @@ namespace ViGo.Services
             await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;
+        }
+
+        public async Task<double> CalculateDriverWageAsync(Guid bookingDetailId, 
+            CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Booking Detail không tồn tại!!");
+            }
+
+            FareServices fareServices = new FareServices(work, _logger);
+            double driverWage = await fareServices.CalculateDriverWage(bookingDetail.PriceAfterDiscount.Value, cancellationToken);
+            return driverWage;
         }
     }
 }
