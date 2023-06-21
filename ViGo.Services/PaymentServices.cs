@@ -51,7 +51,8 @@ namespace ViGo.Services
                     }
                 }
 
-                Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef"));
+                //Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef"));
+                Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef").Split("PhongNT@")[0]);
                 long vnPayTransactionId = Convert.ToInt64(vnPay.GetResponseData("vnp_TransactionNo"));
                 string vnpResponseCode = vnPay.GetResponseData("vnp_ResponseCode");
                 string vnpTransactionStatus = vnPay.GetResponseData("vnp_TransactionStatus");
@@ -65,20 +66,20 @@ namespace ViGo.Services
                 if (checkSignature)
                 {
 
-                                if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
-                                {
+                    if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
+                    {
                         message = "Giao dịch được thực hiện hành công!";
-                                    _logger.LogInformation("Booking has been paid successfully!! BookingId={0}, VNPay TransactionId={1}", bookingId, vnPayTransactionId);
-                                }
-                                else
-                                {
+                        _logger.LogInformation("Booking has been paid successfully!! BookingId={0}, VNPay TransactionId={1}", bookingId, vnPayTransactionId);
+                    }
+                    else
+                    {
                         //throw new ApplicationException("Thanh toán VNPay lỗi! Mã lỗi: " + vnpResponseCode);
                         message = "Có lỗi xảy ra trong quá trình xử lý. Mã lỗi: " + vnpResponseCode;
 
-                                    _logger.LogInformation("Booking failed to be paid!! " +
-                                        "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}",
-                                        bookingId, vnPayTransactionId, vnpResponseCode);
-                                }
+                        _logger.LogInformation("Booking failed to be paid!! " +
+                            "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}",
+                            bookingId, vnPayTransactionId, vnpResponseCode);
+                    }
 
                 }
                 else
@@ -125,7 +126,8 @@ namespace ViGo.Services
                         }
                     }
 
-                    Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef"));
+                    //Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef"));
+                    Guid bookingId = Guid.Parse(vnPay.GetResponseData("vnp_TxnRef").Split("PhongNT@")[0]);
                     long vnPayTransactionId = Convert.ToInt64(vnPay.GetResponseData("vnp_TransactionNo"));
                     string vnpResponseCode = vnPay.GetResponseData("vnp_ResponseCode");
                     string vnpTransactionStatus = vnPay.GetResponseData("vnp_TransactionStatus");
@@ -205,6 +207,8 @@ namespace ViGo.Services
                                     if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
                                     {
                                         systemTransaction_Add.Status = WalletTransactionStatus.SUCCESSFULL;
+                                        systemTransaction_Add.Amount += vnpAmount;
+
                                         walletTransaction_Topup.Status = WalletTransactionStatus.SUCCESSFULL;
                                         walletTransaction_Paid.Status = WalletTransactionStatus.SUCCESSFULL;
 
@@ -223,7 +227,7 @@ namespace ViGo.Services
                                         booking.PaymentMethod = PaymentMethod.VNPAY;
 
                                         _logger.LogInformation("Booking failed to be paid!! " +
-                                            "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}", 
+                                            "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}",
                                             bookingId, vnPayTransactionId, vnpResponseCode);
                                     }
 
@@ -271,7 +275,8 @@ namespace ViGo.Services
                                                     await tripMappingServices.MapBooking(booking, _logger);
                                                 }
                                             });
-                                        } else
+                                        }
+                                        else
                                         {
                                             // FAILED
                                             await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
@@ -286,7 +291,7 @@ namespace ViGo.Services
                                                     { "message", "Thanh toán bằng VNPay thất bại!" }
                                                 }, cancellationToken);
                                         }
-                                        
+
                                     }
 
                                     code = "00";
@@ -307,17 +312,19 @@ namespace ViGo.Services
                         code = "97";
                         message = "Invalid checksum";
 
-                        _logger.LogInformation("Invalid signature!! BookingId={0}, InputData={1}", 
+                        _logger.LogInformation("Invalid signature!! BookingId={0}, InputData={1}",
                             bookingId, requestRawUrl);
 
                         //throw new ApplicationException("Đã có lỗi xảy ra trong quá trình xử lý đơn thanh toán!!");
                     }
-                } else
+                }
+                else
                 {
                     code = "99";
                     message = "Input data required!!";
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError("VNPay IPN Error!! Error description: {exception}, RawURL: {rawUrl}",
                     ex.GeneratorErrorMessage(), requestRawUrl);
@@ -337,7 +344,7 @@ namespace ViGo.Services
                         { "message", "Thanh toán bằng VNPay thất bại!" }
                     }, cancellationToken);
                 }
-                
+
                 return ("99", "Unknown Error: " + ex.GeneratorErrorMessage());
             }
 
@@ -354,7 +361,7 @@ namespace ViGo.Services
             string vnpApiVersion = ViGoConfiguration.VnPayApiVersion;
 
             // Generate fake information
-            Guid bookingDetailId = Guid.Parse("1e92cc88-e5e5-417f-85ef-f731d1ccb17a");
+            Guid bookingDetailId = Guid.Parse("EAC6836E-1CF0-4064-B01C-BD5F1B298EBC");
             double amount = 100000;
 
             VnPayLibrary vnPay = new VnPayLibrary();
@@ -373,7 +380,8 @@ namespace ViGo.Services
             vnPay.AddRequestData("vnp_OrderType", "other"); //default value: other
 
             vnPay.AddRequestData("vnp_ReturnUrl", vnpReturnUrl);
-            vnPay.AddRequestData("vnp_TxnRef", bookingDetailId.ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
+            //vnPay.AddRequestData("vnp_TxnRef", bookingDetailId.ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
+            vnPay.AddRequestData("vnp_TxnRef", bookingDetailId.ToString() + "PhongNT@" + Guid.NewGuid().ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
 
             string paymentUrl = vnPay.CreateRequestUrl(vnpPaymentUrl, vnpHashSecret);
 

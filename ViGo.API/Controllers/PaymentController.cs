@@ -100,6 +100,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(typeof(string), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
+        // Not tested yet!
         public async Task<IActionResult> VnPayIpn(CancellationToken cancellationToken)
         {
             (string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
