@@ -106,6 +106,7 @@ namespace ViGo.Services
             IServiceScopeFactory serviceScopeFactory,
             CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Begin VNPay IPN...");
             (string code, string message) = (string.Empty, string.Empty);
 
             Booking? booking = null;
@@ -352,7 +353,7 @@ namespace ViGo.Services
             return (code, message);
         }
 
-        public string GenerateVnPayTestPaymentUrl(HttpContext context)
+        public string GenerateVnPayTestPaymentUrl(HttpContext context, Guid bookingId)
         {
             string vnpReturnUrl = ViGoConfiguration.VnPayReturnUrl(context);
             string vnpPaymentUrl = ViGoConfiguration.VnPayPaymentUrl;
@@ -361,7 +362,7 @@ namespace ViGo.Services
             string vnpApiVersion = ViGoConfiguration.VnPayApiVersion;
 
             // Generate fake information
-            Guid bookingDetailId = Guid.Parse("EAC6836E-1CF0-4064-B01C-BD5F1B298EBC");
+            //Guid bookingDetailId = Guid.Parse("EAC6836E-1CF0-4064-B01C-BD5F1B298EBC");
             double amount = 100000;
 
             VnPayLibrary vnPay = new VnPayLibrary();
@@ -376,12 +377,12 @@ namespace ViGo.Services
             vnPay.AddRequestData("vnp_CurrCode", "VND");
             vnPay.AddRequestData("vnp_IpAddr", context.GetClientIpAddress());
             vnPay.AddRequestData("vnp_Locale", "vn");
-            vnPay.AddRequestData("vnp_OrderInfo", "Thanh toan chuyen di:" + bookingDetailId);
+            vnPay.AddRequestData("vnp_OrderInfo", "Thanh toan chuyen di:" + bookingId);
             vnPay.AddRequestData("vnp_OrderType", "other"); //default value: other
 
             vnPay.AddRequestData("vnp_ReturnUrl", vnpReturnUrl);
             //vnPay.AddRequestData("vnp_TxnRef", bookingDetailId.ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
-            vnPay.AddRequestData("vnp_TxnRef", bookingDetailId.ToString() + "PhongNT@" + Guid.NewGuid().ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
+            vnPay.AddRequestData("vnp_TxnRef", bookingId.ToString() + "PhongNT@" + Guid.NewGuid().ToString()); // Mã tham chiếu của giao dịch tại hệ thống của merchant. Mã này là duy nhất dùng để phân biệt các đơn hàng gửi sang VNPAY. Không được trùng lặp trong ngày
 
             string paymentUrl = vnPay.CreateRequestUrl(vnpPaymentUrl, vnpHashSecret);
 
