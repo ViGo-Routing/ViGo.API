@@ -14,6 +14,7 @@ namespace ViGo.Domain
 
         public override Guid Id { get; set; }
         public string Code { get; set; } = null!;
+        public Guid? EventId { get; set; }
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
         public double DiscountAmount { get; set; }
@@ -34,6 +35,8 @@ namespace ViGo.Domain
 
         [JsonIgnore]
         public virtual VehicleType VehicleType { get; set; } = null!;
+        [JsonIgnore]
+        public virtual Event? Event { get; set; }
         [JsonIgnore]
         public virtual ICollection<Booking> Bookings { get; set; }
     }

@@ -49,5 +49,7 @@ namespace ViGo.Domain.Enumerations
         public static string WeeklyTicketsDiscount_2 = "2WeeklyTicketsDiscount";
         public static string MonthlyTicketsDiscount_2 = "2MonthlyTicketsDiscount";
         public static string QuarterlyTicketsDiscount_2 = "2QuarterlyTicketsDiscount";
+
+        public static string DriverWagePercent = "DriverWagePercent";
     }
 }

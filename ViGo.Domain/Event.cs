@@ -10,6 +10,7 @@ namespace ViGo.Domain
         public Event()
         {
             Notifications = new HashSet<Notification>();
+            Promotions = new HashSet<Promotion>();
         }
 
         public override Guid Id { get; set; }
@@ -20,5 +21,7 @@ namespace ViGo.Domain
 
         [JsonIgnore]
         public virtual ICollection<Notification> Notifications { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Promotion> Promotions { get; set; }
     }
 }
