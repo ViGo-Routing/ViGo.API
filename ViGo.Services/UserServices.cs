@@ -1,4 +1,5 @@
 ﻿using FirebaseAdmin.Auth;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Validator;
@@ -133,43 +135,16 @@ namespace ViGo.Services
             
         }
 
-        public async Task<IEnumerable<User>> GetUsersAsync()
+        public async Task<IPagedEnumerable<User>> GetUsersAsync(PaginationParameter pagination,
+            HttpContext context, CancellationToken cancellationToken)
         {
-            //List<User> _users = new List<User>
-            //{
-            //    new User
-            //    {
-            //        //Id = Guid.NewGuid(),
-            //        Name = "Customer Trần Phong",
-            //        Email = "phong_customer@gmail.com",
-            //        Password = SecurityUtilities.Encrypt("123456789"),
-            //        Role = Domain.Enumerations.UserRole.CUSTOMER,
-            //        Status = Domain.Enumerations.UserStatus.ACTIVE,
-            //        IsLockedOut = false
-            //    },
-
-            //    new User
-            //    {
-            //        //Id = Guid.NewGuid(),
-            //        Name = "Driver Trần Phong",
-            //        Email = "phong_driver@gmail.com",
-            //        Password = SecurityUtilities.Encrypt("123456789"),
-            //        Role = Domain.Enumerations.UserRole.DRIVER,
-            //        Status = Domain.Enumerations.UserStatus.ACTIVE,
-            //        IsLockedOut = false
-            //    },
-            //};
-
-            //////user.CreatedBy = user.Id;
-            //////user.UpdatedBy = user.Id;
-
-            //await work.Users.InsertAsync(_users, true);
-            //await work.SaveChangesAsync();
-
             IEnumerable<User> users
                 = await work.Users.GetAllAsync();
 
-            return users;
+            int totalRecords = users.Count();
+
+            return users.ToPagedEnumerable(pagination.PageNumber, 
+                pagination.PageSize, totalRecords, context);
         }
 
         public async Task<User> RegisterAsync(UserRegisterModel dto,

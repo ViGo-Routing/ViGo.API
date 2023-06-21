@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 
 namespace ViGo.Services
@@ -18,10 +20,17 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IEnumerable<VehicleType>> GetAllVehicleTypesAsync()
+        public async Task<IPagedEnumerable<VehicleType>> GetAllVehicleTypesAsync(
+            PaginationParameter pagination,
+            HttpContext context)
         {
             IEnumerable<VehicleType> vehicleType = await work.VehicleTypes.GetAllAsync();
-            return vehicleType;
+
+            int totalRecords = vehicleType.Count();
+
+            return vehicleType.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize, 
+                totalRecords, context);
         }
 
         public async Task<VehicleType> GetVehicleTypeByIdAsync(Guid id)

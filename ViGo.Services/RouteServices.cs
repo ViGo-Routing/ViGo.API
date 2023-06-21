@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +14,7 @@ using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
@@ -237,7 +239,9 @@ namespace ViGo.Services
             return route;
         }
 
-        public async Task<IEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId,
+        public async Task<IPagedEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId,
+            PaginationParameter pagination,
+            HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Route> routes = new List<Route>();
@@ -252,6 +256,10 @@ namespace ViGo.Services
                 routes = await work.Routes
                     .GetAllAsync(cancellationToken: cancellationToken);
             }
+
+            int totalRecords = routes.Count();
+
+            routes = routes.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
             if (routes.Any())
             {
@@ -302,17 +310,22 @@ namespace ViGo.Services
                     //    .ThenBy(r => r.StartTime);
 
                     // Stations
-                    Station startStation = stations.SingleOrDefault(
+                    StationViewModel? startStationDto = null;
+                    StationViewModel? endStationDto = null;
+                    if (route.StartStationId.HasValue && route.EndStationId.HasValue)
+                    {
+                        Station? startStation = stations.SingleOrDefault(
                         s => s.Id.Equals(route.StartStationId));
-                    StationViewModel startStationDto = new StationViewModel(
-                        startStation, 1
-                        );
+                        startStationDto = new StationViewModel(
+                            startStation, 1
+                            );
 
-                    Station endStation = stations.SingleOrDefault(
-                        s => s.Id.Equals(route.EndStationId));
-                    StationViewModel endStationDto = new StationViewModel(
-                        endStation, 2
-                        );
+                        Station? endStation = stations.SingleOrDefault(
+                            s => s.Id.Equals(route.EndStationId));
+                        endStationDto = new StationViewModel(
+                            endStation, 2
+                            );
+                    }
 
                     User? routeUser = null;
 
@@ -335,10 +348,12 @@ namespace ViGo.Services
                         userViewModel));
                 }
 
-                return dtos;
+                return dtos.ToPagedEnumerable(pagination.PageNumber, 
+                    pagination.PageSize, totalRecords, context);
             }
 
-            return new List<RouteViewModel>();
+            return new List<RouteViewModel>().ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize, 0, context);
             //IEnumerable<RouteViewModel> models =
             //    from route in routes
             //    select new RouteViewModel(route);
