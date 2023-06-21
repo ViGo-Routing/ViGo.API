@@ -25,5 +25,12 @@ namespace ViGo.Utilities
 
             return hash.ToString();
         }
+
+        //public static bool ValidateHmacSHA512(this string inputHashToValidate,
+        //    string rawData, string key)
+        //{
+        //    string checksum = rawData.HmacSHA512(key);
+        //    return checksum.Equals(inputHashToValidate, StringComparison.InvariantCultureIgnoreCase);
+        //}
     }
 }

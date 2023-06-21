@@ -1,6 +1,8 @@
-﻿using ViGo.Utilities.Extensions;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using ViGo.Utilities.Extensions;
 
-namespace ViGo.API.BackgroundTasks
+namespace ViGo.Utilities.BackgroundTasks
 {
     public class QueuedHostedServices : BackgroundService
     {

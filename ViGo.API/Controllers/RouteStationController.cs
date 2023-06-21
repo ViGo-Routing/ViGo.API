@@ -15,9 +15,12 @@ namespace ViGo.API.Controllers
     {
         private RouteStationServices routeStationServices;
 
-        public RouteStationController(IUnitOfWork work)
+        private ILogger<RouteStationController> _logger;
+
+        public RouteStationController(IUnitOfWork work, ILogger<RouteStationController> logger)
         {
-            routeStationServices = new RouteStationServices(work);
+            routeStationServices = new RouteStationServices(work, logger);
+            _logger = logger;
         }
 
         /// <summary>

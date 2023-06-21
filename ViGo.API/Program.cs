@@ -7,7 +7,6 @@ using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
-using ViGo.API.BackgroundTasks;
 using ViGo.API.Middlewares;
 using ViGo.API.SignalR;
 using ViGo.Utilities.Configuration;
@@ -110,7 +109,10 @@ namespace ViGo.API
                         ValidAudience = ViGoConfiguration.ValidAudience,
                         ValidIssuer = ViGoConfiguration.ValidIssuer,
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(ViGoConfiguration.Secret))
+                            Encoding.UTF8.GetBytes(ViGoConfiguration.Secret)),
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ClockSkew = TimeSpan.Zero
                     };
                     options.Events = new JwtBearerEvents
                     {

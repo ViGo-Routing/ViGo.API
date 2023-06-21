@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace ViGo.Services
 {
     public class RouteServices : BaseServices
     {
-        public RouteServices(IUnitOfWork work) : base(work)
+        public RouteServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

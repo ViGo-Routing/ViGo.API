@@ -18,7 +18,7 @@ namespace ViGo.Services
     public class TripMappingServices : BaseServices
     {
         private int ROUTE_TYPE_COUNT = Enum.GetNames(typeof(RouteType)).Length;
-        public TripMappingServices(IUnitOfWork work) : base(work)
+        public TripMappingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

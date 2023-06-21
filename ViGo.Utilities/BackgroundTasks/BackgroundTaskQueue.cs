@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace ViGo.API.BackgroundTasks
+namespace ViGo.Utilities.BackgroundTasks
 {
     public class BackgroundTaskQueue : IBackgroundTaskQueue
     {

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,12 +13,14 @@ using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Exceptions;
 
 namespace ViGo.Services
 {
     public class BookingDetailServices : BaseServices
     {
-        public BookingDetailServices(IUnitOfWork work) : base(work)
+        public BookingDetailServices(IUnitOfWork work,
+            ILogger logger) : base(work, logger)
         {
         }
 
@@ -82,7 +85,7 @@ namespace ViGo.Services
                     stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId.Value)), 1) : null,
                 driverRoute.EndStationId.HasValue ?
                 new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2) : null) ;
+                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2) : null);
             }
 
             BookingDetailViewModel dto = new BookingDetailViewModel(
@@ -90,7 +93,7 @@ namespace ViGo.Services
             //BookingDetailViewModel dto = new BookingDetailViewModel(bookingDetail);
 
             return dto;
-        
+
         }
 
         public async Task<IEnumerable<BookingDetailViewModel>>
@@ -130,12 +133,12 @@ namespace ViGo.Services
 
             IEnumerable<BookingDetailViewModel> dtos =
                 from bookingDetail in bookingDetails
-                //join customerRoute in routes
-                //    on bookingDetail.CustomerRouteId equals customerRoute.Id
-                //join customerStartStation in stations
-                //    on customerRoute.StartStationId equals customerStartStation.Id
-                //join customerEndStation in stations
-                //    on customerRoute.EndStationId equals customerEndStation.Id
+                    //join customerRoute in routes
+                    //    on bookingDetail.CustomerRouteId equals customerRoute.Id
+                    //join customerStartStation in stations
+                    //    on customerRoute.StartStationId equals customerStartStation.Id
+                    //join customerEndStation in stations
+                    //    on customerRoute.EndStationId equals customerEndStation.Id
                 join driverRoute in routes
                     on bookingDetail.DriverRouteId equals driverRoute.Id
                 join driverStartStation in stations
@@ -178,14 +181,15 @@ namespace ViGo.Services
                 {
                     User driver = drivers.SingleOrDefault(u => u.Id.Equals(bookingDetail.DriverId));
                     dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, new UserViewModel(driver)));
-                } else
+                }
+                else
                 {
                     dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, null));
                 }
             }
 
             return dtos;
-        } 
+        }
 
         public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
             BookingDetailUpdateStatusModel updateDto, CancellationToken cancellationToken)
@@ -220,6 +224,17 @@ namespace ViGo.Services
                 // Time validation
             }
 
+            if (!bookingDetail.DriverId.HasValue)
+            {
+                throw new ApplicationException("Chuyến đi chưa được cấu hình tài xế!!");
+            }
+
+            if (!IdentityUtilities.IsStaff() && !IdentityUtilities.IsAdmin()
+              && !IdentityUtilities.GetCurrentUserId().Equals(bookingDetail.DriverId.Value))
+            {
+                throw new AccessDeniedException("Bạn không thể thực hiện hành động này!!");
+            }
+
             bookingDetail.Status = updateDto.Status;
             switch (updateDto.Status)
             {
@@ -235,6 +250,65 @@ namespace ViGo.Services
             }
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
+
+            if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+            {
+                // Calculate driver wage
+                // Withdraw from System Wallet to pay for Driver
+                FareServices fareServices = new FareServices(work, _logger);
+                if (!bookingDetail.PriceAfterDiscount.HasValue)
+                {
+                    throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
+                }
+
+                double driverWage = await fareServices.CalculateDriverWage(
+                    bookingDetail.PriceAfterDiscount.Value, cancellationToken);
+
+                // Get SYSTEM WALLET
+                Wallet systemWallet = await work.Wallets.GetAsync(w =>
+                    w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                if (systemWallet is null)
+                {
+                    throw new Exception("Chưa có ví dành cho hệ thống!!");
+                }
+
+                WalletTransaction systemTransaction_Withdraw = new WalletTransaction
+                {
+                    WalletId = systemWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    BookingId = bookingDetail.BookingId,
+                    Type = WalletTransactionType.PAY_FOR_DRIVER,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                };
+
+                Wallet driverWallet = await work.Wallets.GetAsync(w =>
+                    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+                if (driverWallet is null)
+                {
+                    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
+                }
+
+                WalletTransaction driverTransaction_Add = new WalletTransaction
+                {
+                    WalletId = driverWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    BookingId = bookingDetail.BookingId,
+                    Type = WalletTransactionType.TRIP_INCOME,
+                    Status = WalletTransactionStatus.SUCCESSFULL
+                };
+
+                systemWallet.Balance -= driverWage;
+                driverWallet.Balance += driverWage;
+
+                await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+                
+                await work.Wallets.UpdateAsync(systemWallet);
+                await work.Wallets.UpdateAsync(driverWallet);
+            }
+
             await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;

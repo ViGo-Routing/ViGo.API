@@ -1,4 +1,4 @@
-﻿namespace ViGo.API.BackgroundTasks
+﻿namespace ViGo.Utilities.BackgroundTasks
 {
     public interface IBackgroundTaskQueue
     {

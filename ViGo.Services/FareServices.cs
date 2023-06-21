@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,8 +15,23 @@ namespace ViGo.Services
 {
     public class FareServices : BaseServices
     {
-        public FareServices(IUnitOfWork work) : base(work)
+        public FareServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
+        }
+
+        public async Task<double> CalculateDriverWage(double bookingDetailFare,
+            CancellationToken cancellationToken)
+        {
+            Setting? driverWageSetting = await work.Settings.GetAsync(
+                s => s.Key.Equals(SettingKeys.DriverWagePercent), cancellationToken: cancellationToken);
+
+            if (driverWageSetting is null)
+            {
+                throw new ApplicationException("Chiết khấu chuyến đi dành cho tài xế chưa được thiết lập!!");
+            }
+
+            double percent = double.Parse(driverWageSetting.Value);
+            return FareUtilities.RoundToThousands(bookingDetailFare * percent);
         }
 
         public async Task<FareCalculateResponseModel> CalculateFareBasedOnDistance(

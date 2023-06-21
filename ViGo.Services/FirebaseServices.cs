@@ -1,4 +1,5 @@
 ﻿using FirebaseAdmin.Auth;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ namespace ViGo.Services
 {
     public class FirebaseServices : BaseServices
     {
-        public FirebaseServices (IUnitOfWork work) : base(work)
+        public FirebaseServices (IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

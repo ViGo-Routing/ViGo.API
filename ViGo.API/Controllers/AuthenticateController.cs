@@ -22,10 +22,12 @@ namespace ViGo.API.Controllers
     public class AuthenticateController : ControllerBase
     {
         private UserServices userServices;
+        private ILogger<AuthenticateController> _logger;
 
-        public AuthenticateController(IUnitOfWork work)
+        public AuthenticateController(IUnitOfWork work, ILogger<AuthenticateController> logger)
         {
-            userServices = new UserServices(work);
+            _logger = logger;
+            userServices = new UserServices(work, logger);
         }
 
         /// <summary>

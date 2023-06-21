@@ -195,7 +195,7 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.Property(e => e.Description).HasMaxLength(200);
+                entity.Property(e => e.Description).HasMaxLength(500);
 
                 entity.Property(e => e.Title).HasMaxLength(255);
 
@@ -240,6 +240,12 @@ namespace ViGo.Domain
                     .HasForeignKey(d => d.VehicleTypeId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Promotion_VehicleType");
+
+                entity.HasOne(d => d.Event)
+                    .WithMany(p => p.Promotions)
+                    .HasForeignKey(d => d.EventId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Promotion_Event");
             });
 
             modelBuilder.Entity<Report>(entity =>
@@ -478,6 +484,8 @@ namespace ViGo.Domain
                 entity.ToTable("WalletTransaction");
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
+
+                entity.Property(e => e.ExternalTransactionId).HasMaxLength(50);
 
                 entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 

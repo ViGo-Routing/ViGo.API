@@ -1,4 +1,4 @@
-﻿using Google.Apis.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace ViGo.Services
 {
     public class BookingServices : BaseServices
     {
-        public BookingServices(IUnitOfWork work) : base(work)
+        public BookingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 

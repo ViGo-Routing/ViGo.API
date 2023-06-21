@@ -1,12 +1,12 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
-using ViGo.API.BackgroundTasks;
 using ViGo.API.SignalR;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
 using ViGo.Repository;
 using ViGo.Repository.Core;
+using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.API

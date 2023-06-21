@@ -29,7 +29,6 @@ namespace ViGo.Utilities
         //    return CalculateFareBasedOnDistance(distance, fare);
         //}
 
-        
     }
 
 
