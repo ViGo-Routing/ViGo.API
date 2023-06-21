@@ -13,6 +13,7 @@ using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -189,9 +190,21 @@ namespace ViGo.Services
             await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
 
-            if (model.IsSentToUser)
+            if (model.IsSentToUser && model.UserId.HasValue)
             {
                 // Send Push Notification to user
+                User? user = await work.Users.GetAsync(model.UserId.Value, cancellationToken: cancellationToken);
+                if (user is null)
+                {
+                    throw new ApplicationException("Thông tin người dùng không tồn tại!!");
+                }
+
+                string? fcmToken = user.FcmToken;
+                if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+                {
+                    await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken,
+                        model.Title, model.Description, cancellationToken: cancellationToken);
+                }
             }
 
             return notification;
