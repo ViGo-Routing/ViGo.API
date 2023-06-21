@@ -208,7 +208,7 @@ namespace ViGo.Services
                                     if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
                                     {
                                         systemTransaction_Add.Status = WalletTransactionStatus.SUCCESSFULL;
-                                        systemTransaction_Add.Amount += vnpAmount;
+                                        //systemTransaction_Add.Amount += vnpAmount;
 
                                         walletTransaction_Topup.Status = WalletTransactionStatus.SUCCESSFULL;
                                         walletTransaction_Paid.Status = WalletTransactionStatus.SUCCESSFULL;
@@ -247,6 +247,17 @@ namespace ViGo.Services
 
                                     // TODO Code
 
+                                    // Run trip mapping
+                                    await backgroundTaskQueue.QueueBackGroundWorkItemAsync(async token =>
+                                    {
+                                        await using (var scope = serviceScopeFactory.CreateAsyncScope())
+                                        {
+                                            IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
+                                            TripMappingServices tripMappingServices = new TripMappingServices(work, _logger);
+                                            await tripMappingServices.MapBooking(booking, _logger);
+                                        }
+                                    });
+
                                     // Send notification to user
                                     User user = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
 
@@ -266,16 +277,6 @@ namespace ViGo.Services
                                                     { "isSuccess", "true" },
                                                     { "message", "Thanh toán bằng VNPay thành công!" }
                                                 }, cancellationToken);
-
-                                            await backgroundTaskQueue.QueueBackGroundWorkItemAsync(async token =>
-                                            {
-                                                await using (var scope = serviceScopeFactory.CreateAsyncScope())
-                                                {
-                                                    IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
-                                                    TripMappingServices tripMappingServices = new TripMappingServices(work, _logger);
-                                                    await tripMappingServices.MapBooking(booking, _logger);
-                                                }
-                                            });
                                         }
                                         else
                                         {
