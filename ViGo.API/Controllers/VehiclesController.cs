@@ -58,7 +58,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehiclesViewModel>), 200)]
+        [ProducesResponseType(typeof(VehiclesViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -111,7 +111,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehiclesViewModel>), 200)]
+        [ProducesResponseType(typeof(VehiclesViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -145,7 +145,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Login successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<VehiclesViewModel>), 200)]
+        [ProducesResponseType(typeof(VehiclesViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
