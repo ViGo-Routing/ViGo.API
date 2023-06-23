@@ -354,7 +354,7 @@ namespace ViGo.Services
             return (code, message);
         }
 
-        public string GenerateVnPayTestPaymentUrl(HttpContext context, Guid bookingId)
+        public string GenerateVnPayTestPaymentUrl(HttpContext context, Guid bookingId, double amount)
         {
             string vnpReturnUrl = ViGoConfiguration.VnPayReturnUrl(context);
             string vnpPaymentUrl = ViGoConfiguration.VnPayPaymentUrl;
@@ -364,7 +364,6 @@ namespace ViGo.Services
 
             // Generate fake information
             //Guid bookingDetailId = Guid.Parse("EAC6836E-1CF0-4064-B01C-BD5F1B298EBC");
-            double amount = 100000;
 
             VnPayLibrary vnPay = new VnPayLibrary();
 
