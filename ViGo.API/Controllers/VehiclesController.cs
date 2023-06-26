@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
@@ -38,7 +39,7 @@ namespace ViGo.API.Controllers
         //[Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllVehiclesAsync(
-            [FromQuery] PaginationParameter? pagination)
+            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
         {
             if (pagination is null)
             {
@@ -46,7 +47,7 @@ namespace ViGo.API.Controllers
             }
 
             IPagedEnumerable<VehiclesViewModel> vehicles = await
-                vehicleServices.GetAllVehiclesAsync(pagination, HttpContext);
+                vehicleServices.GetAllVehiclesAsync(pagination, HttpContext, cancellationToken);
 
             return StatusCode(200, vehicles);
         }
@@ -64,11 +65,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetVehicleByIdAsync(Guid id)
+        public async Task<IActionResult> GetVehicleByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             //try
             //{
-            VehiclesViewModel vehicle = await vehicleServices.GetVehicleByIdAsync(id);
+            VehiclesViewModel vehicle = await vehicleServices.GetVehicleByIdAsync(id, cancellationToken);
             if (vehicle == null)
             {
                 throw new ApplicationException("VehicleID không tồn tại!");
@@ -98,9 +99,9 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet("User/{userId}")]
-        public async Task<IActionResult> GetVehicleByUserIdAsync(Guid userId)
+        public async Task<IActionResult> GetVehicleByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
-            IEnumerable<VehiclesViewModel> vehicle = await vehicleServices.GetVehicleByUserIdAsync(userId);
+            IEnumerable<VehiclesViewModel> vehicle = await vehicleServices.GetVehicleByUserIdAsync(userId, cancellationToken);
             return StatusCode(200, vehicle);
         }
 
@@ -117,11 +118,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateVehicleAsync([FromBody] VehiclesCreateModel vehicle)
+        public async Task<IActionResult> CreateVehicleAsync([FromBody] VehiclesCreateModel vehicle, CancellationToken cancellationToken)
         {
             //try
             //{
-            VehiclesViewModel vehi = await vehicleServices.CreateVehicleAsync(vehicle);
+            VehiclesViewModel vehi = await vehicleServices.CreateVehicleAsync(vehicle, cancellationToken);
             if (vehi == null)
             {
                 throw new ApplicationException("Tạo thất bại!");

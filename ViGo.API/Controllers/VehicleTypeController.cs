@@ -37,7 +37,7 @@ namespace ViGo.API.Controllers
         //[Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllVehicleTypesAsync(
-            [FromQuery] PaginationParameter? pagination)
+            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
         {
             if (pagination is null)
             {
@@ -45,7 +45,7 @@ namespace ViGo.API.Controllers
             }
 
             IPagedEnumerable<VehicleType> vehicleTypes = await
-                vehicleTypeServices.GetAllVehicleTypesAsync(pagination, HttpContext);
+                vehicleTypeServices.GetAllVehicleTypesAsync(pagination, HttpContext, cancellationToken);
             return StatusCode(200, vehicleTypes);
         }
 
@@ -62,11 +62,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetVehicleTypeByIdAsync(Guid id)
+        public async Task<IActionResult> GetVehicleTypeByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             //try
             //{
-            VehicleType vehicleType = await vehicleTypeServices.GetVehicleTypeByIdAsync(id);
+            VehicleType vehicleType = await vehicleTypeServices.GetVehicleTypeByIdAsync(id, cancellationToken);
             if (vehicleType == null)
             {
                 throw new ApplicationException("Vehicle Type ID không tồn tại!");
@@ -96,11 +96,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         //[Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateVehicleTypeAsync([FromBody] VehicleTypeCreateModel vehicleTypeCreate)
+        public async Task<IActionResult> CreateVehicleTypeAsync([FromBody] VehicleTypeCreateModel vehicleTypeCreate, CancellationToken cancellationToken)
         {
             //try
             //{
-            VehicleType vehicleType = await vehicleTypeServices.CreateVehicleTypeAsync(vehicleTypeCreate);
+            VehicleType vehicleType = await vehicleTypeServices.CreateVehicleTypeAsync(vehicleTypeCreate, cancellationToken);
             if (vehicleType == null)
             {
                 throw new ApplicationException("Tạo thất bại!");

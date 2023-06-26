@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Models.Users;
@@ -23,9 +24,10 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<VehiclesViewModel>> GetAllVehiclesAsync(
             PaginationParameter pagination,
-            HttpContext context)
+            HttpContext context, 
+            CancellationToken cancellationToken)
         {
-            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync();
+            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(cancellationToken : cancellationToken);
 
             int totalRecords = vehicles.Count();
             
@@ -34,8 +36,10 @@ namespace ViGo.Services
 
             IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
             IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);
-            IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)));
-            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(q => q.Where(items => vehicleTypeIds.Contains(items.Id)));
+            IEnumerable<User> users = await work.Users.GetAllAsync(
+                q => q.Where(items => userIds.Contains(items.Id)), cancellationToken: cancellationToken);
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(
+                q => q.Where(items => vehicleTypeIds.Contains(items.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<UserViewModel> userViewModels = from user in users 
                                                         select new UserViewModel(user);
@@ -53,14 +57,14 @@ namespace ViGo.Services
                 pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<VehiclesViewModel> GetVehicleByIdAsync(Guid id)
+        public async Task<VehiclesViewModel> GetVehicleByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            Vehicle vehicle = await work.Vehicles.GetAsync(id);
+            Vehicle vehicle = await work.Vehicles.GetAsync(id, cancellationToken: cancellationToken);
             Guid userId = vehicle.UserId;
             Guid vehicleTypeId = vehicle.VehicleTypeId;
 
-            User user = await work.Users.GetAsync(userId);
-            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicleTypeId);
+            User user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicleTypeId, cancellationToken: cancellationToken);
             UserViewModel userViewModel = new UserViewModel(user);
             VehicleTypeViewModel vehicleTypeViewModel = new VehicleTypeViewModel(vehicleType);
 
@@ -70,13 +74,13 @@ namespace ViGo.Services
             //return vehicle;
         }
 
-        public async Task<IEnumerable<VehiclesViewModel>> GetVehicleByUserIdAsync(Guid userId)
+        public async Task<IEnumerable<VehiclesViewModel>> GetVehicleByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
-            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(v => v.Where(q => q.UserId.Equals(userId)));
+            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(v => v.Where(q => q.UserId.Equals(userId)), cancellationToken: cancellationToken);
             IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
             IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);
-            IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)));
-            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(q => q.Where(items => vehicleTypeIds.Contains(items.Id)));
+            IEnumerable<User> users = await work.Users.GetAllAsync(q => q.Where(items => userIds.Contains(items.Id)), cancellationToken: cancellationToken);
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(q => q.Where(items => vehicleTypeIds.Contains(items.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<UserViewModel> userViewModels = from user in users
                                                         select new UserViewModel(user);
@@ -93,7 +97,7 @@ namespace ViGo.Services
             return listVehicle;
         }
 
-        public async Task<VehiclesViewModel> CreateVehicleAsync(VehiclesCreateModel vehicle)
+        public async Task<VehiclesViewModel> CreateVehicleAsync(VehiclesCreateModel vehicle, CancellationToken cancellationToken)
         {
             //check vehicle type id exist 
             Vehicle newVehicle = new Vehicle
@@ -106,12 +110,12 @@ namespace ViGo.Services
             };
 
 
-            await work.Vehicles.InsertAsync(newVehicle);
-            var result = await work.SaveChangesAsync();
+            await work.Vehicles.InsertAsync(newVehicle, cancellationToken: cancellationToken);
+            var result = await work.SaveChangesAsync(cancellationToken: cancellationToken);
 
-            User user = await work.Users.GetAsync(vehicle.UserId);
+            User user = await work.Users.GetAsync(vehicle.UserId, cancellationToken: cancellationToken);
             UserViewModel userViewModel = new UserViewModel(user);
-            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicle.VehicleTypeId);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(vehicle.VehicleTypeId, cancellationToken: cancellationToken);
             VehicleTypeViewModel vehicleTypeViewModel = new VehicleTypeViewModel(vehicleType);
             VehiclesViewModel vehicleView = new VehiclesViewModel(newVehicle, userViewModel, vehicleTypeViewModel);
             if (result > 0)

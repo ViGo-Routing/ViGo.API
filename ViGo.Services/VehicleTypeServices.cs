@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -22,9 +23,10 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<VehicleType>> GetAllVehicleTypesAsync(
             PaginationParameter pagination,
-            HttpContext context)
+            HttpContext context,
+            CancellationToken cancellationToken)
         {
-            IEnumerable<VehicleType> vehicleType = await work.VehicleTypes.GetAllAsync();
+            IEnumerable<VehicleType> vehicleType = await work.VehicleTypes.GetAllAsync(cancellationToken: cancellationToken);
 
             int totalRecords = vehicleType.Count();
 
@@ -33,13 +35,13 @@ namespace ViGo.Services
                 totalRecords, context);
         }
 
-        public async Task<VehicleType> GetVehicleTypeByIdAsync(Guid id)
+        public async Task<VehicleType> GetVehicleTypeByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            VehicleType vehicleType = await work.VehicleTypes.GetAsync(id);
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(id, cancellationToken: cancellationToken);
             return vehicleType;
         }
 
-        public async Task<VehicleType> CreateVehicleTypeAsync(VehicleTypeCreateModel newVehicleType)
+        public async Task<VehicleType> CreateVehicleTypeAsync(VehicleTypeCreateModel newVehicleType, CancellationToken cancellationToken)
         {
             var entry = new VehicleType
             {
@@ -48,8 +50,8 @@ namespace ViGo.Services
                 Type = newVehicleType.Type,
                 IsDeleted = false,
             };
-            await work.VehicleTypes.InsertAsync(entry);
-            var result = await work.SaveChangesAsync();
+            await work.VehicleTypes.InsertAsync(entry, cancellationToken: cancellationToken);
+            var result = await work.SaveChangesAsync(cancellationToken: cancellationToken);
             if (result > 0)
             {
                 return entry;
@@ -60,7 +62,7 @@ namespace ViGo.Services
 
         public async Task<VehicleType> UpdateVehicleTypeAsync(Guid id, VehicleTypeUpdateModel vehicleTypeUpdate)
         {
-            var currentVehicleType = await GetVehicleTypeByIdAsync(id);
+            var currentVehicleType = await work.VehicleTypes.GetAsync(id);
 
             if (currentVehicleType != null)
             {
