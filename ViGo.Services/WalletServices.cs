@@ -41,17 +41,17 @@ namespace ViGo.Services
         //    return wallet;
         //}
 
-        public async Task<IPagedEnumerable<WalletViewModel>> GetAllWalletsAsync(PaginationParameter pagination, HttpContext context)
+        public async Task<IPagedEnumerable<WalletViewModel>> GetAllWalletsAsync(PaginationParameter pagination, HttpContext context, CancellationToken cancellationToken)
         {
             //IEnumerable<Wallet> wallets = await work.Wallets.GetAllAsync(q => q.Where(
-            //    items => items.Type.Equals(WalletType.PERSONAL)));
+            //    items => items.Type.Equals(WalletType.PERSONAL)), cancellationToken: cancellationToken);
 
-            IEnumerable<Wallet> wallets = await work.Wallets.GetAllAsync();
+            IEnumerable<Wallet> wallets = await work.Wallets.GetAllAsync(cancellationToken: cancellationToken);
             int totalRecords = wallets.Count();
             wallets = wallets.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
             
             IEnumerable<Guid> userIds = wallets.Select(w => w.UserId);
-            IEnumerable<User> users = await work.Users.GetAllAsync(e => e.Where(r => userIds.Contains(r.Id)));
+            IEnumerable<User> users = await work.Users.GetAllAsync(e => e.Where(r => userIds.Contains(r.Id)), cancellationToken: cancellationToken);
             IEnumerable<UserViewModel> userView = from user in users
                                                   select new UserViewModel(user);
             IEnumerable<WalletViewModel> listWallet = from wallet in wallets
@@ -61,9 +61,9 @@ namespace ViGo.Services
 
             return listWallet.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize, totalRecords, context);
         }
-        public async Task<WalletViewModel> GetWalletByUserId(Guid userId)
+        public async Task<WalletViewModel> GetWalletByUserId(Guid userId, CancellationToken cancellationToken)
         {
-            Wallet wallet = await work.Wallets.GetAsync(q => q.UserId.Equals(userId));
+            Wallet wallet = await work.Wallets.GetAsync(q => q.UserId.Equals(userId), cancellationToken : cancellationToken);
             Guid userID = wallet.UserId;
             User user = await work.Users.GetAsync(userID);
             UserViewModel userView = new UserViewModel(user);

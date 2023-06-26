@@ -42,14 +42,14 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [HttpGet]
-        public async Task<IActionResult> GetAllWalletsAsync([FromQuery] PaginationParameter? pagination)
+        public async Task<IActionResult> GetAllWalletsAsync([FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
         {
             if (pagination is null)
             {
                 pagination = PaginationParameter.Default;
             }
 
-            IPagedEnumerable<WalletViewModel> listWallet = await walletServices.GetAllWalletsAsync(pagination, HttpContext);
+            IPagedEnumerable<WalletViewModel> listWallet = await walletServices.GetAllWalletsAsync(pagination, HttpContext, cancellationToken);
             return StatusCode(200, listWallet);
         }
 
@@ -66,9 +66,9 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [HttpGet("User/{userId}")]
-        public async Task<IActionResult> GetWalletByUserId(Guid userId)
+        public async Task<IActionResult> GetWalletByUserId(Guid userId, CancellationToken cancellationToken)
         {
-            WalletViewModel wallet = await walletServices.GetWalletByUserId(userId);
+            WalletViewModel wallet = await walletServices.GetWalletByUserId(userId, cancellationToken);
             return StatusCode(200, wallet);
         }
 
