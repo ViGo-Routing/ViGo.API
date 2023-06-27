@@ -120,6 +120,7 @@ namespace ViGo.Services
                 {
                     throw new ApplicationException("Thông tin số điện thoại không trùng khớp!!");
                 }
+
                 return user;
 
             } catch (FirebaseAuthException ex)
