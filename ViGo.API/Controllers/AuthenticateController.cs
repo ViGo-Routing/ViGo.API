@@ -94,7 +94,8 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token)
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                user = user
             });
         }
 
@@ -162,7 +163,8 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, new
             {
-                token = new JwtSecurityTokenHandler().WriteToken(token)
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                user = user
             });
         }
 
