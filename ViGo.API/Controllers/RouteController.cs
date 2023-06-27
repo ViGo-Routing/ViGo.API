@@ -44,7 +44,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateRoute(RouteCreateEditModel dto,
+        public async Task<IActionResult> CreateRoute(RouteCreateModel dto,
             CancellationToken cancellationToken)
         {
             Domain.Route route = await routeServices.CreateRouteAsync(dto, cancellationToken);
@@ -198,7 +198,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteCreateEditModel dto,
+        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteEditModel dto,
             CancellationToken cancellationToken)
         {
             if (!routeId.Equals(dto.Id))

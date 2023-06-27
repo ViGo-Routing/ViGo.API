@@ -28,16 +28,17 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<Route> CreateRouteAsync(RouteCreateEditModel dto,
+        public async Task<Route> CreateRouteAsync(RouteCreateModel dto,
             CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin()
                 && !IdentityUtilities.IsStaff())
             {
-                if (!dto.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
-                {
-                    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
-                }
+                //if (!dto.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                //{
+                //    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
+                //}
+                dto.UserId = IdentityUtilities.GetCurrentUserId();
             }
 
             User user = await work.Users.GetAsync(
@@ -167,7 +168,7 @@ namespace ViGo.Services
             // Create Route
             Route route = new Route
             {
-                UserId = dto.UserId,
+                UserId = dto.UserId.Value,
                 Name = dto.Name,
                 StartStationId = startStation != null ? startStation.Id : null,
                 EndStationId = endStation != null ? endStation.Id : null,
@@ -349,11 +350,11 @@ namespace ViGo.Services
                 }
 
                 return dtos.ToPagedEnumerable(pagination.PageNumber, 
-                    pagination.PageSize, totalRecords, context);
+                    pagination.PageSize, totalRecords, context, false);
             }
 
             return new List<RouteViewModel>().ToPagedEnumerable(
-                pagination.PageNumber, pagination.PageSize, 0, context);
+                pagination.PageNumber, pagination.PageSize, 0, context, false);
             //IEnumerable<RouteViewModel> models =
             //    from route in routes
             //    select new RouteViewModel(route);
@@ -435,15 +436,15 @@ namespace ViGo.Services
 
         }
 
-        public async Task<Route> UpdateRouteAsync(RouteCreateEditModel updateDto,
+        public async Task<Route> UpdateRouteAsync(RouteEditModel updateDto,
             CancellationToken cancellationToken)
         {
-            if (!updateDto.Id.HasValue)
-            {
-                throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
-            }
+            //if (!updateDto.Id.HasValue)
+            //{
+            //    throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
+            //}
 
-            Route route = await work.Routes.GetAsync(updateDto.Id.Value, cancellationToken: cancellationToken);
+            Route route = await work.Routes.GetAsync(updateDto.Id, cancellationToken: cancellationToken);
             if (route == null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
