@@ -273,13 +273,5 @@ __pycache__/
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore
 
-# Migration Ignore
-KlausBOM V 1.0.backup/*
-KlausBOM V 1.0_Core/*
-KlausBOM.Domain.backup.backup/*
-KlausBOM.Repository.backup/*
-KlausBOM.Services.backup/*
-KlausBOM.Utility.backup/*
-KlausBOM.Domain.backup/*
-KlausBOM.Repository.core.backup/*
-KlausBOM.Services.core.backup/*
+# VS Code
+.vscode/
