@@ -29,7 +29,7 @@ namespace ViGo.Repository.Pagination
         public static IPagedEnumerable<T> ToPagedEnumerable<T>(
             this IEnumerable<T> source, int pageNumber, int pageSize, 
             int totalRecords,
-            HttpContext context)
+            HttpContext context, bool isOriginalSource = true)
         {
             if (source is null)
             {
@@ -40,7 +40,7 @@ namespace ViGo.Repository.Pagination
             return new PagedEnumerable<T>(
                 source, 
                 pageNumber, pageSize, totalRecords,
-                context.GetBaseUri(), context.Request.Path.Value);
+                context.GetBaseUri(), context.Request.Path.Value, isOriginalSource);
         }
     }
 }

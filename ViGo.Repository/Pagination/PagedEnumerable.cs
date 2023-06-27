@@ -25,9 +25,11 @@ namespace ViGo.Repository.Pagination
         /// <param name="totalRecords">Original Total records</param>
         /// <param name="baseUri">Base URI of the retrieving action</param>
         /// <param name="route">Route of the retrieving action</param>
+        /// <param name="isOriginalSource">True if the source has not been paged. 
+        /// The paging process with take place in this constructor</param>
         public PagedEnumerable(IEnumerable<T> source, 
             int pageNumber, int pageSize, int totalRecords,
-            string baseUri, string route)
+            string baseUri, string route, bool isOriginalSource = true)
         {
             // Minimum allowed page size is 1
             pageSize = pageSize < 1 ? 1 : pageSize;
@@ -38,7 +40,7 @@ namespace ViGo.Repository.Pagination
             PageSize = pageSize;
             PageNumber = pageNumber;
             //var test = source.Skip((pageIndex - 1) * pageSize).Take(pageSize);
-            Data = source.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+            Data = isOriginalSource ? source.Skip((pageNumber - 1) * pageSize).Take(pageSize) : source;
 
             NextPage =
                 pageNumber >= 1 && pageNumber < TotalPages
