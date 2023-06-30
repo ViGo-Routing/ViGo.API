@@ -11,7 +11,8 @@ namespace ViGo.Domain
         {
             RouteEndStations = new HashSet<Route>();
             RouteStartStations = new HashSet<Route>();
-            RouteStations = new HashSet<RouteStation>();
+            BookingDetailStartStations = new HashSet<BookingDetail>();
+            BookingDetailEndStations = new HashSet<BookingDetail>();
         }
 
         public override Guid Id { get; set; }
@@ -19,6 +20,7 @@ namespace ViGo.Domain
         public double Latitude { get; set; }
         public string Name { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public StationType Type { get; set; }
         public StationStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -30,7 +32,11 @@ namespace ViGo.Domain
         public virtual ICollection<Route> RouteEndStations { get; set; }
         [JsonIgnore]
         public virtual ICollection<Route> RouteStartStations { get; set; }
+
         [JsonIgnore]
-        public virtual ICollection<RouteStation> RouteStations { get; set; }
+        public virtual ICollection<BookingDetail> BookingDetailEndStations { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<BookingDetail> BookingDetailStartStations { get; set; }
+
     }
 }

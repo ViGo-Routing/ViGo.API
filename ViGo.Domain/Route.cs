@@ -10,19 +10,18 @@ namespace ViGo.Domain
         public Route()
         {
             RouteRoutines = new HashSet<RouteRoutine>();
-            RouteStations = new HashSet<RouteStation>();
         }
 
         public override Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string Name { get; set; } = null!;
-        public Guid? StartStationId { get; set; }
-        public Guid? EndStationId { get; set; }
+        public Guid StartStationId { get; set; }
+        public Guid EndStationId { get; set; }
         public double? Distance { get; set; }
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
-        public RouteType RouteType { get; set; } = RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME;
+        //public RouteType RouteType { get; set; } = RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME;
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -39,11 +38,9 @@ namespace ViGo.Domain
         //public virtual ICollection<BookingDetail> CustomerBookingDetails { get; set; }
         [JsonIgnore]
         public virtual ICollection<Booking> CustomerBookings { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
+        //[JsonIgnore]
+        //public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
         [JsonIgnore]
         public virtual ICollection<RouteRoutine> RouteRoutines { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<RouteStation> RouteStations { get; set; }
     }
 }

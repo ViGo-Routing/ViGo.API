@@ -11,6 +11,7 @@ namespace ViGo.Domain
         public string LicensePlate { get; set; } = null!;
         public Guid VehicleTypeId { get; set; }
         public Guid UserId { get; set; }
+        public Guid UserLicenseId { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -21,5 +22,7 @@ namespace ViGo.Domain
         public virtual User User { get; set; } = null!;
         [JsonIgnore]
         public virtual VehicleType VehicleType { get; set; } = null!;
+        [JsonIgnore]
+        public virtual UserLicense UserLicense { get; set; } = null!;
     }
 }

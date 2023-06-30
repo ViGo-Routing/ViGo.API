@@ -29,4 +29,11 @@ namespace ViGo.Domain.Enumerations
         DRIVER_LICENSE = 2,
         VEHICLE_REGISTRATION = 3
     }
+
+    public enum UserLicenseStatus : short
+    {
+        PENDING = 0,
+        APPROVED = 1,
+        REJECTED = -1
+    }
 }
