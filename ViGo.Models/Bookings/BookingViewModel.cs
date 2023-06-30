@@ -7,7 +7,6 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Routes;
-using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 
@@ -36,6 +35,7 @@ namespace ViGo.Models.Bookings
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public string VehicleName { get; set; }
+        public BookingType Type { get; set; }
         public BookingStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -53,13 +53,12 @@ namespace ViGo.Models.Bookings
             //StartRouteStation = startRouteStation;
             //EndRouteStation = endRouteStation;
             CustomerRoute = null;
-            StartTime = booking.StartTime;
             StartDate = booking.StartDate;
             EndDate = booking.EndDate;
             DaysOfWeek = booking.DaysOfWeek;
             TotalPrice = booking.TotalPrice;
             PriceAfterDiscount = booking.PriceAfterDiscount;
-            PaymentMethod = booking.PaymentMethod;
+            //PaymentMethod = booking.PaymentMethod;
             IsShared = booking.IsShared;
             Duration = booking.Duration;
             Distance = booking.Distance;
@@ -67,6 +66,7 @@ namespace ViGo.Models.Bookings
             VehicleTypeId = booking.VehicleTypeId;
             VehicleName = vehicleType.Name + " - " +
                 vehicleType.Slot + " chỗ";
+            Type = booking.Type;
             Status = booking.Status;
             CreatedTime = booking.CreatedTime;
             CreatedBy = booking.CreatedBy;
@@ -86,13 +86,12 @@ namespace ViGo.Models.Bookings
             //StartRouteStation = startRouteStation;
             //EndRouteStation = endRouteStation;
             CustomerRoute = new RouteViewModel(customerRoute, startRouteStation, endRouteStation);
-            StartTime = booking.StartTime;
             StartDate = booking.StartDate;
             EndDate = booking.EndDate;
             DaysOfWeek = booking.DaysOfWeek;
             TotalPrice = booking.TotalPrice;
             PriceAfterDiscount = booking.PriceAfterDiscount;
-            PaymentMethod = booking.PaymentMethod;
+            //PaymentMethod = booking.PaymentMethod;
             IsShared = booking.IsShared;
             Duration = booking.Duration;
             Distance = booking.Distance;
@@ -100,6 +99,7 @@ namespace ViGo.Models.Bookings
             VehicleTypeId = booking.VehicleTypeId;
             VehicleName = vehicleType.Name + " - " + 
                 vehicleType.Slot + " chỗ";
+            Type = booking.Type;
             Status = booking.Status;
             CreatedTime = booking.CreatedTime;
             CreatedBy = booking.CreatedBy;

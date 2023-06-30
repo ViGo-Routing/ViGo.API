@@ -10,21 +10,18 @@ namespace ViGo.Models.RouteRoutines
 {
     public class RouteRoutineViewModel
     {
-        public DateOnly? RoutineDate { get; set; }
+        public DateOnly RoutineDate { get; set; }
         //public DateOnly StartDate { get; set; }
-        public TimeOnly? StartTime { get; set; }
+        public TimeOnly StartTime { get; set; }
         //public DateOnly EndDate { get; set; }
-        public TimeOnly? EndTime { get; set; }
+        //public TimeOnly? EndTime { get; set; }
         public RouteRoutineStatus Status { get; set; }
 
         public RouteRoutineViewModel(RouteRoutine routeRoutine)
         {
-            RoutineDate = routeRoutine.RoutineDate.HasValue ?
-                DateOnly.FromDateTime(routeRoutine.RoutineDate.Value) : null;
-            StartTime = routeRoutine.StartTime.HasValue ?
-                TimeOnly.FromTimeSpan(routeRoutine.StartTime.Value) : null;
-            EndTime = routeRoutine.EndTime.HasValue ?
-                TimeOnly.FromTimeSpan(routeRoutine.EndTime.Value) : null;
+            RoutineDate = DateOnly.FromDateTime(routeRoutine.RoutineDate);
+            StartTime = TimeOnly.FromTimeSpan(routeRoutine.StartTime);
+            //EndTime = TimeOnly.FromTimeSpan(routeRoutine.EndTime);
             Status = routeRoutine.Status;
         }
     }

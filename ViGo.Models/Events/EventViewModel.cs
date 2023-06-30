@@ -13,7 +13,6 @@ namespace ViGo.Models.Events
         public Guid Id { get; set; }
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
-        public EventType Type { get; set; }
         public EventStatus Status { get; set; }
 
         public EventViewModel(Event ev)
@@ -21,7 +20,6 @@ namespace ViGo.Models.Events
             Id = ev.Id;
             Title = ev.Title;
             Content = ev.Content;
-            Type = ev.Type;
             Status = ev.Status;
         }
     }

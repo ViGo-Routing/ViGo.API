@@ -5,7 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
+using ViGo.Models.Stations;
 using ViGo.Models.Users;
 
 namespace ViGo.Models.BookingDetails
@@ -18,14 +20,19 @@ namespace ViGo.Models.BookingDetails
         public UserViewModel? Driver { get; set; }
         //public Guid CustomerRouteId { get; set; }
         //public RouteViewModel? CustomerRoute { get; set; }
-        public Guid? DriverRouteId { get; set; }
-        public RouteViewModel? DriverRoute { get; set; }
+        //public Guid? DriverRouteId { get; set; }
+        //public RouteViewModel? DriverRoute { get; set; }
+        public Guid CustomerRouteRoutineId { get; set; }
+        public RouteRoutineViewModel CustomerRouteRoutine{ get; set; }
+        public StationViewModel StartStation { get; set; }
+        public StationViewModel EndStation { get; set; }
+        public TimeSpan CustomerDesiredPickupTime { get; set; }
         public DateTime? AssignedTime { get; set; }
-        public DateTime? Date { get; set; }
+        public DateTime Date { get; set; }
         public double? Price { get; set; }
         public double? PriceAfterDiscount { get; set; }
         public double? DriverWage { get; set; }
-        public TimeSpan? BeginTime { get; set; }
+        //public TimeSpan? BeginTime { get; set; }
         public DateTime? ArriveAtPickupTime { get; set; }
         public DateTime? PickupTime { get; set; }
         public DateTime? DropoffTime { get; set; }
@@ -38,18 +45,23 @@ namespace ViGo.Models.BookingDetails
         public Guid UpdatedBy { get; set; }
 
         public BookingDetailViewModel(BookingDetail bookingDetail,
+            RouteRoutineViewModel customerRoutine,
+            StationViewModel startStation, StationViewModel endStation,
             UserViewModel? driver)
         {
             Id = bookingDetail.Id;
             Driver = driver;
             //CustomerRouteId = bookingDetail.CustomerRouteId;
-            DriverRouteId = bookingDetail.DriverRouteId;
+            CustomerRouteRoutineId = bookingDetail.CustomerRouteRoutineId;
+            CustomerRouteRoutine = customerRoutine;
+            StartStation = startStation;
+            EndStation = endStation;
+            CustomerDesiredPickupTime = bookingDetail.CustomerDesiredPickupTime;
             AssignedTime = bookingDetail.AssignedTime;
             Date = bookingDetail.Date;
             Price = bookingDetail.Price;
             PriceAfterDiscount = bookingDetail.PriceAfterDiscount;
             DriverWage = bookingDetail.DriverWage;
-            BeginTime = bookingDetail.BeginTime;
             ArriveAtPickupTime = bookingDetail.ArriveAtPickupTime;
             PickupTime = bookingDetail.PickupTime;
             DropoffTime = bookingDetail.DropoffTime;
@@ -62,14 +74,14 @@ namespace ViGo.Models.BookingDetails
             UpdatedBy = bookingDetail.UpdatedBy;
         }
         
-        public BookingDetailViewModel(BookingDetail bookingDetail,
-            UserViewModel? driver,
-            //RouteViewModel customerRoute,
-            RouteViewModel driverRoute)
-            : this(bookingDetail, driver)
-        {
-            //CustomerRoute = customerRoute;
-            DriverRoute = driverRoute;
-        }
+        //public BookingDetailViewModel(BookingDetail bookingDetail,
+        //    UserViewModel? driver,
+        //    //RouteViewModel customerRoute,
+        //    RouteViewModel driverRoute)
+        //    : this(bookingDetail, driver)
+        //{
+        //    //CustomerRoute = customerRoute;
+        //    DriverRoute = driverRoute;
+        //}
     }
 }
