@@ -10,7 +10,6 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
-using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
@@ -44,7 +43,7 @@ namespace ViGo.Services
             User user = await work.Users.GetAsync(
                 u => u.Id.Equals(dto.UserId) && u.Status == UserStatus.ACTIVE, 
                 cancellationToken: cancellationToken);
-            if (user is null || (user.Role != UserRole.DRIVER && user.Role != UserRole.CUSTOMER))
+            if (user is null || user.Role != UserRole.CUSTOMER)
             {
                 throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
             }
@@ -57,50 +56,22 @@ namespace ViGo.Services
                 maxLength: 255,
                 maxLengthErrorMessage: "Tên tuyến đường không được vượt quá 255 kí tự!"
                 );
-            
-            if (!Enum.IsDefined(dto.RouteType) ||
-                (user.Role == UserRole.CUSTOMER &&
-                (dto.RouteType != RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME)))
-            {
-                throw new ApplicationException("Loại Tuyến đường của khách hàng không hợp lệ!!");
-            }
 
-            if (dto.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME ||
-                dto.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
-            {
-                // No need to set up Start, End
-                if (dto.StartStation != null || dto.EndStation != null)
-                {
-                    throw new ApplicationException("Tuyến đường này không cần thiết lập điểm bắt đầu và kết thúc!");
-                }
-
-                if (dto.Distance.HasValue && dto.Distance.Value != 0)
-                {
-                    throw new ApplicationException("Tuyến đường này không cần thiết thiết lập khoảng cách!");
-                }
-                if (dto.Duration.HasValue && dto.Duration.Value != 0)
-                {
-                    throw new ApplicationException("Tuyến đường này không cần thiết thiết lập thời gian di chuyển!");
-                }
-            }
-            else
-            {
                 if (dto.StartStation == null || dto.EndStation == null)
                 {
                     throw new ApplicationException("Tuyến đường chưa được thiết lập điểm bắt đầu và kết thúc!!");
                 }
 
-                if (!dto.Distance.HasValue || dto.Distance <= 0)
+                if (dto.Distance <= 0)
                 {
                     throw new ApplicationException("Khoảng cách tuyến đường phải lớn hơn 0!");
                 }
-                if (!dto.Duration.HasValue || dto.Distance <= 0)
+                if (dto.Distance <= 0)
                 {
                     throw new ApplicationException("Thời gian di chuyển của tuyến đường phải lớn hơn 0!");
                 }
                 IsValidStation(dto.StartStation, "Điểm bắt đầu");
                 IsValidStation(dto.EndStation, "Điểm kết thúc");
-            }
             //if (dto.StartStation != null)
             //{
             //}
@@ -118,12 +89,10 @@ namespace ViGo.Services
             //}
             //await IsValidRoutines(dto.RouteRoutines);
 
-            Station? startStation = null;
+            //Station? startStation = null;
 
-            if (dto.StartStation != null)
-            {
                 // Find Start Station existance
-                startStation = await work.Stations.GetAsync(
+               Station? startStation = await work.Stations.GetAsync(
                 s => s.Longtitude == dto.StartStation.Longtitude
                 && s.Latitude == dto.StartStation.Latitude
                 && s.Status == StationStatus.ACTIVE,
@@ -140,13 +109,9 @@ namespace ViGo.Services
                     };
                     await work.Stations.InsertAsync(startStation, cancellationToken: cancellationToken);
                 }
-            }
 
-            Station? endStation = null;
-            if (dto.EndStation != null)
-            {
                 // Find End Station existance
-                endStation = await work.Stations.GetAsync(
+                Station? endStation = await work.Stations.GetAsync(
                     s => s.Longtitude == dto.EndStation.Longtitude
                     && s.Latitude == dto.EndStation.Latitude
                     && s.Status == StationStatus.ACTIVE,
@@ -163,54 +128,52 @@ namespace ViGo.Services
                     };
                     await work.Stations.InsertAsync(endStation, cancellationToken: cancellationToken);
                 }
-            }
 
             // Create Route
             Route route = new Route
             {
                 UserId = dto.UserId.Value,
                 Name = dto.Name,
-                StartStationId = startStation != null ? startStation.Id : null,
-                EndStationId = endStation != null ? endStation.Id : null,
+                StartStationId = startStation.Id,
+                EndStationId = endStation.Id,
                 Distance = dto.Distance,
                 Duration = dto.Duration,
-                RouteType = dto.RouteType,
                 RoutineType = dto.RoutineType,
                 Status = RouteStatus.ACTIVE
             };
             await work.Routes.InsertAsync(route, cancellationToken: cancellationToken);
 
-            // Create RouteStations
-            IList<RouteStation> routeStations = new List<RouteStation>();
-            if (startStation != null)
-            {
-                routeStations.Add(
-                    // Start Station
-                    new RouteStation
-                    {
-                        RouteId = route.Id,
-                        StationId = startStation.Id,
-                        StationIndex = 1,
-                        DistanceFromFirstStation = 0,
-                        DurationFromFirstStation = 0,
-                        Status = RouteStationStatus.ACTIVE
-                    });
-            }
-            if (endStation != null)
-            {
-                routeStations.Add(
-                    // End Station
-                    new RouteStation
-                    {
-                        RouteId = route.Id,
-                        StationId = endStation.Id,
-                        StationIndex = 2,
-                        DistanceFromFirstStation = dto.Distance,
-                        DurationFromFirstStation = dto.Duration,
-                        Status = RouteStationStatus.ACTIVE
-                    });
-            }
-            await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
+            //// Create RouteStations
+            //IList<RouteStation> routeStations = new List<RouteStation>();
+            //if (startStation != null)
+            //{
+            //    routeStations.Add(
+            //        // Start Station
+            //        new RouteStation
+            //        {
+            //            RouteId = route.Id,
+            //            StationId = startStation.Id,
+            //            StationIndex = 1,
+            //            DistanceFromFirstStation = 0,
+            //            DurationFromFirstStation = 0,
+            //            Status = RouteStationStatus.ACTIVE
+            //        });
+            //}
+            //if (endStation != null)
+            //{
+            //    routeStations.Add(
+            //        // End Station
+            //        new RouteStation
+            //        {
+            //            RouteId = route.Id,
+            //            StationId = endStation.Id,
+            //            StationIndex = 2,
+            //            DistanceFromFirstStation = dto.Distance,
+            //            DurationFromFirstStation = dto.Duration,
+            //            Status = RouteStationStatus.ACTIVE
+            //        });
+            //}
+            //await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
 
             // Create RouteRoutine
             //IList<RouteRoutine> routeRoutines =
@@ -228,9 +191,9 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
 
-            routeStations.ToList()
-                .ForEach(rs => rs.Station = null);
-            route.RouteStations = routeStations;
+            //routeStations.ToList()
+            //    .ForEach(rs => rs.Station = null);
+            //route.RouteStations = routeStations;
             //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
             //    .ThenBy(r => r.StartTime).ToList();
 
@@ -266,12 +229,13 @@ namespace ViGo.Services
             {
                 IEnumerable<Guid> routeIds = routes.Select(r => r.Id);
 
-                IEnumerable<RouteStation> routeStations = await work.RouteStations
-                    .GetAllAsync(query => query.Where(
-                        s => routeIds.Contains(s.RouteId)), 
-                        cancellationToken: cancellationToken);
+                //IEnumerable<RouteStation> routeStations = await work.RouteStations
+                //    .GetAllAsync(query => query.Where(
+                //        s => routeIds.Contains(s.RouteId)), 
+                //        cancellationToken: cancellationToken);
 
-                IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
+                IEnumerable<Guid> stationIds = routes.Select(s => s.StartStationId)
+                    .Concat(routes.Select(s => s.EndStationId)).Distinct();
                 IEnumerable<Station> stations = await work.Stations
                     .GetAllAsync(query => query.Where(
                         s => stationIds.Contains(s.Id)), 
@@ -311,22 +275,14 @@ namespace ViGo.Services
                     //    .ThenBy(r => r.StartTime);
 
                     // Stations
-                    StationViewModel? startStationDto = null;
-                    StationViewModel? endStationDto = null;
-                    if (route.StartStationId.HasValue && route.EndStationId.HasValue)
-                    {
-                        Station? startStation = stations.SingleOrDefault(
-                        s => s.Id.Equals(route.StartStationId));
-                        startStationDto = new StationViewModel(
-                            startStation, 1
-                            );
+                    
+                    Station startStation = stations.SingleOrDefault(
+                    s => s.Id.Equals(route.StartStationId));
+                    StationViewModel startStationDto = new StationViewModel(startStation);
 
-                        Station? endStation = stations.SingleOrDefault(
-                            s => s.Id.Equals(route.EndStationId));
-                        endStationDto = new StationViewModel(
-                            endStation, 2
-                            );
-                    }
+                    Station endStation = stations.SingleOrDefault(
+                        s => s.Id.Equals(route.EndStationId));
+                    StationViewModel endStationDto = new StationViewModel(endStation);
 
                     User? routeUser = null;
 
@@ -372,11 +328,13 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-            IEnumerable<RouteStation> routeStations = await work.RouteStations
-                .GetAllAsync(query => query.Where(
-                    s => s.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
 
-            IEnumerable<Guid> stationIds = routeStations.Select(s => s.StationId).Distinct();
+            IEnumerable<Guid> stationIds = new List<Guid>
+            {
+                route.StartStationId,
+                route.EndStationId
+            };
+
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
@@ -384,7 +342,6 @@ namespace ViGo.Services
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
-
 
             // Routine
             //IEnumerable<RouteRoutineViewModel> routineDtos =
@@ -394,33 +351,23 @@ namespace ViGo.Services
             //    .ThenBy(r => r.StartTime);
 
             // Stations
-            StationViewModel? startStationDto = null;
-            if (route.StartStationId != null)
-            {
-                Station? startStation = stations.SingleOrDefault(
+
+                Station startStation = stations.SingleOrDefault(
                     s => s.Id.Equals(route.StartStationId));
-                startStationDto = new StationViewModel(
-                    startStation, 1
-                    );
-            }
+                StationViewModel startStationDto = new StationViewModel(startStation);
 
-            StationViewModel? endStationDto = null;
-            if (route.EndStationId != null)
-            {
-                Station? endStation = stations.SingleOrDefault(
+
+                Station endStation = stations.SingleOrDefault(
                 s => s.Id.Equals(route.EndStationId));
-                endStationDto = new StationViewModel(
-                    endStation, 2
-                    );
-            }
+                StationViewModel endStationDto = new StationViewModel(endStation);
 
-            // Route Stations
-            IEnumerable<RouteStationViewModel> routeStationDtos =
-                (from routeStation in routeStations
-                 join station in stations
-                    on routeStation.StationId equals station.Id
-                 select new RouteStationViewModel(routeStation, station))
-                 .OrderBy(s => s.StationIndex);
+            //// Route Stations
+            //IEnumerable<RouteStationViewModel> routeStationDtos =
+            //    (from routeStation in routeStations
+            //     join station in stations
+            //        on routeStation.StationId equals station.Id
+            //     select new RouteStationViewModel(routeStation, station))
+            //     .OrderBy(s => s.StationIndex);
 
             // User
             User user = await work.Users.GetAsync(route.UserId, cancellationToken: cancellationToken);
@@ -475,8 +422,8 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
-                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
-                    && b.Status != BookingDetailStatus.CANCELLED)),
+                    /*|| (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)*/) // Driver Route
+                    && b.Status != BookingDetailStatus.CANCELLED),
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
@@ -514,33 +461,33 @@ namespace ViGo.Services
                 route.Duration = updateDto.Duration;
             }
 
-            IList<RouteStation> routeStations = new List<RouteStation>();
-            Station? startStation = null, endStation = null;
+            //IList<RouteStation> routeStations = new List<RouteStation>();
+            //Station? startStation = null, endStation = null;
 
-            if (updateDto.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME ||
-                updateDto.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
-            {
-                // No need to set up Start, End
-                if (updateDto.StartStation != null || updateDto.EndStation != null)
-                {
-                    throw new ApplicationException("Tuyến đường này không cần thiết lập điểm bắt đầu và kết thúc!");
-                }
-            }
-            else
-            {
-                //if (updateDto.StartStation == null || updateDto.EndStation == null)
-                //{
-                //    throw new ApplicationException("Tuyến đường chưa được thiết lập điểm bắt đầu và kết thúc!!");
-                //}
-                //IsValidStation(updateDto.StartStation, "Điểm bắt đầu");
-                //IsValidStation(updateDto.EndStation, "Điểm kết thúc");
+            //if (updateDto.RouteType == RouteType.EVERY_ROUTE_SPECIFIC_TIME ||
+            //    updateDto.RouteType == RouteType.EVERY_ROUTE_EVERY_TIME)
+            //{
+            //    // No need to set up Start, End
+            //    if (updateDto.StartStation != null || updateDto.EndStation != null)
+            //    {
+            //        throw new ApplicationException("Tuyến đường này không cần thiết lập điểm bắt đầu và kết thúc!");
+            //    }
+            //}
+            //else
+            //{
+            //    //if (updateDto.StartStation == null || updateDto.EndStation == null)
+            //    //{
+            //    //    throw new ApplicationException("Tuyến đường chưa được thiết lập điểm bắt đầu và kết thúc!!");
+            //    //}
+            //    //IsValidStation(updateDto.StartStation, "Điểm bắt đầu");
+            //    //IsValidStation(updateDto.EndStation, "Điểm kết thúc");
 
-                if (updateDto.StartStation != null)
-                {
+            //    if (updateDto.StartStation != null)
+            //    {
                     IsValidStation(updateDto.StartStation, "Điểm bắt đầu");
 
                     // Find Start Station existance
-                    startStation = await work.Stations.GetAsync(
+                    Station startStation = await work.Stations.GetAsync(
                         s => s.Longtitude == updateDto.StartStation.Longtitude
                         && s.Latitude == updateDto.StartStation.Latitude
                         && s.Status == StationStatus.ACTIVE,
@@ -558,27 +505,27 @@ namespace ViGo.Services
                         await work.Stations.InsertAsync(startStation, cancellationToken: cancellationToken);
                     }
 
-                    routeStations.Add(
-                        // Start Station
-                        new RouteStation
-                        {
-                            RouteId = route.Id,
-                            StationId = startStation.Id,
-                            StationIndex = 1,
-                            DistanceFromFirstStation = 0,
-                            DurationFromFirstStation = 0,
-                            Status = RouteStationStatus.ACTIVE
-                        }
-                    );
+                    //routeStations.Add(
+                    //    // Start Station
+                    //    new RouteStation
+                    //    {
+                    //        RouteId = route.Id,
+                    //        StationId = startStation.Id,
+                    //        StationIndex = 1,
+                    //        DistanceFromFirstStation = 0,
+                    //        DurationFromFirstStation = 0,
+                    //        Status = RouteStationStatus.ACTIVE
+                    //    }
+                    //);
                     route.StartStationId = startStation.Id;
-                }
+                //}
 
-                if (updateDto.EndStation != null)
-                {
+                //if (updateDto.EndStation != null)
+                //{
                     IsValidStation(updateDto.EndStation, "Điểm kết thúc");
 
                     // Find End Station existance
-                    endStation = await work.Stations.GetAsync(
+                     Station endStation = await work.Stations.GetAsync(
                         s => s.Longtitude == updateDto.EndStation.Longtitude
                         && s.Latitude == updateDto.EndStation.Latitude
                         && s.Status == StationStatus.ACTIVE,
@@ -594,23 +541,22 @@ namespace ViGo.Services
                             Status = StationStatus.ACTIVE
                         };
                         await work.Stations.InsertAsync(endStation, cancellationToken: cancellationToken);
-                    }
+                    //}
 
-                    routeStations.Add(
-                        // End Station
-                        new RouteStation
-                        {
-                            RouteId = route.Id,
-                            StationId = endStation.Id,
-                            StationIndex = 2,
-                            DistanceFromFirstStation = updateDto.Distance,
-                            DurationFromFirstStation = updateDto.Duration,
-                            Status = RouteStationStatus.ACTIVE
-                        }
-                    );
+                    //routeStations.Add(
+                    //    // End Station
+                    //    new RouteStation
+                    //    {
+                    //        RouteId = route.Id,
+                    //        StationId = endStation.Id,
+                    //        StationIndex = 2,
+                    //        DistanceFromFirstStation = updateDto.Distance,
+                    //        DurationFromFirstStation = updateDto.Duration,
+                    //        Status = RouteStationStatus.ACTIVE
+                    //    }
+                    //);
                     route.EndStationId = endStation.Id;
                 }
-            }
 
             //if (updateDto.RouteRoutines.Count == 0)
             //{
@@ -626,18 +572,18 @@ namespace ViGo.Services
             await work.Routes.UpdateAsync(route);
 
             // Update RouteStations
-            if (routeStations.Count > 0)
-            {
-                IEnumerable<RouteStation> currentRouteStations
-                = await work.RouteStations.GetAllAsync(query => query.Where(
-                    s => s.RouteId.Equals(route.Id)), cancellationToken: cancellationToken);
-                foreach (RouteStation routeStation in currentRouteStations)
-                {
-                    await work.RouteStations.DeleteAsync(routeStation, isSoftDelete: false);
-                }
+            //if (routeStations.Count > 0)
+            //{
+            //    IEnumerable<RouteStation> currentRouteStations
+            //    = await work.RouteStations.GetAllAsync(query => query.Where(
+            //        s => s.RouteId.Equals(route.Id)), cancellationToken: cancellationToken);
+            //    foreach (RouteStation routeStation in currentRouteStations)
+            //    {
+            //        await work.RouteStations.DeleteAsync(routeStation, isSoftDelete: false);
+            //    }
 
-                await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
-            }
+            //    await work.RouteStations.InsertAsync(routeStations, cancellationToken: cancellationToken);
+            //}
 
             // Update RouteRoutine
             //IEnumerable<RouteRoutine> currentRoutines
@@ -663,9 +609,9 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
 
-            routeStations.ToList()
-                .ForEach(rs => rs.Station = null);
-            route.RouteStations = routeStations;
+            //routeStations.ToList()
+            //    .ForEach(rs => rs.Station = null);
+            //route.RouteStations = routeStations;
             //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
             //    .ThenBy(r => r.StartTime).ToList();
             route.EndStation = endStation;
@@ -710,7 +656,7 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
-                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    /*|| (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id))*/ // Driver Route
                     && b.Status != BookingDetailStatus.CANCELLED)), 
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
@@ -749,7 +695,7 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
-                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    /*|| (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id))*/ // Driver Route
                     && b.Status != BookingDetailStatus.CANCELLED)),
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
@@ -763,7 +709,7 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> deleteBookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
-                    || (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)) // Driver Route
+                    /*|| (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id))*/ // Driver Route
                     )),
                     cancellationToken: cancellationToken);
             IEnumerable<Guid> deleteBookingIds = deleteBookingDetails.Select(d => d.BookingId).Distinct();
@@ -794,7 +740,7 @@ namespace ViGo.Services
         }
 
         #region Validation
-        private void IsValidStation(RouteStationCreateEditModel station, string stationName)
+        private void IsValidStation(StationViewModel station, string stationName)
         {
             stationName = stationName.ToLower().Trim();
 
