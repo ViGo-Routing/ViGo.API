@@ -52,33 +52,33 @@ namespace ViGo.API.Controllers
             return StatusCode(200, distance);
         }
 
-        [HttpGet("TripMapping")]
-        public async Task<IActionResult> TestTripMapping(Guid bookingId,
-            CancellationToken cancellationToken)
-        {
-            BookingViewModel bookingModel = await bookingServices.GetBookingAsync(bookingId, cancellationToken);
-            Booking booking = new Booking()
-            {
-                Id = bookingModel.Id,
-                CustomerRouteId = bookingModel.CustomerRoute.Id,
-                CustomerId = bookingModel.Customer.Id,
-                StartTime = bookingModel.StartTime,
-                StartDate = bookingModel.StartDate,
-                EndDate = bookingModel.EndDate,
-                TotalPrice = bookingModel.TotalPrice,
-                PriceAfterDiscount = bookingModel.PriceAfterDiscount,
-                PaymentMethod = bookingModel.PaymentMethod,
-                IsShared = bookingModel.IsShared,
-                Duration = bookingModel.Duration,
-                Distance = bookingModel.Distance,
-                PromotionId = bookingModel.PromotionId,
-                VehicleTypeId = bookingModel.VehicleTypeId
-            };
+        //[HttpGet("TripMapping")]
+        //public async Task<IActionResult> TestTripMapping(Guid bookingId,
+        //    CancellationToken cancellationToken)
+        //{
+        //    BookingViewModel bookingModel = await bookingServices.GetBookingAsync(bookingId, cancellationToken);
+        //    Booking booking = new Booking()
+        //    {
+        //        Id = bookingModel.Id,
+        //        CustomerRouteId = bookingModel.CustomerRoute.Id,
+        //        CustomerId = bookingModel.Customer.Id,
+        //        StartTime = bookingModel.StartTime,
+        //        StartDate = bookingModel.StartDate,
+        //        EndDate = bookingModel.EndDate,
+        //        TotalPrice = bookingModel.TotalPrice,
+        //        PriceAfterDiscount = bookingModel.PriceAfterDiscount,
+        //        PaymentMethod = bookingModel.PaymentMethod,
+        //        IsShared = bookingModel.IsShared,
+        //        Duration = bookingModel.Duration,
+        //        Distance = bookingModel.Distance,
+        //        PromotionId = bookingModel.PromotionId,
+        //        VehicleTypeId = bookingModel.VehicleTypeId
+        //    };
 
-            await tripMappingServices.MapBooking(booking, _logger);
+        //    await tripMappingServices.MapBooking(booking, _logger);
 
-            return StatusCode(200);
-        }
+        //    return StatusCode(200);
+        //}
 
         [Authorize]
         [HttpPost("Generate-Firebase")]

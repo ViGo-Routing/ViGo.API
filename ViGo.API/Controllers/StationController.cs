@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Repository.Core;
 using ViGo.Services;
@@ -44,6 +43,30 @@ namespace ViGo.API.Controllers
         {
             StationViewModel? dto = await stationServices.GetStationAsync(stationId, cancellationToken);
             return StatusCode(200, dto);
+        }
+
+        /// <summary>
+        /// Get List of Metro stations
+        /// </summary>
+        /// <returns>
+        /// List of stations
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get station list successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Metro")]
+        [Authorize]
+        [ProducesResponseType(typeof(IEnumerable<StationViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetMetroStation(Guid stationId,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<StationViewModel> models = await stationServices
+                .GetMetroStationsAsync(cancellationToken);
+            return StatusCode(200, models);
         }
     }
 }
