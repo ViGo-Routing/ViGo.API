@@ -79,14 +79,8 @@ namespace ViGo.Domain
             }
             return this.RoutineDate == other.RoutineDate
                 && this.StartTime == other.StartTime
-                && this.EndTime == other.EndTime;
+                /*&& this.EndTime == other.EndTime*/;
         }
-    }
-
-    public partial class RouteStation
-        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
-    {
-
     }
 
     public partial class Setting

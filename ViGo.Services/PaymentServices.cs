@@ -157,153 +157,153 @@ namespace ViGo.Services
                             }
                             else
                             {
-                                if (booking.Status == BookingStatus.UNPAID)
-                                {
-                                    // Get SYSTEM WALLET
-                                    Wallet systemWallet = await work.Wallets.GetAsync(w =>
-                                        w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
-                                    if (systemWallet is null)
-                                    {
-                                        throw new Exception("Chưa có ví dành cho hệ thống!!");
-                                    }
+                                //if (booking.Status == BookingStatus.UNPAID)
+                                //{
+                                //    // Get SYSTEM WALLET
+                                //    Wallet systemWallet = await work.Wallets.GetAsync(w =>
+                                //        w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                                //    if (systemWallet is null)
+                                //    {
+                                //        throw new Exception("Chưa có ví dành cho hệ thống!!");
+                                //    }
 
-                                    WalletTransaction systemTransaction_Add = new WalletTransaction
-                                    {
-                                        WalletId = systemWallet.Id,
-                                        Amount = vnpAmount,
-                                        BookingId = bookingId,
-                                        Type = WalletTransactionType.BOOKING_TOPUP_BY_MOMO,
-                                        //Status = WalletTransactionStatus.SUCCESSFULL,
-                                        CreatedBy = booking.CustomerId,
-                                        UpdatedBy = booking.CustomerId
-                                    };
+                                //    WalletTransaction systemTransaction_Add = new WalletTransaction
+                                //    {
+                                //        WalletId = systemWallet.Id,
+                                //        Amount = vnpAmount,
+                                //        BookingId = bookingId,
+                                //        Type = WalletTransactionType.BOOKING_TOPUP_BY_MOMO,
+                                //        //Status = WalletTransactionStatus.SUCCESSFULL,
+                                //        CreatedBy = booking.CustomerId,
+                                //        UpdatedBy = booking.CustomerId
+                                //    };
 
-                                    Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(booking.CustomerId), cancellationToken: cancellationToken);
-                                    if (wallet == null)
-                                    {
-                                        throw new ApplicationException("Không tìm thấy ví của người dùng!");
-                                    }
+                                //    Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(booking.CustomerId), cancellationToken: cancellationToken);
+                                //    if (wallet == null)
+                                //    {
+                                //        throw new ApplicationException("Không tìm thấy ví của người dùng!");
+                                //    }
 
-                                    WalletTransaction walletTransaction_Topup = new WalletTransaction
-                                    {
-                                        WalletId = wallet.Id,
-                                        Amount = vnpAmount,
-                                        BookingId = bookingId,
-                                        Type = WalletTransactionType.BOOKING_TOPUP_BY_MOMO,
-                                        //Status = WalletTransactionStatus.SUCCESSFULL,
-                                        CreatedBy = booking.CustomerId,
-                                        UpdatedBy = booking.CustomerId
-                                    };
-                                    WalletTransaction walletTransaction_Paid = new WalletTransaction
-                                    {
-                                        WalletId = wallet.Id,
-                                        Amount = vnpAmount,
-                                        BookingId = bookingId,
-                                        Type = WalletTransactionType.BOOKING_PAID_BY_VNPAY,
-                                        //Status = WalletTransactionStatus.SUCCESSFULL,
-                                        CreatedBy = booking.CustomerId,
-                                        UpdatedBy = booking.CustomerId
-                                    };
+                                //    WalletTransaction walletTransaction_Topup = new WalletTransaction
+                                //    {
+                                //        WalletId = wallet.Id,
+                                //        Amount = vnpAmount,
+                                //        BookingId = bookingId,
+                                //        Type = WalletTransactionType.BOOKING_TOPUP_BY_MOMO,
+                                //        //Status = WalletTransactionStatus.SUCCESSFULL,
+                                //        CreatedBy = booking.CustomerId,
+                                //        UpdatedBy = booking.CustomerId
+                                //    };
+                                //    WalletTransaction walletTransaction_Paid = new WalletTransaction
+                                //    {
+                                //        WalletId = wallet.Id,
+                                //        Amount = vnpAmount,
+                                //        BookingId = bookingId,
+                                //        Type = WalletTransactionType.BOOKING_PAID_BY_VNPAY,
+                                //        //Status = WalletTransactionStatus.SUCCESSFULL,
+                                //        CreatedBy = booking.CustomerId,
+                                //        UpdatedBy = booking.CustomerId
+                                //    };
 
-                                    if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
-                                    {
-                                        systemTransaction_Add.Status = WalletTransactionStatus.SUCCESSFULL;
-                                        //systemTransaction_Add.Amount += vnpAmount;
+                                //    if (vnpResponseCode == "00" && vnpTransactionStatus == "00")
+                                //    {
+                                //        systemTransaction_Add.Status = WalletTransactionStatus.SUCCESSFULL;
+                                //        //systemTransaction_Add.Amount += vnpAmount;
 
-                                        walletTransaction_Topup.Status = WalletTransactionStatus.SUCCESSFULL;
-                                        walletTransaction_Paid.Status = WalletTransactionStatus.SUCCESSFULL;
+                                //        walletTransaction_Topup.Status = WalletTransactionStatus.SUCCESSFULL;
+                                //        walletTransaction_Paid.Status = WalletTransactionStatus.SUCCESSFULL;
 
-                                        booking.Status = BookingStatus.PENDING_MAPPING;
-                                        booking.PaymentMethod = PaymentMethod.VNPAY;
+                                //        booking.Status = BookingStatus.PENDING_MAPPING;
+                                //        booking.PaymentMethod = PaymentMethod.VNPAY;
 
-                                        _logger.LogInformation("Booking has been paid successfully!! BookingId={0}, VNPay TransactionId={1}", bookingId, vnPayTransactionId);
-                                    }
-                                    else
-                                    {
-                                        //throw new ApplicationException("Thanh toán VNPay lỗi! Mã lỗi: " + vnpResponseCode);
-                                        systemTransaction_Add.Status = WalletTransactionStatus.FAILED;
-                                        walletTransaction_Topup.Status = WalletTransactionStatus.FAILED;
-                                        walletTransaction_Paid.Status = WalletTransactionStatus.FAILED;
+                                //        _logger.LogInformation("Booking has been paid successfully!! BookingId={0}, VNPay TransactionId={1}", bookingId, vnPayTransactionId);
+                                //    }
+                                //    else
+                                //    {
+                                //        //throw new ApplicationException("Thanh toán VNPay lỗi! Mã lỗi: " + vnpResponseCode);
+                                //        systemTransaction_Add.Status = WalletTransactionStatus.FAILED;
+                                //        walletTransaction_Topup.Status = WalletTransactionStatus.FAILED;
+                                //        walletTransaction_Paid.Status = WalletTransactionStatus.FAILED;
 
-                                        booking.PaymentMethod = PaymentMethod.VNPAY;
+                                //        booking.PaymentMethod = PaymentMethod.VNPAY;
 
-                                        _logger.LogInformation("Booking failed to be paid!! " +
-                                            "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}",
-                                            bookingId, vnPayTransactionId, vnpResponseCode);
-                                    }
+                                //        _logger.LogInformation("Booking failed to be paid!! " +
+                                //            "BookingId={0}, VNPay TransactionId={1}, ResponseCode={3}",
+                                //            bookingId, vnPayTransactionId, vnpResponseCode);
+                                //    }
 
-                                    await work.Bookings.UpdateAsync(booking,
-                                            isManuallyAssignTracking: true);
+                                //    await work.Bookings.UpdateAsync(booking,
+                                //            isManuallyAssignTracking: true);
 
-                                    // Add Wallet Transaction
-                                    await work.WalletTransactions.InsertAsync(systemTransaction_Add,
-                                        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
-                                    await work.WalletTransactions.InsertAsync(walletTransaction_Topup,
-                                        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
-                                    await work.WalletTransactions.InsertAsync(walletTransaction_Paid,
-                                        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
+                                //    // Add Wallet Transaction
+                                //    await work.WalletTransactions.InsertAsync(systemTransaction_Add,
+                                //        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
+                                //    await work.WalletTransactions.InsertAsync(walletTransaction_Topup,
+                                //        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
+                                //    await work.WalletTransactions.InsertAsync(walletTransaction_Paid,
+                                //        isManuallyAssignTracking: true, cancellationToken: cancellationToken);
 
-                                    await work.SaveChangesAsync(cancellationToken);
+                                //    await work.SaveChangesAsync(cancellationToken);
 
-                                    // TODO Code
+                                //    // TODO Code
 
-                                    // Run trip mapping
-                                    await backgroundTaskQueue.QueueBackGroundWorkItemAsync(async token =>
-                                    {
-                                        await using (var scope = serviceScopeFactory.CreateAsyncScope())
-                                        {
-                                            IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
-                                            TripMappingServices tripMappingServices = new TripMappingServices(work, _logger);
-                                            await tripMappingServices.MapBooking(booking, _logger);
-                                        }
-                                    });
+                                //    // Run trip mapping
+                                //    await backgroundTaskQueue.QueueBackGroundWorkItemAsync(async token =>
+                                //    {
+                                //        await using (var scope = serviceScopeFactory.CreateAsyncScope())
+                                //        {
+                                //            IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
+                                //            TripMappingServices tripMappingServices = new TripMappingServices(work, _logger);
+                                //            await tripMappingServices.MapBooking(booking, _logger);
+                                //        }
+                                //    });
 
-                                    // Send notification to user
-                                    User user = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+                                //    // Send notification to user
+                                //    User user = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
 
-                                    fcmToken = user.FcmToken;
-                                    if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
-                                    {
-                                        if (systemTransaction_Add.Status == WalletTransactionStatus.SUCCESSFULL)
-                                        {
-                                            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
-                                            "Quý khách đã thực hiện thanh toán đơn đặt chuyến đi bằng VNPay thành công!!", cancellationToken: cancellationToken);
+                                //    fcmToken = user.FcmToken;
+                                //    if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+                                //    {
+                                //        if (systemTransaction_Add.Status == WalletTransactionStatus.SUCCESSFULL)
+                                //        {
+                                //            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
+                                //            "Quý khách đã thực hiện thanh toán đơn đặt chuyến đi bằng VNPay thành công!!", cancellationToken: cancellationToken);
 
-                                            // Send data to mobile application
-                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
-                                                {
-                                                    { "bookingId", booking.Id.ToString() },
-                                                    { "paymentMethod", PaymentMethod.VNPAY.ToString() },
-                                                    { "isSuccess", "true" },
-                                                    { "message", "Thanh toán bằng VNPay thành công!" }
-                                                }, cancellationToken);
-                                        }
-                                        else
-                                        {
-                                            // FAILED
-                                            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
-                                           "Giao dịch thực hiện thanh toán đơn đặt chuyến đi bằng VNPay của quý khách đã bị thất bại!!", cancellationToken: cancellationToken);
+                                //            // Send data to mobile application
+                                //            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
+                                //                {
+                                //                    { "bookingId", booking.Id.ToString() },
+                                //                    { "paymentMethod", PaymentMethod.VNPAY.ToString() },
+                                //                    { "isSuccess", "true" },
+                                //                    { "message", "Thanh toán bằng VNPay thành công!" }
+                                //                }, cancellationToken);
+                                //        }
+                                //        else
+                                //        {
+                                //            // FAILED
+                                //            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
+                                //           "Giao dịch thực hiện thanh toán đơn đặt chuyến đi bằng VNPay của quý khách đã bị thất bại!!", cancellationToken: cancellationToken);
 
-                                            // Send data to mobile application
-                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
-                                                {
-                                                    { "bookingId", booking.Id.ToString() },
-                                                    { "paymentMethod", PaymentMethod.VNPAY.ToString() },
-                                                    { "isSuccess", "false" },
-                                                    { "message", "Thanh toán bằng VNPay thất bại!" }
-                                                }, cancellationToken);
-                                        }
+                                //            // Send data to mobile application
+                                //            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
+                                //                {
+                                //                    { "bookingId", booking.Id.ToString() },
+                                //                    { "paymentMethod", PaymentMethod.VNPAY.ToString() },
+                                //                    { "isSuccess", "false" },
+                                //                    { "message", "Thanh toán bằng VNPay thất bại!" }
+                                //                }, cancellationToken);
+                                //        }
 
-                                    }
+                                //    }
 
-                                    code = "00";
-                                    message = "Confirm success";
-                                }
-                                else
-                                {
-                                    code = "02";
-                                    message = "Booking has been already paid!!";
-                                }
+                                //    code = "00";
+                                //    message = "Confirm success";
+                                //}
+                                //else
+                                //{
+                                //    code = "02";
+                                //    message = "Booking has been already paid!!";
+                                //}
                             }
 
                         }

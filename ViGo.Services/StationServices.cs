@@ -30,5 +30,19 @@ namespace ViGo.Services
             return model;
 
         }
+
+        public async Task<IEnumerable<StationViewModel>> GetMetroStationsAsync(
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<Station> stations = await work.Stations.GetAllAsync(
+                query => query.Where(
+                    s => s.Type == Domain.Enumerations.StationType.METRO),
+                cancellationToken: cancellationToken);
+
+            IEnumerable<StationViewModel> models =
+                from station in stations
+                select new StationViewModel(station);
+            return models;
+        }
     }
 }

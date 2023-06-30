@@ -20,7 +20,6 @@ namespace ViGo.Repository.Core
         IRepository<Report> Reports { get; }
         IRepository<Route> Routes { get; }
         IRepository<RouteRoutine> RouteRoutines { get; }
-        IRepository<RouteStation> RouteStations { get; }
         IRepository<Setting> Settings { get; }
         IRepository<Station> Stations { get; }
         IRepository<User> Users { get; }

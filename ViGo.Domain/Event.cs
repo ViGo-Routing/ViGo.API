@@ -16,7 +16,7 @@ namespace ViGo.Domain
         public override Guid Id { get; set; }
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
-        public EventType Type { get; set; }
+        //public EventType Type { get; set; }
         public EventStatus Status { get; set; }
 
         [JsonIgnore]

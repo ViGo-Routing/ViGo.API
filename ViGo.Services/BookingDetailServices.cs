@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
@@ -51,24 +52,24 @@ namespace ViGo.Services
 
             //}).Distinct();
 
-            IEnumerable<Guid> stationIds = new List<Guid>();
+            //IEnumerable<Guid> stationIds = new List<Guid>();
 
-            Route? driverRoute = null;
-            if (bookingDetail.DriverRouteId.HasValue)
-            {
-                driverRoute = await work.Routes
-                    .GetAsync(bookingDetail.DriverRouteId.Value, cancellationToken: cancellationToken);
-                if (driverRoute.StartStationId.HasValue && driverRoute.EndStationId.HasValue)
-                {
-                    stationIds = stationIds.Append(driverRoute.StartStationId.Value)
-                        .Append(driverRoute.EndStationId.Value);
-                }
+            //Route? driverRoute = null;
+            //if (bookingDetail.DriverRouteId.HasValue)
+            //{
+            //    driverRoute = await work.Routes
+            //        .GetAsync(bookingDetail.DriverRouteId.Value, cancellationToken: cancellationToken);
+            //    if (driverRoute.StartStationId.HasValue && driverRoute.EndStationId.HasValue)
+            //    {
+            //        stationIds = stationIds.Append(driverRoute.StartStationId.Value)
+            //            .Append(driverRoute.EndStationId.Value);
+            //    }
 
-            }
+            //}
 
-            IEnumerable<Station> stations = await work.Stations
-                .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+            //IEnumerable<Station> stations = await work.Stations
+            //    .GetAllAsync(query => query.Where(
+            //        s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
             //RouteViewModel customerRouteDto = new RouteViewModel(
             //    customerRoute,
@@ -77,24 +78,32 @@ namespace ViGo.Services
             //    new StationViewModel(
             //        stations.SingleOrDefault(s => s.Id.Equals(customerRoute.EndStationId)), 2));
 
-            RouteViewModel? driverRouteDto = null;
-            if (driverRoute != null)
-            {
-                driverRouteDto = new RouteViewModel(
-                driverRoute,
-                driverRoute.StartStationId.HasValue ?
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId.Value)), 1) : null,
-                driverRoute.EndStationId.HasValue ?
-                new StationViewModel(
-                    stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2) : null);
-            }
+            //RouteViewModel? driverRouteDto = null;
+            //if (driverRoute != null)
+            //{
+            //    driverRouteDto = new RouteViewModel(
+            //    driverRoute,
+            //    driverRoute.StartStationId.HasValue ?
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(driverRoute.StartStationId.Value)), 1) : null,
+            //    driverRoute.EndStationId.HasValue ?
+            //    new StationViewModel(
+            //        stations.SingleOrDefault(s => s.Id.Equals(driverRoute.EndStationId)), 2) : null);
+            //}
 
-            BookingDetailViewModel dto = new BookingDetailViewModel(
-                bookingDetail, driverDto, /*customerRouteDto,*/ driverRouteDto);
-            //BookingDetailViewModel dto = new BookingDetailViewModel(bookingDetail);
+            RouteRoutine customerRoutine = await work.RouteRoutines
+                .GetAsync(bookingDetail.CustomerRouteRoutineId, cancellationToken: cancellationToken);
+            RouteRoutineViewModel customerRoutineModel = new RouteRoutineViewModel(customerRoutine);
+            //BookingDetailViewModel dto = new BookingDetailViewModel(
+            //    bookingDetail, driverDto /*customerRouteDto,*/ /*driverRouteDto*/);
+            ////BookingDetailViewModel dto = new BookingDetailViewModel(bookingDetail);
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId, cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId, cancellationToken: cancellationToken);
 
-            return dto;
+            BookingDetailViewModel bookingDetailViewModel = new BookingDetailViewModel(bookingDetail, customerRoutineModel,
+                 new StationViewModel(startStation), new StationViewModel(endStation), driverDto);
+
+            return bookingDetailViewModel;
 
         }
 
@@ -126,45 +135,55 @@ namespace ViGo.Services
                     pagination.PageSize, 0, context);
             }
 
-            IEnumerable<Guid> routeIds = (bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
-                .Select(bd =>
-                bd.DriverRouteId.Value))
-                .Distinct();
+            //IEnumerable<Guid> routeIds = (bookingDetails.Where(bd => bd.DriverRouteId.HasValue)
+            //    .Select(bd =>
+            //    bd.DriverRouteId.Value))
+            //    .Distinct();
 
-            IEnumerable<Route> routes = await work.Routes
-                .GetAllAsync(query => query.Where(
-                    r => routeIds.Contains(r.Id)), cancellationToken: cancellationToken);
+            //IEnumerable<Route> routes = await work.Routes
+            //    .GetAllAsync(query => query.Where(
+            //        r => routeIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
-            IEnumerable<Guid> stationIds = routes.Where(r => r.StartStationId.HasValue).Select(
-                r => r.StartStationId.Value).Concat(routes.Where(r => r.EndStationId.HasValue).Select(
-                    r => r.EndStationId.Value)).Distinct();
+            IEnumerable<Guid> stationIds = bookingDetails.Select(
+               b => b.StartStationId).Concat(bookingDetails.Select(
+               b => b.EndStationId)).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
                     s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
+            IEnumerable<Guid> customerRoutineIds = bookingDetails.Select(bd => bd.CustomerRouteRoutineId)
+                .Distinct();
+
+            IEnumerable<RouteRoutine> customerRoutines = await work.RouteRoutines
+                .GetAllAsync(query => query.Where(
+                    r => customerRoutineIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<BookingDetailViewModel> dtos =
                 from bookingDetail in bookingDetails
                     //join customerRoute in routes
                     //    on bookingDetail.CustomerRouteId equals customerRoute.Id
-                    //join customerStartStation in stations
-                    //    on customerRoute.StartStationId equals customerStartStation.Id
-                    //join customerEndStation in stations
-                    //    on customerRoute.EndStationId equals customerEndStation.Id
-                join driverRoute in routes
-                    on bookingDetail.DriverRouteId equals driverRoute.Id
-                join driverStartStation in stations
-                    on driverRoute.StartStationId equals driverStartStation.Id
-                join driverEndStation in stations
-                    on driverRoute.EndStationId equals driverEndStation.Id
+                join customerStartStation in stations
+                    on bookingDetail.StartStationId equals customerStartStation.Id
+                join customerEndStation in stations
+                    on bookingDetail.EndStationId equals customerEndStation.Id
+                //join driverRoute in routes
+                //    on bookingDetail.DriverRouteId equals driverRoute.Id
+                //join driverStartStation in stations
+                //    on driverRoute.StartStationId equals driverStartStation.Id
+                //join driverEndStation in stations
+                //    on driverRoute.EndStationId equals driverEndStation.Id
+                join customerRoutine in customerRoutines
+                    on bookingDetail.CustomerRouteRoutineId equals customerRoutine.Id
                 select new BookingDetailViewModel(
-                    bookingDetail, null,
+                    bookingDetail, new RouteRoutineViewModel(customerRoutine), 
+                    new StationViewModel(customerStartStation),
+                    new StationViewModel(customerEndStation), null);
                     //new RouteViewModel(customerRoute,
                     //    new StationViewModel(customerStartStation, 1),
                     //    new StationViewModel(customerEndStation, 2)),
-                    new RouteViewModel(driverRoute,
-                        new StationViewModel(driverStartStation, 1),
-                        new StationViewModel(driverEndStation, 2)));
+                    /*new RouteViewModel(driverRoute,
+                        new StationViewModel(driverStartStation),
+                        //new StationViewModel(driverEndStation))); */
             //IEnumerable<BookingDetailViewModel> dtos =
             //    from bookingDetail in bookingDetails
             //    select new BookingDetailViewModel(bookingDetail);
@@ -194,19 +213,44 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     u => driverIds.Contains(u.Id)), cancellationToken: cancellationToken);
 
+            IEnumerable<Guid> customerRoutineIds = bookingDetails.Select(bd => bd.CustomerRouteRoutineId)
+                .Distinct();
+
+            IEnumerable<RouteRoutine> customerRoutines = await work.RouteRoutines
+                .GetAllAsync(query => query.Where(
+                    r => customerRoutineIds.Contains(r.Id)), cancellationToken: cancellationToken);
+
+            IEnumerable<Guid> stationIds = bookingDetails.Select(
+               b => b.StartStationId).Concat(bookingDetails.Select(
+               b => b.EndStationId)).Distinct();
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+
             IEnumerable<BookingDetailViewModel> dtos =
                 new List<BookingDetailViewModel>();
             foreach (BookingDetail bookingDetail in bookingDetails)
             {
+                RouteRoutine customerRoutine = customerRoutines.SingleOrDefault(
+                    r => r.Id.Equals(bookingDetail.CustomerRouteRoutineId));
+
+                Station startStation = stations.SingleOrDefault(s => s.Id.Equals(bookingDetail.StartStationId));
+                Station endStation = stations.SingleOrDefault(s => s.Id.Equals(bookingDetail.EndStationId));
+
+                BookingDetailViewModel model = new BookingDetailViewModel(bookingDetail, new RouteRoutineViewModel(customerRoutine),
+                        new StationViewModel(startStation), new StationViewModel(endStation), null);
+
                 if (bookingDetail.DriverId.HasValue)
                 {
                     User driver = drivers.SingleOrDefault(u => u.Id.Equals(bookingDetail.DriverId));
-                    dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, new UserViewModel(driver)));
+                    model.Driver = new UserViewModel(driver);
                 }
-                else
-                {
-                    dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, null));
-                }
+                //else
+                //{
+                //    dtos = dtos.Append(new BookingDetailViewModel(bookingDetail, new RouteRoutineViewModel(customerRoutine),
+                //        null));
+                //}
+                dtos = dtos.Append(model);
             }
 
             return dtos.ToPagedEnumerable(pagination.PageNumber, 
@@ -294,41 +338,41 @@ namespace ViGo.Services
                     throw new Exception("Chưa có ví dành cho hệ thống!!");
                 }
 
-                WalletTransaction systemTransaction_Withdraw = new WalletTransaction
-                {
-                    WalletId = systemWallet.Id,
-                    Amount = driverWage,
-                    BookingDetailId = bookingDetail.Id,
-                    BookingId = bookingDetail.BookingId,
-                    Type = WalletTransactionType.PAY_FOR_DRIVER,
-                    Status = WalletTransactionStatus.SUCCESSFULL,
-                };
+                //WalletTransaction systemTransaction_Withdraw = new WalletTransaction
+                //{
+                //    WalletId = systemWallet.Id,
+                //    Amount = driverWage,
+                //    BookingDetailId = bookingDetail.Id,
+                //    BookingId = bookingDetail.BookingId,
+                //    Type = WalletTransactionType.PAY_FOR_DRIVER,
+                //    Status = WalletTransactionStatus.SUCCESSFULL,
+                //};
 
-                Wallet driverWallet = await work.Wallets.GetAsync(w =>
-                    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
-                if (driverWallet is null)
-                {
-                    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
-                }
+                //Wallet driverWallet = await work.Wallets.GetAsync(w =>
+                //    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+                //if (driverWallet is null)
+                //{
+                //    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
+                //}
 
-                WalletTransaction driverTransaction_Add = new WalletTransaction
-                {
-                    WalletId = driverWallet.Id,
-                    Amount = driverWage,
-                    BookingDetailId = bookingDetail.Id,
-                    BookingId = bookingDetail.BookingId,
-                    Type = WalletTransactionType.TRIP_INCOME,
-                    Status = WalletTransactionStatus.SUCCESSFULL
-                };
+                //WalletTransaction driverTransaction_Add = new WalletTransaction
+                //{
+                //    WalletId = driverWallet.Id,
+                //    Amount = driverWage,
+                //    BookingDetailId = bookingDetail.Id,
+                //    BookingId = bookingDetail.BookingId,
+                //    Type = WalletTransactionType.TRIP_INCOME,
+                //    Status = WalletTransactionStatus.SUCCESSFULL
+                //};
 
-                systemWallet.Balance -= driverWage;
-                driverWallet.Balance += driverWage;
+                //systemWallet.Balance -= driverWage;
+                //driverWallet.Balance += driverWage;
 
-                await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+                //await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
+                //await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
                 
-                await work.Wallets.UpdateAsync(systemWallet);
-                await work.Wallets.UpdateAsync(driverWallet);
+                //await work.Wallets.UpdateAsync(systemWallet);
+                //await work.Wallets.UpdateAsync(driverWallet);
             }
 
             await work.SaveChangesAsync(cancellationToken);

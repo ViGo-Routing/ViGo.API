@@ -9,7 +9,6 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
-using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
@@ -140,18 +139,10 @@ namespace ViGo.Services
             //    endStation, stations.SingleOrDefault(s => s.Id.Equals(endStation.StationId)));
             Route route = await work.Routes.GetAsync(booking.CustomerRouteId,
                 cancellationToken: cancellationToken);
-            Station? startStation = null;
-            if (route.StartStationId.HasValue)
-            {
-                startStation = await work.Stations.GetAsync(route.StartStationId.Value,
+            Station startStation = await work.Stations.GetAsync(route.StartStationId,
                     cancellationToken: cancellationToken);
-            }
-            Station? endStation = null;
-            if (route.EndStationId.HasValue)
-            {
-                endStation = await work.Stations.GetAsync(route.EndStationId.Value,
+            Station endStation = await work.Stations.GetAsync(route.EndStationId,
                     cancellationToken: cancellationToken);
-            }
 
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId, cancellationToken: cancellationToken);
 
@@ -180,8 +171,8 @@ namespace ViGo.Services
 
             BookingViewModel dto = new BookingViewModel(booking,
                 customerDto, route, 
-                new StationViewModel(startStation, 1),
-                new StationViewModel(endStation, 2), vehicleType);
+                new StationViewModel(startStation),
+                new StationViewModel(endStation), vehicleType);
             //BookingViewModel dto = new BookingViewModel(booking);
 
             return dto;
@@ -190,9 +181,13 @@ namespace ViGo.Services
         public async Task<Booking> CreateBookingAsync(
             BookingCreateModel model, CancellationToken cancellationToken)
         {
-            if (!Enum.IsDefined(model.PaymentMethod))
+            //if (!Enum.IsDefined(model.PaymentMethod))
+            //{
+            //    throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
+            //}
+            if (!Enum.IsDefined(model.Type))
             {
-                throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
+                throw new ApplicationException("Loại Booking không hợp lệ!!");
             }
             if (model.Distance <= 0)
             {
@@ -203,7 +198,18 @@ namespace ViGo.Services
                 throw new ApplicationException("Thời gian di chuyển phải lớn hơn 0!");
             }
 
-            User user = await work.Users.GetAsync(model.CustomerId,
+            if (!IdentityUtilities.IsAdmin())
+            {
+                model.CustomerId = IdentityUtilities.GetCurrentUserId();
+            } else
+            {
+                if (model.CustomerId is null)
+                {
+                    throw new ApplicationException("Thông tin khách hàng không hợp lệ!!");
+                }
+            }
+
+            User user = await work.Users.GetAsync(model.CustomerId.Value,
                 cancellationToken: cancellationToken);
             if (user is null ||
                 user.Role != UserRole.CUSTOMER)
@@ -295,30 +301,48 @@ namespace ViGo.Services
 
             int bookingDetailCount = routeRoutines.Count();
 
+            if (model.Type == BookingType.ROUND_TRIP)
+            {
+                bookingDetailCount *= 2;
+            }
+
             if (bookingDetailCount == 0)
             {
                 throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
                     "của chuyến đi đã được thiết lập!!");
             }
 
+            if (model.Type == BookingType.ROUND_TRIP && model.CustomerRoundTripDesiredPickupTime is null)
+            {
+                throw new ApplicationException("Thông tin thời gian đón khách cho chuyến về chưa được thiết lập!!!");
+            }
+
             // All is valid
             Booking booking = new Booking()
             {
-                CustomerId = model.CustomerId,
+                CustomerId = model.CustomerId.Value,
                 CustomerRouteId = model.CustomerRouteId,
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
-                StartTime = routeRoutines.First().StartTime,
                 TotalPrice = model.TotalPrice,
                 PriceAfterDiscount = model.PriceAfterDiscount,
-                PaymentMethod = model.PaymentMethod,
                 IsShared = model.IsShared,
                 Duration = model.Duration,
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
-                Status = BookingStatus.UNPAID // TODO Code
+                Type = model.Type,
+                Status = BookingStatus.DRAFT // TODO Code
             };
+
+            Wallet customerWallet = await work.Wallets.GetAsync(
+                w => w.UserId.Equals(model.CustomerId), cancellationToken: cancellationToken);
+            // TODO Code
+            if (customerWallet.Balance >= model.PriceAfterDiscount)
+            {
+                booking.Status = BookingStatus.CONFIRMED;
+            }
+
             await work.Bookings.InsertAsync(booking,
                 cancellationToken: cancellationToken);
 
@@ -332,15 +356,37 @@ namespace ViGo.Services
                 BookingDetail bookingDetail = new BookingDetail
                 {
                     BookingId = booking.Id,
-                    Date = routeRoutine.RoutineDate.Value,
+                    Date = routeRoutine.RoutineDate,
                     Price = priceEachTrip,
                     PriceAfterDiscount = priceAfterDiscountEachTrip,
+                    CustomerRouteRoutineId = routeRoutine.Id,
+                    StartStationId = route.StartStationId,
+                    EndStationId = route.EndStationId,
+                    CustomerDesiredPickupTime = model.CustomerDesiredPickupTime.ToTimeSpan(),
                     DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
-                    BeginTime = routeRoutine.StartTime.Value,
-                    Status = BookingDetailStatus.PENDING
+                    Status = BookingDetailStatus.PENDING_ASSIGN
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,
                     cancellationToken: cancellationToken);
+
+                if (model.Type == BookingType.ROUND_TRIP)
+                {
+                    BookingDetail roundBookingDetail = new BookingDetail
+                    {
+                        BookingId = booking.Id,
+                        Date = routeRoutine.RoutineDate,
+                        Price = priceEachTrip,
+                        PriceAfterDiscount = priceAfterDiscountEachTrip,
+                        CustomerRouteRoutineId = routeRoutine.Id,
+                        StartStationId = route.EndStationId,
+                        EndStationId = route.StartStationId,
+                        DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                        CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
+                        Status = BookingDetailStatus.PENDING_ASSIGN
+                    };
+                    await work.BookingDetails.InsertAsync(bookingDetail,
+                        cancellationToken: cancellationToken);
+                }
             }
 
             await work.SaveChangesAsync(cancellationToken);

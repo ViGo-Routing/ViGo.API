@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.RouteStations;
+using ViGo.Models.Stations;
 
 namespace ViGo.Models.Routes
 {
@@ -17,9 +17,9 @@ namespace ViGo.Models.Routes
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
-        public RouteType RouteType { get; set; }
-        public RouteStationCreateEditModel? StartStation { get; set; }
-        public RouteStationCreateEditModel? EndStation { get; set; }
+        //public RouteType RouteType { get; set; }
+        public StationViewModel StartStation { get; set; }
+        public StationViewModel EndStation { get; set; }
 
         //public IList<RouteRoutineCreateEditModel> RouteRoutines { get; set; }
     }

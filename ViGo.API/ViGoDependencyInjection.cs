@@ -62,7 +62,6 @@ namespace ViGo.API
             services.AddScoped<IRepository<Report>, EntityRepository<Report>>();
             services.AddScoped<IRepository<ViGo.Domain.Route>, EntityRepository<ViGo.Domain.Route>>();
             services.AddScoped<IRepository<RouteRoutine>, EntityRepository<RouteRoutine>>();
-            services.AddScoped<IRepository<RouteStation>, EntityRepository<RouteStation>>();
             services.AddScoped<IRepository<Setting>, EntityRepository<Setting>>();
             services.AddScoped<IRepository<Station>, EntityRepository<Station>>();
             services.AddScoped<IRepository<User>, EntityRepository<User>>();

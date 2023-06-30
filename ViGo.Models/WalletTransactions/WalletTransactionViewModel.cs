@@ -35,7 +35,6 @@ namespace ViGo.Models.WalletTransactions
             Id = walletTransaction.Id;
             WalletId = walletTransaction.WalletId;
             Amount = walletTransaction.Amount;
-            BookingId = walletTransaction.BookingId;
             BookingDetailId = walletTransaction.BookingDetailId;
             ExternalTransactionId = walletTransaction.ExternalTransactionId;
             Type = walletTransaction.Type;
@@ -53,7 +52,6 @@ namespace ViGo.Models.WalletTransactions
             Id = walletTransaction.Id;
             WalletId = walletTransaction.WalletId;
             Amount = walletTransaction.Amount;
-            BookingId = walletTransaction.BookingId;
             BookingDetailId = walletTransaction.BookingDetailId;
             ExternalTransactionId = walletTransaction.ExternalTransactionId;
             Type = walletTransaction.Type;
@@ -72,7 +70,6 @@ namespace ViGo.Models.WalletTransactions
             Id = walletTransaction.Id;
             WalletId = walletTransaction.WalletId;
             Amount = walletTransaction.Amount;
-            BookingId = walletTransaction.BookingId;
             BookingDetailId = walletTransaction.BookingDetailId;
             ExternalTransactionId = walletTransaction.ExternalTransactionId;
             Type = walletTransaction.Type;

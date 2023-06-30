@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.RouteRoutines;
-using ViGo.Models.RouteStations;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 
@@ -22,9 +21,9 @@ namespace ViGo.Models.Routes
         public double? Distance { get; set; }
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
-        public RouteType RouteType { get; set; }
-        public StationViewModel? StartStation { get; set; }
-        public StationViewModel? EndStation { get; set; }
+        //public RouteType RouteType { get; set; }
+        public StationViewModel StartStation { get; set; }
+        public StationViewModel EndStation { get; set; }
         //public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
         //public IList<RouteStationViewModel> RouteStations { get; set; }
         public UserViewModel? User { get; set; }
@@ -49,8 +48,8 @@ namespace ViGo.Models.Routes
         //    RouteStations = routeStations.ToList();
         //}
 
-        public RouteViewModel(Route route, StationViewModel? startStation,
-            StationViewModel? endStation, UserViewModel? user = null)
+        public RouteViewModel(Route route, StationViewModel startStation,
+            StationViewModel endStation, UserViewModel? user = null)
         {
             Id = route.Id;
             UserId = route.UserId;
@@ -59,7 +58,6 @@ namespace ViGo.Models.Routes
             EndStationId = route.EndStationId;
             Distance = route.Distance;
             Duration = route.Duration;
-            RouteType = route.RouteType;
             Status = route.Status;
             StartStation = startStation;
             EndStation = endStation;

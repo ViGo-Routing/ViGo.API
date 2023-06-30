@@ -24,7 +24,6 @@ namespace ViGo.Repository
         public IRepository<Report> Reports { get; }
         public IRepository<Route> Routes { get; }
         public IRepository<RouteRoutine> RouteRoutines { get; }
-        public IRepository<RouteStation> RouteStations { get; }
         public IRepository<Setting> Settings { get; }
         public IRepository<Station> Stations { get; }
         public IRepository<User> Users { get; }
@@ -49,7 +48,6 @@ namespace ViGo.Repository
             IRepository<Report> reports, 
             IRepository<Route> routes, 
             IRepository<RouteRoutine> routeRoutines, 
-            IRepository<RouteStation> routeStations, 
             IRepository<Setting> settings, 
             IRepository<Station> stations, 
             IRepository<User> users, 
@@ -70,7 +68,6 @@ namespace ViGo.Repository
             Reports = reports;
             Routes = routes;
             RouteRoutines = routeRoutines;
-            RouteStations = routeStations;
             Settings = settings;
             Stations = stations;
             Users = users;
@@ -94,7 +91,6 @@ namespace ViGo.Repository
             Reports = serviceProvider.GetRequiredService<IRepository<Report>>();
             Routes = serviceProvider.GetRequiredService<IRepository<Route>>();
             RouteRoutines = serviceProvider.GetRequiredService<IRepository<RouteRoutine>>();
-            RouteStations = serviceProvider.GetRequiredService<IRepository<RouteStation>>();
             Settings = serviceProvider.GetRequiredService<IRepository<Setting>>();
             Stations = serviceProvider.GetRequiredService<IRepository<Station>>();
             Users = serviceProvider.GetRequiredService<IRepository<User>>();
