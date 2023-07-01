@@ -87,10 +87,23 @@ namespace ViGo.Services
             }
 
             // Check for longtitude and latitude
-            if (model.Type == StationType.OTHER && 
+            if (model.Type == StationType.OTHER &&
                 !MapsUtilities.IsInRegion(new PointF((float)model.Latitude, (float)model.Longtitude)))
             {
                 throw new ApplicationException("Hiện tại ViGo chỉ hỗ trợ trong khu vực TP.HCM và TP.Thủ Đức!");
+            }
+
+            Station checkStation = await work.Stations.GetAsync(
+                s => ((s.Longtitude == model.Longtitude
+                       && s.Latitude == model.Latitude)
+                       || s.Address.ToLower().Equals(model.Address.ToLower()))
+                    && s.Status == StationStatus.ACTIVE,
+                cancellationToken: cancellationToken);
+
+            if (checkStation != null)
+            {
+                throw new ApplicationException("Thông tin điểm di chuyển (tọa độ hoặc địa chỉ) " +
+                    "đã tồn tại trong hệ thống!!");
             }
 
             Station station = new Station()
@@ -201,7 +214,7 @@ namespace ViGo.Services
 
                 station.Status = model.Status.Value;
             }
-            
+
             // Check for longtitude and latitude
             if (model.Longtitude.HasValue && model.Latitude.HasValue)
             {
@@ -212,9 +225,22 @@ namespace ViGo.Services
                     throw new ApplicationException("Hiện tại ViGo chỉ hỗ trợ trong khu vực TP.HCM và TP.Thủ Đức!");
                 }
 
+                Station checkStation = await work.Stations.GetAsync(
+                s => ((s.Longtitude == model.Longtitude
+                       && s.Latitude == model.Latitude)
+                       || (model.Address != null && s.Address.ToLower().Equals(model.Address.ToLower())))
+                    && s.Status == StationStatus.ACTIVE,
+                cancellationToken: cancellationToken);
+
+                if (checkStation != null)
+                {
+                    throw new ApplicationException("Thông tin điểm di chuyển (tọa độ hoặc địa chỉ) " +
+                        "đã tồn tại trong hệ thống!!");
+                }
+
                 station.Longtitude = model.Longtitude.Value;
                 station.Latitude = model.Latitude.Value;
-            } 
+            }
             else if ((model.Longtitude.HasValue && !model.Latitude.HasValue)
                 || (!model.Longtitude.HasValue && model.Latitude.HasValue))
             {
@@ -225,7 +251,7 @@ namespace ViGo.Services
             await work.SaveChangesAsync(cancellationToken);
 
             return station;
-            
+
         }
     }
 }
