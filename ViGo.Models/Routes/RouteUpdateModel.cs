@@ -8,7 +8,7 @@ using ViGo.Models.Stations;
 
 namespace ViGo.Models.Routes
 {
-    public class RouteEditModel
+    public class RouteUpdateModel
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }

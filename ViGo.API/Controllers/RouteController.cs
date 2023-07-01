@@ -38,7 +38,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Create Route successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -64,7 +64,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get List of routes successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("CurrentUser")]
-        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        [Authorize(Roles = "CUSTOMER")]
         [ProducesResponseType(typeof(IPagedEnumerable<RouteViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -192,13 +192,13 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route has been updated successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("{routeId}")]
-        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteEditModel dto,
+        public async Task<IActionResult> UpdateRoute(Guid routeId, RouteUpdateModel dto,
             CancellationToken cancellationToken)
         {
             if (!routeId.Equals(dto.Id))
@@ -222,7 +222,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route has been updated successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("ChangeStatus/{routeId}")]
-        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -257,7 +257,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route has been deleted successfully</response>
         /// <response code="500">Server error</response>
         [HttpDelete("{routeId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(Domain.Route), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
