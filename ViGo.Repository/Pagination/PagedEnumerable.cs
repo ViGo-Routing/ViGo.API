@@ -29,7 +29,7 @@ namespace ViGo.Repository.Pagination
         /// The paging process with take place in this constructor</param>
         public PagedEnumerable(IEnumerable<T> source, 
             int pageNumber, int pageSize, int totalRecords,
-            string baseUri, string route, bool isOriginalSource = true)
+            string baseUri, string route, bool isOriginalSource = false)
         {
             // Minimum allowed page size is 1
             pageSize = pageSize < 1 ? 1 : pageSize;
