@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\hcm-boundaries.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Data\hcm-boundaries.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="FirebaseAdmin" Version="2.3.0" />
     <PackageReference Include="GoogleMapsApi" Version="1.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
