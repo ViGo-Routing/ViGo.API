@@ -131,6 +131,8 @@ namespace ViGo.Services
                 }
             }
 
+            responseModel.OriginalFare *= fareModel.TotalNumberOfTickets;
+
             if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
                 responseModel.OriginalFare *= 2;
