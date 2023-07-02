@@ -34,7 +34,6 @@ namespace ViGo.API.Controllers
         /// Generates JWT token for Admin and Staff
         /// </summary>
         /// <remarks>Login with email and password</remarks>
-        /// <param name="loginUser">User login information</param>
         /// <returns>
         /// JWT token object { token: "" }
         /// </returns>
@@ -103,7 +102,6 @@ namespace ViGo.API.Controllers
         /// Generates JWT token for Customer and Driver
         /// </summary>
         /// <remarks>Login with phone number and Firebase Token</remarks>
-        /// <param name="loginUser">User login information</param>
         /// <returns>
         /// JWT token object { token: "" }
         /// </returns>
@@ -171,7 +169,6 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Register new user
         /// </summary>
-        /// <param name="registerDto">User register information</param>
         /// <returns>
         /// The newly created user
         /// </returns>
