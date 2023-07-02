@@ -351,6 +351,8 @@ namespace ViGo.Services
             double priceEachTrip = booking.TotalPrice.Value / bookingDetailCount;
             double priceAfterDiscountEachTrip = booking.PriceAfterDiscount.Value / bookingDetailCount;
 
+            FareServices fareServices = new FareServices(work, _logger);
+
             foreach (RouteRoutine routeRoutine in routeRoutines)
             {
                 BookingDetail bookingDetail = new BookingDetail
@@ -363,7 +365,7 @@ namespace ViGo.Services
                     StartStationId = route.StartStationId,
                     EndStationId = route.EndStationId,
                     CustomerDesiredPickupTime = model.CustomerDesiredPickupTime.ToTimeSpan(),
-                    DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                    DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                     Status = BookingDetailStatus.PENDING_ASSIGN
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,
@@ -380,7 +382,7 @@ namespace ViGo.Services
                         CustomerRouteRoutineId = routeRoutine.Id,
                         StartStationId = route.EndStationId,
                         EndStationId = route.StartStationId,
-                        DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                         CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
                         Status = BookingDetailStatus.PENDING_ASSIGN
                     };

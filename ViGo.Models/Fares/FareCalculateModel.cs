@@ -15,6 +15,8 @@ namespace ViGo.Models.Fares
         public double Distance { get; set; }
         public int TotalNumberOfTickets { get; set; }
         public RoutineType? RoutineType { get; set; }
+        public BookingType TripType { get; set; } = BookingType.ONE_WAY;
+        public TimeOnly? RoundTripBeginTime { get; set; } = null;
     }
 
     public class FareCalculateResponseModel
