@@ -140,9 +140,9 @@ namespace ViGo.Services
             Route route = await work.Routes.GetAsync(booking.CustomerRouteId,
                 cancellationToken: cancellationToken);
             Station startStation = await work.Stations.GetAsync(route.StartStationId,
-                    cancellationToken: cancellationToken);
+                    includeDeleted: true, cancellationToken: cancellationToken);
             Station endStation = await work.Stations.GetAsync(route.EndStationId,
-                    cancellationToken: cancellationToken);
+                    includeDeleted: true, cancellationToken: cancellationToken);
 
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId, cancellationToken: cancellationToken);
 
@@ -351,6 +351,8 @@ namespace ViGo.Services
             double priceEachTrip = booking.TotalPrice.Value / bookingDetailCount;
             double priceAfterDiscountEachTrip = booking.PriceAfterDiscount.Value / bookingDetailCount;
 
+            FareServices fareServices = new FareServices(work, _logger);
+
             foreach (RouteRoutine routeRoutine in routeRoutines)
             {
                 BookingDetail bookingDetail = new BookingDetail
@@ -362,8 +364,8 @@ namespace ViGo.Services
                     CustomerRouteRoutineId = routeRoutine.Id,
                     StartStationId = route.StartStationId,
                     EndStationId = route.EndStationId,
-                    CustomerDesiredPickupTime = model.CustomerDesiredPickupTime.ToTimeSpan(),
-                    DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                    CustomerDesiredPickupTime = routeRoutine.StartTime,
+                    DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                     Status = BookingDetailStatus.PENDING_ASSIGN
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,
@@ -380,7 +382,7 @@ namespace ViGo.Services
                         CustomerRouteRoutineId = routeRoutine.Id,
                         StartStationId = route.EndStationId,
                         EndStationId = route.StartStationId,
-                        DriverWage = FareUtilities.DriverWagePercent * priceEachTrip,
+                        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                         CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
                         Status = BookingDetailStatus.PENDING_ASSIGN
                     };

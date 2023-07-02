@@ -37,6 +37,11 @@ namespace ViGo.Services
         public async Task<FareCalculateResponseModel> CalculateFareBasedOnDistance(
             FareCalculateRequestModel fareModel, CancellationToken cancellationToken)
         {
+            if (fareModel.TripType == BookingType.ROUND_TRIP && fareModel.RoundTripBeginTime is null)
+            {
+                throw new ApplicationException("Thời gian cho chuyến đi khứ hồi chưa được thiết lập!!!");
+            }
+
             Fare? fare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(fareModel.VehicleTypeId));
             if (fare is null)
             {
@@ -126,7 +131,14 @@ namespace ViGo.Services
                 }
             }
 
-            responseModel.FinalFare = responseModel.OriginalFare;
+            responseModel.OriginalFare *= fareModel.TotalNumberOfTickets;
+
+            if (fareModel.TripType == BookingType.ROUND_TRIP)
+            {
+                responseModel.OriginalFare *= 2;
+            }
+
+            //responseModel.FinalFare = responseModel.OriginalFare;
             TimeSpan endTimeSpan = DateTimeUtilities.CalculateTripEndTime(fareModel.BeginTime.ToTimeSpan(), fareModel.Duration);
             TimeOnly endTime = TimeOnly.FromTimeSpan(endTimeSpan);
 
@@ -156,7 +168,7 @@ namespace ViGo.Services
                 }
                 if (settingNightTrip != null)
                 {
-                    responseModel.AdditionalFare = double.Parse(settingNightTrip.Value);
+                    responseModel.AdditionalFare += double.Parse(settingNightTrip.Value);
 
                     //responseModel.OriginalFare += responseModel.AdditionalFare;
                     //responseModel.FinalFare += responseModel.AdditionalFare;
@@ -164,8 +176,52 @@ namespace ViGo.Services
                 
             }
 
+            if (fareModel.TripType == BookingType.ROUND_TRIP)
+            {
+                TimeSpan roundTripEndTimeSpan = DateTimeUtilities.CalculateTripEndTime(
+                    fareModel.RoundTripBeginTime.Value.ToTimeSpan(), fareModel.Duration);
+
+                TimeOnly roundTripEndTime = TimeOnly.FromTimeSpan(endTimeSpan);
+
+                if (IsNightTrip(fareModel.RoundTripBeginTime.Value, roundTripEndTime))
+                {
+                    // Additional fare
+                    VehicleType? vehicleType = await work.VehicleTypes.GetAsync(fareModel.VehicleTypeId,
+                        cancellationToken: cancellationToken);
+                    if (vehicleType is null)
+                    {
+                        throw new ApplicationException("Thông tin phương tiện di chuyển không hợp lệ!!");
+                    }
+
+                    Setting? settingNightTrip = null;
+                    switch (vehicleType.Type)
+                    {
+                        case VehicleSubType.VI_RIDE:
+                            settingNightTrip = await work.Settings.GetAsync(
+                                s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike),
+                                cancellationToken: cancellationToken);
+                            break;
+                        case VehicleSubType.VI_CAR:
+                            settingNightTrip = await work.Settings.GetAsync(
+                                s => s.Key.Equals(SettingKeys.NightTripExtraFeeCar),
+                                cancellationToken: cancellationToken);
+                            break;
+
+                    }
+                    if (settingNightTrip != null)
+                    {
+                        responseModel.AdditionalFare += double.Parse(settingNightTrip.Value);
+
+                        //responseModel.OriginalFare += responseModel.AdditionalFare;
+                        //responseModel.FinalFare += responseModel.AdditionalFare;
+                    }
+
+                }
+            }
+
             responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare);
-            responseModel.FinalFare += responseModel.AdditionalFare;
+            responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare;
+            //responseModel.FinalFare += responseModel.AdditionalFare;
 
             // Discount on Total Number of Tickets
             Setting? settingTotalTicket = null;
@@ -194,9 +250,9 @@ namespace ViGo.Services
                 responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
             }
 
+            //double finalFareEachTrip = FareUtilities.RoundToThousands(responseModel.FinalFare / fareModel.TotalNumberOfTickets);
+
             responseModel.FinalFare = FareUtilities.RoundToThousands(responseModel.FinalFare);
-            // TODO Code
-            // Discount based on RouteType
 
             return responseModel;
         }

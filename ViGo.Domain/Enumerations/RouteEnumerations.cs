@@ -12,13 +12,13 @@ namespace ViGo.Domain.Enumerations
         ACTIVE = 1
     }
 
-    public enum RouteType : short
-    {
-        SPECIFIC_ROUTE_SPECIFIC_TIME = 0,
-        SPECIFIC_ROUTE_EVERY_TIME = 1,
-        EVERY_ROUTE_SPECIFIC_TIME = 2,
-        EVERY_ROUTE_EVERY_TIME = 3
-    }
+    //public enum RouteType : short
+    //{
+    //    SPECIFIC_ROUTE_SPECIFIC_TIME = 0,
+    //    SPECIFIC_ROUTE_EVERY_TIME = 1,
+    //    EVERY_ROUTE_SPECIFIC_TIME = 2,
+    //    EVERY_ROUTE_EVERY_TIME = 3
+    //}
 
     public enum RoutineType : short
     {

@@ -68,7 +68,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        [Authorize]
+        [Authorize(Roles = "ADMIN,DRIVER")]
         public async Task<IActionResult> GetDriverAssignedBookingDetails(
             Guid driverId, [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
@@ -165,7 +165,7 @@ namespace ViGo.API.Controllers
         /// <response code="403">Invalid role</response>
         /// <response code="200">Assign driver successfully</response>
         /// <response code="500">Server error</response>
-        [HttpPut("AssignDriver/{bookingDetailId}")]
+        [HttpPost("Driver/Assign/{bookingDetailId}")]
         [ProducesResponseType(typeof(BookingDetail), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -183,6 +183,37 @@ namespace ViGo.API.Controllers
 
             BookingDetail bookingDetail = await bookingDetailServices
                 .AssignDriverAsync(dto, cancellationToken);
+            return StatusCode(200, bookingDetail);
+        }
+
+        /// <summary>
+        /// Driver picks a Booking Detail
+        /// </summary>
+        /// <remarks>
+        /// Only DRIVER can perform this task
+        /// </remarks>
+        /// <returns>
+        /// The updated Booking Detail with Driver information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Driver picks successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Driver/Pick/{bookingDetailId}")]
+        [ProducesResponseType(typeof(BookingDetail), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "DRIVER")]
+        public async Task<IActionResult> DriverPicksBookingDetail(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+
+            BookingDetail bookingDetail = await bookingDetailServices
+                .DriverPicksBookingDetailAsync(bookingDetailId, cancellationToken);
             return StatusCode(200, bookingDetail);
         }
 
@@ -213,6 +244,37 @@ namespace ViGo.API.Controllers
         {
             double driverWage = await bookingDetailServices.CalculateDriverWageAsync(bookingDetailId, cancellationToken);
             return StatusCode(200, driverWage);
+        }
+
+        /// <summary>
+        /// Get list of available Booking Details that driver can pick to drive
+        /// </summary>
+        /// <returns>
+        /// List of available Booking Details
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of booking details successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Driver/Available/{driverId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,DRIVER")]
+        public async Task<IActionResult> GetDriverAvailableBookingDetails(
+            Guid driverId, [FromQuery] PaginationParameter? pagination,
+            CancellationToken cancellationToken)
+        {
+            if (pagination is null)
+            {
+                pagination = PaginationParameter.Default;
+            }
+            IPagedEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
+                    driverId, pagination, HttpContext,
+                    cancellationToken);
+            return StatusCode(200, dtos);
         }
     }
 }

@@ -243,7 +243,7 @@ namespace ViGo.Services
                     .Concat(routes.Select(s => s.EndStationId)).Distinct();
                 IEnumerable<Station> stations = await work.Stations
                     .GetAllAsync(query => query.Where(
-                        s => stationIds.Contains(s.Id)),
+                        s => stationIds.Contains(s.Id)), includeDeleted: true,
                         cancellationToken: cancellationToken);
 
                 //IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
@@ -333,7 +333,6 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-
             IEnumerable<Guid> stationIds = new List<Guid>
             {
                 route.StartStationId,
@@ -342,7 +341,7 @@ namespace ViGo.Services
 
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+                    s => stationIds.Contains(s.Id)), true, cancellationToken: cancellationToken);
 
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
