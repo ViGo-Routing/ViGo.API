@@ -17,7 +17,7 @@ namespace ViGo.Services
 {
     public class TripMappingServices : BaseServices
     {
-        private int ROUTE_TYPE_COUNT = Enum.GetNames(typeof(RouteType)).Length;
+        //private int ROUTE_TYPE_COUNT = Enum.GetNames(typeof(RouteType)).Length;
         public TripMappingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
@@ -435,12 +435,23 @@ namespace ViGo.Services
 
     }
 
-    public class DriverTrip
+    public class DriverTrip : IEquatable<DriverTrip>
     {
+        public Guid Id { get; set; }
         public TimeSpan BeginTime { get; set; }
         public TimeSpan EndTime { get; set; }
         public GoogleMapPoint StartLocation { get; set; }
         public GoogleMapPoint EndLocation { get; set; }
+
+        public bool Equals(DriverTrip? other)
+        {
+            if (other is null)
+            {
+                return false;
+            }
+
+            return this.Id.Equals(other.Id);
+        }
     }
 
     public class DriverTripsOfDate
@@ -449,16 +460,27 @@ namespace ViGo.Services
         public IList<DriverTrip> Trips { get; set; }
     }
 
+    //public class DriverMappingItem
+    //{
+    //    public Guid DriverId { get; set; }
+    //    public Guid DriverRouteId { get; set; }
+    //    public int PrioritizedPoint { get; set; }
+
+    //    public DriverMappingItem(Guid driverId, Guid driverRouteId, int prioritizedPoint)
+    //    {
+    //        DriverId = driverId;
+    //        DriverRouteId = driverRouteId;
+    //        PrioritizedPoint = prioritizedPoint;
+    //    }
+    //}
     public class DriverMappingItem
     {
-        public Guid DriverId { get; set; }
-        public Guid DriverRouteId { get; set; }
-        public int PrioritizedPoint { get; set; }
+        public BookingDetail BookingDetail { get; set; }
+        public double PrioritizedPoint { get; set; }
 
-        public DriverMappingItem(Guid driverId, Guid driverRouteId, int prioritizedPoint)
+        public DriverMappingItem(BookingDetail bookingDetail, double prioritizedPoint)
         {
-            DriverId = driverId;
-            DriverRouteId = driverRouteId;
+            BookingDetail = bookingDetail;
             PrioritizedPoint = prioritizedPoint;
         }
     }
