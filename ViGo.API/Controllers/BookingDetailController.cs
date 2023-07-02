@@ -165,7 +165,7 @@ namespace ViGo.API.Controllers
         /// <response code="403">Invalid role</response>
         /// <response code="200">Assign driver successfully</response>
         /// <response code="500">Server error</response>
-        [HttpPut("AssignDriver/{bookingDetailId}")]
+        [HttpPost("Driver/Assign/{bookingDetailId}")]
         [ProducesResponseType(typeof(BookingDetail), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(403)]
@@ -183,6 +183,37 @@ namespace ViGo.API.Controllers
 
             BookingDetail bookingDetail = await bookingDetailServices
                 .AssignDriverAsync(dto, cancellationToken);
+            return StatusCode(200, bookingDetail);
+        }
+
+        /// <summary>
+        /// Driver picks a Booking Detail
+        /// </summary>
+        /// <remarks>
+        /// Only DRIVER can perform this task
+        /// </remarks>
+        /// <returns>
+        /// The updated Booking Detail with Driver information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Driver picks successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Driver/Pick/{bookingDetailId}")]
+        [ProducesResponseType(typeof(BookingDetail), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "DRIVER")]
+        public async Task<IActionResult> DriverPicksBookingDetail(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+
+            BookingDetail bookingDetail = await bookingDetailServices
+                .DriverPicksBookingDetailAsync(bookingDetailId, cancellationToken);
             return StatusCode(200, bookingDetail);
         }
 

@@ -140,9 +140,9 @@ namespace ViGo.Services
             Route route = await work.Routes.GetAsync(booking.CustomerRouteId,
                 cancellationToken: cancellationToken);
             Station startStation = await work.Stations.GetAsync(route.StartStationId,
-                    cancellationToken: cancellationToken);
+                    includeDeleted: true, cancellationToken: cancellationToken);
             Station endStation = await work.Stations.GetAsync(route.EndStationId,
-                    cancellationToken: cancellationToken);
+                    includeDeleted: true, cancellationToken: cancellationToken);
 
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId, cancellationToken: cancellationToken);
 
@@ -364,7 +364,7 @@ namespace ViGo.Services
                     CustomerRouteRoutineId = routeRoutine.Id,
                     StartStationId = route.StartStationId,
                     EndStationId = route.EndStationId,
-                    CustomerDesiredPickupTime = model.CustomerDesiredPickupTime.ToTimeSpan(),
+                    CustomerDesiredPickupTime = routeRoutine.StartTime,
                     DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                     Status = BookingDetailStatus.PENDING_ASSIGN
                 };

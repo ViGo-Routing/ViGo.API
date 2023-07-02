@@ -15,12 +15,13 @@ namespace ViGo.Models.Bookings
     public class BookingViewModel
     {
         public Guid Id { get; set; }
-        //public Guid CustomerId { get; set; }
+        public Guid CustomerId { get; set; }
         //public Guid StartRouteStationId { get; set; }
         //public Guid EndRouteStationId { get; set; }
         public UserViewModel Customer { get; set; }
         //public RouteStationViewModel StartRouteStation { get; set; }
         //public RouteStationViewModel EndRouteStation { get; set; }
+        public Guid CustomerRouteId { get; set; }
         public RouteViewModel? CustomerRoute { get; set; }
         public TimeSpan? StartTime { get; set; }
         public DateTime StartDate { get; set; }
@@ -49,10 +50,12 @@ namespace ViGo.Models.Bookings
             VehicleType vehicleType)
         {
             Id = booking.Id;
+            CustomerId = booking.CustomerId;
             Customer = customer;
             //StartRouteStation = startRouteStation;
             //EndRouteStation = endRouteStation;
             CustomerRoute = null;
+            CustomerRouteId = booking.CustomerRouteId;
             StartDate = booking.StartDate;
             EndDate = booking.EndDate;
             DaysOfWeek = booking.DaysOfWeek;
@@ -79,33 +82,33 @@ namespace ViGo.Models.Bookings
             Route customerRoute,
             StationViewModel startRouteStation,
             StationViewModel endRouteStation,
-            VehicleType vehicleType)
+            VehicleType vehicleType) : this(booking, customer, vehicleType)
         {
-            Id = booking.Id;
-            Customer = customer;
-            //StartRouteStation = startRouteStation;
-            //EndRouteStation = endRouteStation;
+            //Id = booking.Id;
+            //Customer = customer;
+            ////StartRouteStation = startRouteStation;
+            ////EndRouteStation = endRouteStation;
             CustomerRoute = new RouteViewModel(customerRoute, startRouteStation, endRouteStation);
-            StartDate = booking.StartDate;
-            EndDate = booking.EndDate;
-            DaysOfWeek = booking.DaysOfWeek;
-            TotalPrice = booking.TotalPrice;
-            PriceAfterDiscount = booking.PriceAfterDiscount;
-            //PaymentMethod = booking.PaymentMethod;
-            IsShared = booking.IsShared;
-            Duration = booking.Duration;
-            Distance = booking.Distance;
-            PromotionId = booking.PromotionId;
-            VehicleTypeId = booking.VehicleTypeId;
-            VehicleName = vehicleType.Name + " - " + 
-                vehicleType.Slot + " chỗ";
-            Type = booking.Type;
-            Status = booking.Status;
-            CreatedTime = booking.CreatedTime;
-            CreatedBy = booking.CreatedBy;
-            UpdatedTime = booking.UpdatedTime;
-            UpdatedBy = booking.UpdatedBy;
-            IsDeleted = booking.IsDeleted;
+            //StartDate = booking.StartDate;
+            //EndDate = booking.EndDate;
+            //DaysOfWeek = booking.DaysOfWeek;
+            //TotalPrice = booking.TotalPrice;
+            //PriceAfterDiscount = booking.PriceAfterDiscount;
+            ////PaymentMethod = booking.PaymentMethod;
+            //IsShared = booking.IsShared;
+            //Duration = booking.Duration;
+            //Distance = booking.Distance;
+            //PromotionId = booking.PromotionId;
+            //VehicleTypeId = booking.VehicleTypeId;
+            //VehicleName = vehicleType.Name + " - " + 
+            //    vehicleType.Slot + " chỗ";
+            //Type = booking.Type;
+            //Status = booking.Status;
+            //CreatedTime = booking.CreatedTime;
+            //CreatedBy = booking.CreatedBy;
+            //UpdatedTime = booking.UpdatedTime;
+            //UpdatedBy = booking.UpdatedBy;
+            //IsDeleted = booking.IsDeleted;
         }
 
         //public BookingViewModel(Booking booking, UserViewModel customer,

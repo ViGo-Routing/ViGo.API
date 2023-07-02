@@ -18,7 +18,7 @@ namespace ViGo.Models.Bookings
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         //public string? DaysOfWeek { get; set; }
-        public TimeOnly CustomerDesiredPickupTime { get; set; }
+        //public TimeOnly CustomerDesiredPickupTime { get; set; }
         public double TotalPrice { get; set; }
         public double PriceAfterDiscount { get; set; }
         //public PaymentMethod PaymentMethod { get; set; }
