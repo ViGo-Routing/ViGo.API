@@ -17,6 +17,7 @@ using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Utilities.Google;
 
 namespace ViGo.Services
 {
@@ -113,8 +114,13 @@ namespace ViGo.Services
             HttpContext context,
             CancellationToken cancellationToken)
         {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                driverId = IdentityUtilities.GetCurrentUserId();
+            }
+
             User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
-            if (driver == null)
+            if (driver == null || driver.Role == UserRole.DRIVER)
             {
                 throw new ApplicationException("Tài xế không tồn tại!!!");
             }
@@ -419,6 +425,325 @@ namespace ViGo.Services
             FareServices fareServices = new FareServices(work, _logger);
             double driverWage = await fareServices.CalculateDriverWage(bookingDetail.PriceAfterDiscount.Value, cancellationToken);
             return driverWage;
+        }
+
+        public async Task<IPagedEnumerable<BookingDetailViewModel>>
+            GetDriverAvailableBookingDetailsAsync(Guid driverId,
+                PaginationParameter pagination, HttpContext context,
+                CancellationToken cancellationToken)
+        {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                driverId = IdentityUtilities.GetCurrentUserId();
+            }
+
+            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
+            if (driver == null || driver.Role != UserRole.DRIVER)
+            {
+                throw new ApplicationException("Tài xế không tồn tại!!!");
+            }
+
+            IEnumerable<BookingDetail> unassignedBookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => !bd.DriverId.HasValue
+                    && bd.Status == BookingDetailStatus.PENDING_ASSIGN
+                    // Only for future ones
+                    && bd.Date >= DateTimeUtilities.GetDateTimeVnNow()), 
+                    cancellationToken: cancellationToken);
+
+            // Get Bookings
+            IEnumerable<Guid> bookingIds = unassignedBookingDetails.Select(
+                bd => bd.BookingId);
+            IEnumerable<Booking> bookings = await work.Bookings.GetAllAsync(
+                query => query.Where(b => bookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+
+            // Get Start and End Station
+            IEnumerable<Guid> stationIds = unassignedBookingDetails
+                .Select(b => b.StartStationId).Concat(unassignedBookingDetails.Select(b => b.EndStationId))
+                .Distinct();
+            IEnumerable<Station> stations = await work.Stations.GetAllAsync(
+                query => query.Where(s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+
+            // Get driver current schedules
+            IList<DriverTripsOfDate> driverTrips = new List<DriverTripsOfDate>();
+            IEnumerable<BookingDetail> driverBookingDetails = await
+                work.BookingDetails.GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                        bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
+            if (driverBookingDetails.Any())
+            {
+                IEnumerable<Guid> driverBookingIds = driverBookingDetails.Select(d => d.BookingId).Distinct();
+                IEnumerable<Booking> driverBookings = await work.Bookings.GetAllAsync(
+                    query => query.Where(b => bookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+
+                IEnumerable<Guid> driverStationIds = driverBookingDetails.Select(
+                    b => b.StartStationId).Concat(driverBookingDetails.Select(b => b.EndStationId))
+                    .Distinct();
+                IEnumerable<Station> driverStations = await work.Stations.GetAllAsync(
+                    query => query.Where(s => driverStationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+                IEnumerable<DateOnly> tripDates = driverBookingDetails.Select(
+                    d => DateOnly.FromDateTime(d.Date)).Distinct();
+                foreach (DateOnly tripDate in tripDates)
+                {
+                    IEnumerable<BookingDetail> tripsInDate = driverBookingDetails.Where(
+                        bd => DateOnly.FromDateTime(bd.Date) == tripDate);
+                    IEnumerable<DriverTrip> trips = from detail in driverBookingDetails
+                                                    join booking in driverBookings
+                                                        on detail.BookingId equals booking.Id
+                                                    join startStation in driverStations
+                                                        on detail.StartStationId equals startStation.Id
+                                                    join endStation in driverStations
+                                                        on detail.EndStationId equals endStation.Id
+                                                    select new DriverTrip()
+                                                    {
+                                                        Id = detail.Id,
+                                                        BeginTime = detail.CustomerDesiredPickupTime,
+                                                        EndTime = DateTimeUtilities.CalculateTripEndTime(detail.CustomerDesiredPickupTime, booking.Duration),
+                                                        StartLocation = new Utilities.Google.GoogleMapPoint()
+                                                        {
+                                                            Latitude = startStation.Latitude,
+                                                            Longtitude = startStation.Longtitude
+                                                        },
+                                                        EndLocation = new Utilities.Google.GoogleMapPoint()
+                                                        {
+                                                            Latitude = endStation.Latitude,
+                                                            Longtitude = endStation.Longtitude
+                                                        }
+                                                    };
+
+                    trips = trips.OrderBy(t => t.BeginTime);
+
+                    driverTrips.Add(new DriverTripsOfDate
+                    {
+                        Date = tripDate,
+                        Trips = trips.ToList()
+                    });
+                }
+            }
+
+            IList<DriverMappingItem> prioritizedBookingDetails = new List<DriverMappingItem>();
+
+            foreach (BookingDetail bookingDetail in unassignedBookingDetails)
+            {
+                Booking booking = bookings.SingleOrDefault(b => b.Id.Equals(bookingDetail.BookingId));
+                TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
+                    bookingDetail.CustomerDesiredPickupTime, booking.Duration);
+
+                Station startStation = stations.SingleOrDefault(s => s.Id.Equals(bookingDetail.StartStationId));
+                Station endStation = stations.SingleOrDefault(s => s.Id.Equals(bookingDetail.EndStationId));
+                
+                if (!driverTrips.Any())
+                {
+                    // Has not been configured or has no trips
+                    prioritizedBookingDetails.Add(new DriverMappingItem(
+                        bookingDetail, bookingDetail.CustomerDesiredPickupTime.TotalMinutes));
+                } else
+                {
+                    // Has Trips
+                    DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
+                        t => t.Date == DateOnly.FromDateTime(bookingDetail.Date));
+                    if (tripsOfDate is null || tripsOfDate.Trips.Count == 0)
+                    {
+                        // No trips in day
+                        prioritizedBookingDetails.Add(new DriverMappingItem(
+                            bookingDetail, 
+                            bookingDetail.CustomerDesiredPickupTime
+                                .Add(TimeSpan.FromMinutes(30)).TotalMinutes)); // Less prioritized
+                    } else
+                    {
+                        // Has trips in day
+                        IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(new DriverTrip
+                        {
+                            Id = bookingDetail.Id,
+                            BeginTime = bookingDetail.CustomerDesiredPickupTime,
+                            EndTime = bookingDetailEndTime,
+                            StartLocation = new GoogleMapPoint {
+                                Latitude = startStation.Latitude,
+                                Longtitude = startStation.Longtitude
+                            },
+                            EndLocation = new GoogleMapPoint
+                            {
+                                Latitude = endStation.Latitude,
+                                Longtitude = endStation.Longtitude
+                            }
+                        }).OrderBy(t => t.BeginTime);
+
+                        LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
+                        LinkedListNode<DriverTrip> addedTrip = addedTripsAsLinkedList.Find(new DriverTrip { Id = bookingDetail.Id });
+
+                        DriverTrip? previousTrip = addedTrip.Previous?.Value;
+                        DriverTrip? nextTrip = addedTrip.Next?.Value;
+
+                        if (previousTrip is null)
+                        {
+                            if (nextTrip != null)
+                            {
+                                // Has Next trip
+                                if (addedTrip.Value.EndTime < nextTrip.BeginTime)
+                                {
+                                    // Valid one
+                                    AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
+                                        addedTrip.Value, previousTrip, nextTrip);
+                                }
+                            }
+                            // Previous and Next cannot be both null
+                        } else
+                        {
+                            // Has Previous trip
+                            if (addedTrip.Value.BeginTime > previousTrip.EndTime)
+                            {
+                                if (nextTrip != null)
+                                {
+                                    if (addedTrip.Value.EndTime < nextTrip.BeginTime)
+                                    {
+                                        // Valid one
+                                        AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
+                                            addedTrip.Value, previousTrip, nextTrip);
+                                    }
+                                } else
+                                {
+                                    // Valid one
+                                    AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
+                                        addedTrip.Value, previousTrip, nextTrip);
+                                }
+                            }
+                            
+                        }
+                    }
+                }
+            }
+
+            if (prioritizedBookingDetails.Count == 0)
+            {
+                // No Available ones
+            }
+            else
+            {
+                prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(
+                    d => d.BookingDetail.Date)
+                    .ThenBy(d => d.PrioritizedPoint).ToList();
+
+            }
+
+            int totalCount = prioritizedBookingDetails.Count;
+            prioritizedBookingDetails = prioritizedBookingDetails.ToPagedEnumerable(
+                pagination.PageNumber, pagination.PageSize).Data.ToList();
+
+            IEnumerable<Guid> customerRoutineIds = prioritizedBookingDetails.Select(
+                p => p.BookingDetail.CustomerRouteRoutineId);
+            IEnumerable<RouteRoutine> customerRoutines = await work.RouteRoutines.GetAllAsync(
+                query => query.Where(r => customerRoutineIds.Contains(r.Id)), cancellationToken: cancellationToken);
+
+            IEnumerable<BookingDetailViewModel> availables = from bookingDetail in prioritizedBookingDetails
+                                                             join customerRoutine in customerRoutines
+                                                                on bookingDetail.BookingDetail.CustomerRouteRoutineId equals customerRoutine.Id
+                                                             join startStation in stations
+                                                                on bookingDetail.BookingDetail.StartStationId equals startStation.Id
+                                                            join endStation in stations
+                                                                on bookingDetail.BookingDetail.EndStationId equals endStation.Id
+                                                             select new BookingDetailViewModel(bookingDetail.BookingDetail,
+                                                                 new RouteRoutineViewModel(customerRoutine), 
+                                                                 new StationViewModel(startStation), new StationViewModel(endStation), null);
+
+            return availables.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize, 
+                totalCount, context);
+
+        }
+
+        private async void AddToPrioritizedBookingDetails(IList<DriverMappingItem> prioritizedBookingDetails,
+            BookingDetail bookingDetailToAdd, DriverTrip addedTrip,
+            DriverTrip? previousTrip, DriverTrip? nextTrip)
+        {
+            //TimeSpan addedTripEndTime = addedTrip.EndTime;
+
+            if (previousTrip is null)
+            {
+                if (nextTrip != null)
+                {
+                    // Has Next trip
+                    //TimeSpan nextTripEndTime = nextTrip.EndTime;
+                    // Check for duration from addedTrip EndStation to nextTrip StartStation
+                    int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        addedTrip.EndLocation, nextTrip.StartLocation);
+
+                    if ((nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes > movingDuration + 10)
+                    {
+                        // Valid booking details
+                        prioritizedBookingDetails.Add(new DriverMappingItem(
+                            bookingDetailToAdd, (nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes - movingDuration));
+                    }
+                }
+                // Previous and Next cannot be both null
+            }
+            else
+            {
+                // Has Previous trip
+                //TimeSpan previousTripEndTime = previousTrip.EndTime;
+
+                if (nextTrip is null)
+                {
+                    // Only previous trip
+                    
+                    // Check for duration from addedTrip EndStation to nextTrip StartStation
+                    int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        previousTrip.EndLocation, addedTrip.StartLocation);
+
+                    if ((addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes > movingDuration + 10)
+                    {
+                        // Valid booking details
+                        prioritizedBookingDetails.Add(new DriverMappingItem(
+                            bookingDetailToAdd, (addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes - movingDuration));
+                    }
+                }
+                else
+                {
+                    // Has Previous and Next trip
+                    //TimeSpan nextTripEndTime = nextTrip.EndTime;
+                    // Check for duration from addedTrip EndStation to nextTrip StartStation
+                    int movingDurationPrevToAdded = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        previousTrip.EndLocation, addedTrip.StartLocation);
+                    int movingDurationAddedToNext = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        addedTrip.EndLocation, nextTrip.StartLocation);
+
+                    double durationPrevToAdded = (addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes;
+                    double durationAddedToNext = (nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes;
+
+                    if (durationPrevToAdded > movingDurationPrevToAdded + 10 
+                        && durationAddedToNext > movingDurationAddedToNext + 10)
+                    {
+                        // Valid booking details
+                        prioritizedBookingDetails.Add(new DriverMappingItem(
+                            bookingDetailToAdd, (durationPrevToAdded - movingDurationPrevToAdded + 
+                                                durationAddedToNext - movingDurationAddedToNext) / 2));
+                    }
+                }
+
+            }
+
+            //TimeSpan lastTripEndTime = lastTrip.EndTime;
+            //TimeSpan nextTripEndTime = DateTimeUtilities.CalculateTripEndTime(bookingDetail.CustomerDesiredPickupTime,
+            //    booking.Duration);
+            //if (lastTripEndTime <= bookingDetail.CustomerDesiredPickupTime)
+            //{
+            //    // Check for duration from lastTrip End Station to BD's Start Station
+            //    int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+            //        lastTrip.EndLocation, new GoogleMapPoint
+            //        {
+            //            Latitude = startStation.Latitude,
+            //            Longtitude = startStation.Longtitude
+            //        }); // Minutes
+
+            //    if ((bookingDetail.CustomerDesiredPickupTime - lastTripEndTime).TotalMinutes
+            //        > movingDuration + 10)
+            //    {
+            //        // 10 minutes for traffic and other stuffs
+            //        // Valid booking details
+            //        prioritizedBookingDetails.Add(new DriverMappingItem(bookingDetail,
+            //            (bookingDetail.CustomerDesiredPickupTime - lastTripEndTime).TotalMinutes - movingDuration
+            //        )); // Prioritized by duration to move between stations
+            //    }
+
+            //}
         }
     }
 }
