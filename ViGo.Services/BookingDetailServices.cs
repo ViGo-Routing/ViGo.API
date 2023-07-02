@@ -123,7 +123,7 @@ namespace ViGo.Services
             }
 
             User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
-            if (driver == null || driver.Role == UserRole.DRIVER)
+            if (driver == null || driver.Role != UserRole.DRIVER)
             {
                 throw new ApplicationException("Tài xế không tồn tại!!!");
             }
