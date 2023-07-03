@@ -80,7 +80,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateRouteRoutines(RouteRoutineCreateEditModel model,
+        public async Task<IActionResult> CreateRouteRoutines(RouteRoutineCreateUpdateModel model,
             CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routines = await routeRoutineServices.CreateRouteRoutinesAsync(model, cancellationToken);
@@ -110,7 +110,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRouteRoutines(Guid routeId, RouteRoutineCreateEditModel model,
+        public async Task<IActionResult> UpdateRouteRoutines(Guid routeId, RouteRoutineCreateUpdateModel model,
             CancellationToken cancellationToken)
         {
             if (!routeId.Equals(model.RouteId))
