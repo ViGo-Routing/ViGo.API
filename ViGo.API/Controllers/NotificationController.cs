@@ -117,7 +117,7 @@ namespace ViGo.API.Controllers
         /// Delete a Notification
         /// </summary>
         /// <remarks>
-        /// Only Admin/Staff can delete notification through this endpoint.
+        /// Only Admin or the user of that notification can delete notification through this endpoint.
         /// </remarks>
         /// <returns>
         /// Deleted Notification's information

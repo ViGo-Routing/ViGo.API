@@ -48,7 +48,7 @@ namespace ViGo.Services
                 pagination.PageSize).Data;
 
             IEnumerable<Guid> eventIds = notifications.Where(n => n.EventId.HasValue)
-                .Select(n => n.EventId.Value);
+                .Select(n => n.EventId.Value).Distinct();
             IEnumerable<Event> events = await work.Events.GetAllAsync(query => query.Where(
                 e => eventIds.Contains(e.Id)), cancellationToken: cancellationToken);
 

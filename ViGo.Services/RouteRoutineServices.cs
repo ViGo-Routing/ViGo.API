@@ -48,7 +48,7 @@ namespace ViGo.Services
                 pagination.PageNumber, pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateEditModel model,
+        public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateUpdateModel model,
             CancellationToken cancellationToken)
         {
             Route? route = await work.Routes.GetAsync(model.RouteId, cancellationToken: cancellationToken);
@@ -103,7 +103,7 @@ namespace ViGo.Services
             return routeRoutines;
         }
 
-        public async Task<IEnumerable<RouteRoutine>> UpdateRouteRoutinesAsync(RouteRoutineCreateEditModel model,
+        public async Task<IEnumerable<RouteRoutine>> UpdateRouteRoutinesAsync(RouteRoutineCreateUpdateModel model,
             CancellationToken cancellationToken)
         {
             Route? route = await work.Routes.GetAsync(model.RouteId, cancellationToken: cancellationToken);
