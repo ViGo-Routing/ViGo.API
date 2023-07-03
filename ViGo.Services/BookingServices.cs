@@ -232,9 +232,10 @@ namespace ViGo.Services
                 throw new ApplicationException("Loại phương tiện di chuyển không hợp lệ!!");
             }
 
+            Promotion? promotion = null;
             if (model.PromotionId.HasValue)
             {
-                Promotion promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
+                promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
                     cancellationToken: cancellationToken);
                 if (promotion is null ||
                     promotion.Status == PromotionStatus.UNAVAILABLE ||
@@ -268,6 +269,14 @@ namespace ViGo.Services
                         throw new ApplicationException("Mã khuyến mãi đã vượt quá số lần sử dụng!!");
                     }
                 }
+                if (promotion.MaxTotalUsage.HasValue)
+                {
+                    if (promotion.TotalUsage == promotion.MaxTotalUsage)
+                    {
+                        throw new ApplicationException("Mã khuyến mãi đã vượt quá số lượt sử dụng!!");
+                    }
+                }
+
             }
 
             //TODO Code
@@ -389,6 +398,12 @@ namespace ViGo.Services
                     await work.BookingDetails.InsertAsync(bookingDetail,
                         cancellationToken: cancellationToken);
                 }
+            }
+
+            if (promotion != null)
+            {
+                promotion.TotalUsage += 1;
+                await work.Promotions.UpdateAsync(promotion);
             }
 
             await work.SaveChangesAsync(cancellationToken);
