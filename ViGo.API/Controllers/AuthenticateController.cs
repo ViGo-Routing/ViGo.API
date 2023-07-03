@@ -57,9 +57,9 @@ namespace ViGo.API.Controllers
                 return StatusCode(401, "Đăng nhập không thành công!");
             }
 
-            if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+            if (user.Status == Domain.Enumerations.UserStatus.BANNED)
             {
-                return StatusCode(401, "Tài khoản chưa được xác minh!");
+                return StatusCode(401, "Tài khoản đã bị khóa!");
             }
             if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
             {
@@ -124,9 +124,9 @@ namespace ViGo.API.Controllers
             {
                 return StatusCode(401, "Đăng nhập không thành công!");
             }
-            if (user.Status == Domain.Enumerations.UserStatus.UNVERIFIED)
+            if (user.Status == Domain.Enumerations.UserStatus.BANNED)
             {
-                return StatusCode(401, "Tài khoản chưa được xác minh!");
+                return StatusCode(401, "Tài khoản đã bị khóa!");
             }
             if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
             {
