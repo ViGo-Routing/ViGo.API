@@ -257,6 +257,21 @@ namespace ViGo.Services
                     .GetAllAsync(cancellationToken: cancellationToken);
             }
 
+            routes = routes.Where(
+                r =>
+                {
+                    if (r.Type == RouteType.ONE_WAY)
+                    {
+                        return true;
+                    }
+                    // ROUND_TRIP
+                    if (r.RoundTripRouteId.HasValue)
+                    {
+                        return true;
+                    }
+                    return false;
+                });
+
             int totalRecords = routes.Count();
 
             routes = routes.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;

@@ -65,6 +65,7 @@ namespace ViGo.Models.Routes
             EndStation = endStation;
             User = user;
             Type = route.Type;
+            RoundTripRouteId = route.RoundTripRouteId;
             //RouteRoutines = new List<RouteRoutineListItemDto>();
             //RouteStations = new List<RouteStationListItemDto>();
         }
