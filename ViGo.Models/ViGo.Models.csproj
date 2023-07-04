@@ -15,7 +15,6 @@
     <Folder Include="Wallets\" />
     <Folder Include="VehicleTypes\" />
     <Folder Include="Vehicles\" />
-    <Folder Include="UserLicenses\" />
     <Folder Include="Settings\" />
     <Folder Include="Reports\" />
   </ItemGroup>
