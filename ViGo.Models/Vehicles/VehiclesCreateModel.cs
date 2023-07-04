@@ -14,6 +14,7 @@ namespace ViGo.Models.Vehicles
         public string LicensePlate { get; set; } = null!;
         public Guid VehicleTypeId { get; set; }
         public Guid UserId { get; set; }
-        //public  VehicleTypeViewModel VehicleType { get; set; } 
+        public Guid UserLicenseId { get; set; }
+
     }
 }
