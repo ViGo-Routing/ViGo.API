@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.GoogleMaps;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;

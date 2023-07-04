@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.GoogleMaps;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
@@ -755,12 +756,12 @@ namespace ViGo.Services
                                                         Id = detail.Id,
                                                         BeginTime = detail.CustomerDesiredPickupTime,
                                                         EndTime = DateTimeUtilities.CalculateTripEndTime(detail.CustomerDesiredPickupTime, booking.Duration),
-                                                        StartLocation = new Utilities.Google.GoogleMapPoint()
+                                                        StartLocation = new GoogleMapPoint()
                                                         {
                                                             Latitude = startStation.Latitude,
                                                             Longtitude = startStation.Longtitude
                                                         },
-                                                        EndLocation = new Utilities.Google.GoogleMapPoint()
+                                                        EndLocation = new GoogleMapPoint()
                                                         {
                                                             Latitude = endStation.Latitude,
                                                             Longtitude = endStation.Longtitude

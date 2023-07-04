@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
+    <ProjectReference Include="..\ViGo.Models\ViGo.Models.csproj" />
   </ItemGroup>
 
 </Project>
