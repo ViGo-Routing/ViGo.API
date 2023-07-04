@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.UserLicenses;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
@@ -86,6 +87,7 @@ namespace ViGo.Services
                 FrontSideFile = userLicense.FrontSideFile,
                 BackSideFile = userLicense.BackSideFile,
                 LicenseType = userLicense.LicenseType,
+                Status = UserLicenseStatus.PENDING,
                 IsDeleted = false,
 
             };
