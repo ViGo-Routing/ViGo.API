@@ -36,7 +36,7 @@ namespace ViGo.API
             #endregion
 
             #region DbContext
-            services.AddDbContext<ViGoDBContext>(options =>
+            services.AddDbContextPool<ViGoDBContext>(options =>
             {
                 if (env.IsDevelopment())
                 {
