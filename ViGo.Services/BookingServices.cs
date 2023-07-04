@@ -185,10 +185,10 @@ namespace ViGo.Services
             //{
             //    throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
             //}
-            if (!Enum.IsDefined(model.Type))
-            {
-                throw new ApplicationException("Loại Booking không hợp lệ!!");
-            }
+            //if (!Enum.IsDefined(model.Type))
+            //{
+            //    throw new ApplicationException("Loại Booking không hợp lệ!!");
+            //}
             if (model.Distance <= 0)
             {
                 throw new ApplicationException("Khoảng cách phải lớn hơn 0!");
@@ -223,6 +223,20 @@ namespace ViGo.Services
                 !route.UserId.Equals(user.Id))
             {
                 throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
+            }
+
+            Route? roundTrip = null;
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                if (!route.RoundTripRouteId.HasValue)
+                {
+                    throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
+                            "Không thể tạo Booking cho tuyến đường này. Vui lòng tiến hành tạo Booking cho tuyến đường chính!");
+                } else
+                {
+                    roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
+                        cancellationToken: cancellationToken);
+                }
             }
 
             VehicleType vehicleType = await work.VehicleTypes
@@ -308,12 +322,20 @@ namespace ViGo.Services
                     && r.RoutineDate >= model.StartDate
                     && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken);
 
+            if (roundTrip != null)
+            {
+                routeRoutines = routeRoutines.Concat(await work.RouteRoutines.GetAllAsync(
+                    query => query.Where(r => r.RouteId.Equals(roundTrip.Id)
+                    && r.RoutineDate >= model.StartDate
+                    && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken));
+            }
+
             int bookingDetailCount = routeRoutines.Count();
 
-            if (model.Type == BookingType.ROUND_TRIP)
-            {
-                bookingDetailCount *= 2;
-            }
+            //if (model.Type == BookingType.ROUND_TRIP)
+            //{
+            //    bookingDetailCount *= 2;
+            //}
 
             if (bookingDetailCount == 0)
             {
@@ -321,10 +343,10 @@ namespace ViGo.Services
                     "của chuyến đi đã được thiết lập!!");
             }
 
-            if (model.Type == BookingType.ROUND_TRIP && model.CustomerRoundTripDesiredPickupTime is null)
-            {
-                throw new ApplicationException("Thông tin thời gian đón khách cho chuyến về chưa được thiết lập!!!");
-            }
+            //if (model.Type == BookingType.ROUND_TRIP && model.CustomerRoundTripDesiredPickupTime is null)
+            //{
+            //    throw new ApplicationException("Thông tin thời gian đón khách cho chuyến về chưa được thiết lập!!!");
+            //}
 
             // All is valid
             Booking booking = new Booking()
@@ -340,7 +362,7 @@ namespace ViGo.Services
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
-                Type = model.Type,
+                //Type = model.Type,
                 Status = BookingStatus.DRAFT // TODO Code
             };
 
@@ -373,31 +395,31 @@ namespace ViGo.Services
                     CustomerRouteRoutineId = routeRoutine.Id,
                     StartStationId = route.StartStationId,
                     EndStationId = route.EndStationId,
-                    CustomerDesiredPickupTime = routeRoutine.StartTime,
+                    CustomerDesiredPickupTime = routeRoutine.PickupTime,
                     DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                     Status = BookingDetailStatus.PENDING_ASSIGN
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,
                     cancellationToken: cancellationToken);
 
-                if (model.Type == BookingType.ROUND_TRIP)
-                {
-                    BookingDetail roundBookingDetail = new BookingDetail
-                    {
-                        BookingId = booking.Id,
-                        Date = routeRoutine.RoutineDate,
-                        Price = priceEachTrip,
-                        PriceAfterDiscount = priceAfterDiscountEachTrip,
-                        CustomerRouteRoutineId = routeRoutine.Id,
-                        StartStationId = route.EndStationId,
-                        EndStationId = route.StartStationId,
-                        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
-                        CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
-                        Status = BookingDetailStatus.PENDING_ASSIGN
-                    };
-                    await work.BookingDetails.InsertAsync(bookingDetail,
-                        cancellationToken: cancellationToken);
-                }
+                //if (model.Type == BookingType.ROUND_TRIP)
+                //{
+                //    BookingDetail roundBookingDetail = new BookingDetail
+                //    {
+                //        BookingId = booking.Id,
+                //        Date = routeRoutine.RoutineDate,
+                //        Price = priceEachTrip,
+                //        PriceAfterDiscount = priceAfterDiscountEachTrip,
+                //        CustomerRouteRoutineId = routeRoutine.Id,
+                //        StartStationId = route.EndStationId,
+                //        EndStationId = route.StartStationId,
+                //        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
+                //        CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
+                //        Status = BookingDetailStatus.PENDING_ASSIGN
+                //    };
+                //    await work.BookingDetails.InsertAsync(bookingDetail,
+                //        cancellationToken: cancellationToken);
+                //}
             }
 
             if (promotion != null)

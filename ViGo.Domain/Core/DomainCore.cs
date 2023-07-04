@@ -78,7 +78,7 @@ namespace ViGo.Domain
                 return true;
             }
             return this.RoutineDate == other.RoutineDate
-                && this.StartTime == other.StartTime
+                && this.PickupTime == other.PickupTime
                 /*&& this.EndTime == other.EndTime*/;
         }
     }

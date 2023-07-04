@@ -28,7 +28,6 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Create new Route for User
         /// </summary>
-        /// <param name="dto">Route information to be created</param>
         /// <returns>
         /// The newly added route
         /// </returns>

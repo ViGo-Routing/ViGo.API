@@ -12,7 +12,7 @@ namespace ViGo.Models.RouteRoutines
     {
         public DateOnly RoutineDate { get; set; }
         //public DateOnly StartDate { get; set; }
-        public TimeOnly StartTime { get; set; }
+        public TimeOnly PickupTime { get; set; }
         //public DateOnly EndDate { get; set; }
         //public TimeOnly EndTime { get; set; }
         public RouteRoutineStatus Status { get; set; } = RouteRoutineStatus.ACTIVE;
@@ -25,7 +25,7 @@ namespace ViGo.Models.RouteRoutines
         public RouteRoutineListItemModel(RouteRoutine routeRoutine)
         {
             RoutineDate = DateOnly.FromDateTime(routeRoutine.RoutineDate);
-            StartTime = TimeOnly.FromTimeSpan(routeRoutine.StartTime);
+            PickupTime = TimeOnly.FromTimeSpan(routeRoutine.PickupTime);
             //EndTime = TimeOnly.FromTimeSpan(routeRoutine.EndTime);
             Status = routeRoutine.Status;
         }
@@ -41,7 +41,7 @@ namespace ViGo.Models.RouteRoutines
                 return true;
             }
             return this.RoutineDate == other.RoutineDate
-                && this.StartTime == other.StartTime
+                && this.PickupTime == other.PickupTime
                /* && this.EndTime == other.EndTime*/;
         }
     }

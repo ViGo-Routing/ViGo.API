@@ -18,6 +18,7 @@ namespace ViGo.Models.Routes
         public double Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
+        public RouteType Type { get; set; } = RouteType.ONE_WAY;
         public StationViewModel StartStation { get; set; }
         public StationViewModel EndStation { get; set; }
 

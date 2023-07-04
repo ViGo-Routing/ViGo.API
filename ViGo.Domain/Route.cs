@@ -10,6 +10,7 @@ namespace ViGo.Domain
         public Route()
         {
             RouteRoutines = new HashSet<RouteRoutine>();
+            CustomerBookings = new HashSet<Booking>();
         }
 
         public override Guid Id { get; set; }
@@ -21,7 +22,8 @@ namespace ViGo.Domain
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
-        //public RouteType RouteType { get; set; } = RouteType.SPECIFIC_ROUTE_SPECIFIC_TIME;
+        public RouteType Type { get; set; } = RouteType.ONE_WAY;
+        public Guid? RoundTripRouteId { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -42,5 +44,10 @@ namespace ViGo.Domain
         //public virtual ICollection<BookingDetail> DriverBookingDetails { get; set; }
         [JsonIgnore]
         public virtual ICollection<RouteRoutine> RouteRoutines { get; set; }
+
+        [JsonIgnore]
+        public virtual Route? RoundTrip { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<Route>? MainTrips { get; set; }
     }
 }

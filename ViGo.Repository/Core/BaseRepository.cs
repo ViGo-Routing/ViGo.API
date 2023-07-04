@@ -141,11 +141,13 @@ namespace ViGo.Repository.Core
         /// <param name="isSoftDelete">Boolean value which will determine whether or not 
         /// the Delete action should be a soft delete or not
         /// </param>
+        /// <param name="cancellationToken">Cancellation Token</param>
         /// <returns>
         /// A task that represents the asynchronous operation
         /// </returns>
         public abstract Task DeleteAsync(TEntity entity,
-            bool isSoftDelete = true);
+            bool isSoftDelete = true,
+            CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Delete the entity entry

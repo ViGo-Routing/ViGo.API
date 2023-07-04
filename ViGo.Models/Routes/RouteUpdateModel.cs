@@ -17,7 +17,7 @@ namespace ViGo.Models.Routes
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RoutineType RoutineType { get; set; }
-        //public RouteType RouteType { get; set; }
+        public RouteType Type { get; set; }
         public StationViewModel StartStation { get; set; }
         public StationViewModel EndStation { get; set; }
 

@@ -57,6 +57,15 @@ namespace ViGo.Services
                 maxLengthErrorMessage: "Tên tuyến đường không được vượt quá 255 kí tự!"
                 );
 
+            if (!Enum.IsDefined(dto.Type))
+            {
+                throw new ApplicationException("Loại tuyến đường không hợp lệ!!");
+            }
+            if (!Enum.IsDefined(dto.RoutineType))
+            {
+                throw new ApplicationException("Loại lịch trình đi không hợp lệ!!");
+            }
+
             if (dto.StartStation == null || dto.EndStation == null)
             {
                 throw new ApplicationException("Tuyến đường chưa được thiết lập điểm bắt đầu và kết thúc!!");
@@ -143,8 +152,30 @@ namespace ViGo.Services
                 Distance = dto.Distance,
                 Duration = dto.Duration,
                 RoutineType = dto.RoutineType,
+                Type = dto.Type,
                 Status = RouteStatus.ACTIVE
             };
+
+            if (dto.Type == RouteType.ROUND_TRIP)
+            {
+                Route roundTripRoute = new Route
+                {
+                    UserId = dto.UserId.Value,
+                    Name = dto.Name,
+                    StartStationId = endStation.Id,
+                    EndStationId = startStation.Id,
+                    Distance = dto.Distance,
+                    Duration = dto.Duration,
+                    RoutineType = dto.RoutineType,
+                    Type = dto.Type,
+                    Status = RouteStatus.ACTIVE
+                };
+                await work.Routes.InsertAsync(roundTripRoute, cancellationToken: cancellationToken);
+
+                route.RoundTripRouteId = roundTripRoute.Id;
+
+            }
+
             await work.Routes.InsertAsync(route, cancellationToken: cancellationToken);
 
             //// Create RouteStations
@@ -376,11 +407,33 @@ namespace ViGo.Services
             // User
             User user = await work.Users.GetAsync(route.UserId, cancellationToken: cancellationToken);
             UserViewModel userViewModel = new UserViewModel(user);
+
+            // Round Trip
+            RouteViewModel? roundTrip = null;
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                //if (route.RoundTripRouteId is null)
+                //{
+                //    throw new ApplicationException("Tuyến đường khứ hồi nhưng thiếu thông tin tuyến đường chiều về!");
+                //}
+
+                if (route.RoundTripRouteId != null)
+                {
+                    Route? roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+                    if (roundTripRoute is null)
+                    {
+                        throw new ApplicationException("Tuyến đường chiều về không tồn tại!!");
+                    }
+
+                    roundTrip = new RouteViewModel(roundTripRoute, endStationDto, startStationDto, userViewModel);
+                }
+            }
             return new RouteViewModel(
                     route,
                     startStationDto,
                     endStationDto,
-                    userViewModel);
+                    userViewModel,
+                    roundTrip);
 
             //RouteViewModel model = new RouteViewModel(route);
             //return model;
@@ -427,7 +480,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     b => ((bookingIds.Contains(b.Id) && b.DriverId.HasValue) // Customer Route and a driver has been assigned
                     /*|| (b.DriverRouteId.HasValue && b.DriverRouteId.Equals(route.Id)*/) // Driver Route
-                    && b.Status != BookingDetailStatus.CANCELLED),
+                    /*&& b.Status != BookingDetailStatus.CANCELLED*/),
                     cancellationToken: cancellationToken);
             if (bookingDetails.Any())
             {
@@ -467,6 +520,15 @@ namespace ViGo.Services
                 route.Duration = updateDto.Duration;
             }
 
+            if (!Enum.IsDefined(route.RoutineType))
+            {
+                throw new ApplicationException("Loại lịch trình đi không hợp lệ!!");
+            }
+            if (!Enum.IsDefined(route.Type))
+            {
+                throw new ApplicationException("Loại tuyến đường không hợp lệ!!");
+            }
+
             //IList<RouteStation> routeStations = new List<RouteStation>();
             //Station? startStation = null, endStation = null;
 
@@ -495,8 +557,8 @@ namespace ViGo.Services
             // Find Start Station existance
             Station startStation = await work.Stations.GetAsync(
                 s => ((s.Longtitude == updateDto.StartStation.Longtitude
-        && s.Latitude == updateDto.StartStation.Latitude)
-        || s.Address.ToLower().Equals(updateDto.StartStation.Address.ToLower()))
+                    && s.Latitude == updateDto.StartStation.Latitude)
+                    || s.Address.ToLower().Equals(updateDto.StartStation.Address.ToLower()))
                 && s.Status == StationStatus.ACTIVE,
                 cancellationToken: cancellationToken);
             if (startStation == null)
@@ -535,8 +597,8 @@ namespace ViGo.Services
             // Find End Station existance
             Station endStation = await work.Stations.GetAsync(
                s => ((s.Longtitude == updateDto.EndStation.Longtitude
-       && s.Latitude == updateDto.EndStation.Latitude)
-       || s.Address.ToLower().Equals(updateDto.EndStation.Address.ToLower()))
+                   && s.Latitude == updateDto.EndStation.Latitude)
+                   || s.Address.ToLower().Equals(updateDto.EndStation.Address.ToLower()))
                && s.Status == StationStatus.ACTIVE,
                cancellationToken: cancellationToken);
             if (endStation == null)
@@ -578,6 +640,81 @@ namespace ViGo.Services
             //}
             //await IsValidRoutines(updateDto.RouteRoutines, true, updateDto.Id);
 
+
+            // RouteType
+            if (route.Type != updateDto.Type)
+            {
+                route.Type = updateDto.Type;
+
+                if (updateDto.Type == RouteType.ONE_WAY)
+                {
+                    // Previous Route Type is ROUND_TRIP
+                    // Delete the round trip one
+                    Guid roundTripRouteId = route.RoundTripRouteId.Value;
+                    Route roundTrip = await work.Routes.GetAsync(roundTripRouteId, cancellationToken: cancellationToken);
+
+                    IEnumerable<RouteRoutine> routines = await work.RouteRoutines.GetAllAsync(
+                        query => query.Where(r => r.RouteId.Equals(roundTripRouteId)),
+                        cancellationToken: cancellationToken);
+
+                    if (routines.Any())
+                    {
+                        foreach (var routine in routines)
+                        {
+                            await work.RouteRoutines.DeleteAsync(routine, 
+                                isSoftDelete: false,
+                                cancellationToken);
+                        }
+                    }
+                    await work.Routes.DeleteAsync(roundTrip,
+                        isSoftDelete: false, 
+                        cancellationToken);
+                } else if (updateDto.Type == RouteType.ROUND_TRIP)
+                {
+                    // Previous Route Type is ONE_WAY
+                    // Generate 1 more route
+                    Route roundTripRoute = new Route
+                    {
+                        UserId = route.UserId,
+                        Name = route.Name,
+                        StartStationId = route.EndStationId,
+                        EndStationId = route.StartStationId,
+                        Distance = route.Distance,
+                        Duration = route.Duration,
+                        RoutineType = route.RoutineType,
+                        Type = route.Type,
+                        Status = RouteStatus.ACTIVE
+                    };
+                    await work.Routes.InsertAsync(roundTripRoute, cancellationToken: cancellationToken);
+
+                    route.RoundTripRouteId = roundTripRoute.Id;
+                }
+            } else
+            {
+                // Same Route
+                if (route.Type == RouteType.ROUND_TRIP)
+                {
+                    if (route.RoundTripRouteId.HasValue)
+                    {
+                        Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
+                        roundTrip.Name = route.Name;
+                        roundTrip.StartStationId = route.EndStationId;
+                        roundTrip.EndStationId = route.StartStationId;
+                        roundTrip.Distance = route.Distance;
+                        roundTrip.Duration = route.Duration;
+                        roundTrip.RoutineType = route.RoutineType;
+                        roundTrip.Status = route.Status;
+                            
+                        await work.Routes.UpdateAsync(roundTrip);
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
+                            "Không thể cập nhật trạng thái tuyến đường này. Vui lòng cập nhật trạng thái tuyến đường chính!");
+                    }
+                }
+            }
             // Update Route
             await work.Routes.UpdateAsync(route);
 
@@ -674,12 +811,31 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
             }
 
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                if (route.RoundTripRouteId.HasValue)
+                {
+                    Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
+                    if (roundTrip.Status != newStatus){
+                        roundTrip.Status = newStatus;
+                    }
+
+                    await work.Routes.UpdateAsync(roundTrip);
+                } else
+                {
+                    throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
+                        "Không thể cập nhật trạng thái tuyến đường này. Vui lòng cập nhật trạng thái tuyến đường chính!");
+                }
+            }
+
             if (route.Status != newStatus)
             {
                 route.Status = newStatus;
-                await work.Routes.UpdateAsync(route);
-                await work.SaveChangesAsync(cancellationToken);
             }
+
+            await work.Routes.UpdateAsync(route);
+            await work.SaveChangesAsync(cancellationToken);
 
             return route;
         }
@@ -750,7 +906,21 @@ namespace ViGo.Services
                 }
             }
 
-            await work.Routes.DeleteAsync(route);
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                if (route.RoundTripRouteId.HasValue)
+                {
+                    Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+                    await work.Routes.DeleteAsync(roundTrip, cancellationToken: cancellationToken);
+
+                } else
+                {
+                    throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
+                        "Không thể xóa tuyến đường này. Vui lòng xóa tuyến đường chính!");
+                }
+            }
+
+            await work.Routes.DeleteAsync(route, cancellationToken: cancellationToken);
 
             await work.SaveChangesAsync(cancellationToken);
 

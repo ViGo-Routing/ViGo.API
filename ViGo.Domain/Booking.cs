@@ -29,7 +29,7 @@ namespace ViGo.Domain
         public bool IsShared { get; set; }
         public double Duration { get; set; }
         public double Distance { get; set; }
-        public BookingType Type { get; set; }
+        //public BookingType Type { get; set; }
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public BookingStatus Status { get; set; }
