@@ -42,7 +42,7 @@ namespace ViGo.Services
                 from routeRoutine in routeRoutines
                 select new RouteRoutineViewModel(routeRoutine);
             models = models.OrderBy(r => r.RoutineDate)
-                .ThenBy(r => r.StartTime);
+                .ThenBy(r => r.PickupTime);
 
             return models.ToPagedEnumerable(
                 pagination.PageNumber, pagination.PageSize, totalRecords, context);
@@ -92,13 +92,13 @@ namespace ViGo.Services
                  {
                      RouteId = model.RouteId,
                      RoutineDate = routine.RoutineDate.ToDateTime(TimeOnly.MinValue),
-                     StartTime = routine.StartTime.ToTimeSpan(),
+                     PickupTime = routine.PickupTime.ToTimeSpan(),
                      Status = RouteRoutineStatus.ACTIVE
                  }).ToList();
             await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
             routeRoutines = routeRoutines.OrderBy(r => r.RoutineDate)
-                .ThenBy(r => r.StartTime).ToList();
+                .ThenBy(r => r.PickupTime).ToList();
 
             return routeRoutines;
         }
@@ -148,7 +148,7 @@ namespace ViGo.Services
                     "Vui lòng dùng chức năng Tạo lịch trình!");
             }
             currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
-                .ThenBy(r => r.StartTime);
+                .ThenBy(r => r.PickupTime);
             //IList<RouteRoutineListItemModel> newRoutines = new List<RouteRoutineListItemModel>();
             IList<Guid> routineToDelete = new List<Guid>();
             foreach (RouteRoutine oldRoutine in currentRoutines)
@@ -185,7 +185,7 @@ namespace ViGo.Services
                      {
                          RouteId = model.RouteId,
                          RoutineDate = routine.RoutineDate.ToDateTime(TimeOnly.MinValue),
-                         StartTime = routine.StartTime.ToTimeSpan(),
+                         PickupTime = routine.PickupTime.ToTimeSpan(),
                          //EndTime = routine.EndTime.ToTimeSpan(),
                          Status = RouteRoutineStatus.ACTIVE
                      }).ToList();
@@ -198,7 +198,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(route.Id)), cancellationToken: cancellationToken))
                     .OrderBy(r => r.RoutineDate)
-                    .ThenBy(r => r.StartTime);
+                    .ThenBy(r => r.PickupTime);
 
             return updatedRouteRoutines;
         }
@@ -208,7 +208,7 @@ namespace ViGo.Services
         private void IsValidRoutine(RouteRoutineListItemModel routine)
         {
                 DateTime startDateTime = DateTimeUtilities
-                .ToDateTime(routine.RoutineDate, routine.StartTime);
+                .ToDateTime(routine.RoutineDate, routine.PickupTime);
                 //DateTime endDateTime = DateTimeUtilities.
                 //    ToDateTime(routine.RoutineDate, routine.StartTime.AddMinutes(30));
 
@@ -217,7 +217,7 @@ namespace ViGo.Services
                     minimum: vnNow,
                     minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
                     $"{routine.RoutineDate.ToShortDateString()}, " +
-                    $"giờ: {routine.StartTime.ToShortTimeString()})"
+                    $"giờ: {routine.PickupTime.ToShortTimeString()})"
                     //maximum: endDateTime,
                     //maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
                     //$"{routine.RoutineDate.ToShortDateString()}, " +
@@ -242,9 +242,9 @@ namespace ViGo.Services
             {
                 routineRanges.Add(new DateTimeRange(
                  DateTimeUtilities
-                 .ToDateTime(routine.RoutineDate, routine.StartTime),
+                 .ToDateTime(routine.RoutineDate, routine.PickupTime),
                      DateTimeUtilities.
-                 ToDateTime(routine.RoutineDate, routine.StartTime.AddMinutes(30))
+                 ToDateTime(routine.RoutineDate, routine.PickupTime.AddMinutes(30))
                  ));
             }
 
@@ -291,9 +291,9 @@ namespace ViGo.Services
                 from routine in currentRouteRoutines
                 select new DateTimeRange(
                     DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.StartTime)),
+                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.PickupTime)),
                     DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.StartTime.Add(TimeSpan.FromMinutes(30))))
+                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.PickupTime.Add(TimeSpan.FromMinutes(30))))
                 );
                 currentRanges = currentRanges.OrderBy(r => r.StartDateTime);
 
