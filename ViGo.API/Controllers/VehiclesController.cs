@@ -36,7 +36,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles = "ADMIN")]
         [HttpGet]
         public async Task<IActionResult> GetAllVehiclesAsync(
             [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
@@ -63,7 +63,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles ="ADMIN")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleByIdAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -97,7 +97,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles ="ADMIN,DRIVER")]
         [HttpGet("User/{userId}")]
         public async Task<IActionResult> GetVehicleByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
@@ -116,7 +116,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles = "ADMIN")]
         [HttpPost]
         public async Task<IActionResult> CreateVehicleAsync([FromBody] VehiclesCreateModel vehicle, CancellationToken cancellationToken)
         {
@@ -139,34 +139,34 @@ namespace ViGo.API.Controllers
             //}
         }
 
-        /// <summary>
-        /// Update information of Vehicle
-        /// </summary>
-        /// <response code="401">Login failed</response>
-        /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
-        /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(VehiclesViewModel), 200)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        //[Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateVehicleAsync(Guid id, [FromBody] VehiclesUpdateModel vehiclesUpdate)
-        {
-            //try
-            //{
-            VehiclesViewModel vehicle = await vehicleServices.UpdateVehicleAsync(id, vehiclesUpdate);
-            return StatusCode(200, vehicle);
-            //}
-            //catch (ApplicationException appEx)
-            //{
-            //    return StatusCode(400, appEx.GeneratorErrorMessage());
-            //}
-            //catch (Exception ex)
-            //{
-            //    return StatusCode(500, ex.GeneratorErrorMessage());
-            //}
-        }
+    //    /// <summary>
+    //    /// Update information of Vehicle
+    //    /// </summary>
+    //    /// <response code="401">Login failed</response>
+    //    /// <response code="400">Some information is invalid</response>
+    //    /// <response code="200">Login successfully</response>
+    //    /// <response code="500">Server error</response>
+    //    [ProducesResponseType(typeof(VehiclesViewModel), 200)]
+    //    [ProducesResponseType(401)]
+    //    [ProducesResponseType(400)]
+    //    [ProducesResponseType(500)]
+    //    //[Authorize]
+    //    [HttpPut("{id}")]
+    //    public async Task<IActionResult> UpdateVehicleAsync(Guid id, [FromBody] VehiclesUpdateModel vehiclesUpdate)
+    //    {
+    //        //try
+    //        //{
+    //        VehiclesViewModel vehicle = await vehicleServices.UpdateVehicleAsync(id, vehiclesUpdate);
+    //        return StatusCode(200, vehicle);
+    //        //}
+    //        //catch (ApplicationException appEx)
+    //        //{
+    //        //    return StatusCode(400, appEx.GeneratorErrorMessage());
+    //        //}
+    //        //catch (Exception ex)
+    //        //{
+    //        //    return StatusCode(500, ex.GeneratorErrorMessage());
+    //        //}
+    //    }
     }
 }

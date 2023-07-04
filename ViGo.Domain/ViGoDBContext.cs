@@ -310,6 +310,12 @@ namespace ViGo.Domain
                     .WithMany(p => p.Routes)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull);
+
+                entity.HasOne(d => d.RoundTrip)
+                    .WithMany(p => p.MainTrips)
+                    .HasForeignKey(d => d.RoundTripRouteId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_Route_RoundTrip");
             });
 
             modelBuilder.Entity<RouteRoutine>(entity =>
