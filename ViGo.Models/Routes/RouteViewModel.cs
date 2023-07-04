@@ -21,12 +21,14 @@ namespace ViGo.Models.Routes
         public double? Distance { get; set; }
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
-        //public RouteType RouteType { get; set; }
+        public RouteType Type { get; set; }
+        public Guid? RoundTripRouteId { get; set; }
         public StationViewModel StartStation { get; set; }
         public StationViewModel EndStation { get; set; }
         //public IList<RouteRoutineViewModel> RouteRoutines { get; set; }
         //public IList<RouteStationViewModel> RouteStations { get; set; }
         public UserViewModel? User { get; set; }
+        public RouteViewModel? RoundTripRoute { get; set; }
 
         //public RouteViewModel(Route route,
         //    StationViewModel startStation,
@@ -62,8 +64,17 @@ namespace ViGo.Models.Routes
             StartStation = startStation;
             EndStation = endStation;
             User = user;
+            Type = route.Type;
             //RouteRoutines = new List<RouteRoutineListItemDto>();
             //RouteStations = new List<RouteStationListItemDto>();
+        }
+
+        public RouteViewModel(Route route, StationViewModel startStation,
+            StationViewModel endStation, UserViewModel? user = null,
+            RouteViewModel? roundTripRoute = null)
+            : this (route, startStation, endStation, user)
+        {
+            RoundTripRoute = roundTripRoute;
         }
     }
 }

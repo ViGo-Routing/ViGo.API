@@ -36,7 +36,7 @@ namespace ViGo.Models.Bookings
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public string VehicleName { get; set; }
-        public BookingType Type { get; set; }
+        //public BookingType Type { get; set; }
         public BookingStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -69,7 +69,7 @@ namespace ViGo.Models.Bookings
             VehicleTypeId = booking.VehicleTypeId;
             VehicleName = vehicleType.Name + " - " +
                 vehicleType.Slot + " chỗ";
-            Type = booking.Type;
+            //Type = booking.Type;
             Status = booking.Status;
             CreatedTime = booking.CreatedTime;
             CreatedBy = booking.CreatedBy;
@@ -88,7 +88,7 @@ namespace ViGo.Models.Bookings
             //Customer = customer;
             ////StartRouteStation = startRouteStation;
             ////EndRouteStation = endRouteStation;
-            CustomerRoute = new RouteViewModel(customerRoute, startRouteStation, endRouteStation);
+            CustomerRoute = new RouteViewModel(customerRoute, startRouteStation, endRouteStation, null, null);
             //StartDate = booking.StartDate;
             //EndDate = booking.EndDate;
             //DaysOfWeek = booking.DaysOfWeek;
