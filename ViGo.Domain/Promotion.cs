@@ -18,7 +18,7 @@ namespace ViGo.Domain
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
         public double DiscountAmount { get; set; }
-        public bool IsPercentage { get; set; }
+        public bool? IsPercentage { get; set; }
         public double? MaxDecrease { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? ExpireTime { get; set; }
