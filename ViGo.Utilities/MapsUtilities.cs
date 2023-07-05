@@ -38,7 +38,7 @@ namespace ViGo.Utilities
         {
             return new PointF(
                 Convert.ToSingle(googleMapPoint.Latitude),
-                Convert.ToSingle(googleMapPoint.Longtitude));
+                Convert.ToSingle(googleMapPoint.Longitude));
         }
     }
 
