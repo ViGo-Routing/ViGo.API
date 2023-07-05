@@ -41,7 +41,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRouteStation(Guid routeId,
+        public async Task<IActionResult> GetRouteRoutines(Guid routeId,
             [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
@@ -55,6 +55,30 @@ namespace ViGo.API.Controllers
                 pagination, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get information for a RouteRoutine
+        /// </summary>
+        /// <returns>
+        /// Routine information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get routine's information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("{routineId}")]
+        [Authorize]
+        [ProducesResponseType(typeof(RouteRoutineViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRoutine(Guid routineId,
+            CancellationToken cancellationToken)
+        {
+            RouteRoutineViewModel routine = await routeRoutineServices.GetRouteRoutineAsync(routineId,
+                cancellationToken);
+            return StatusCode(200, routine);
         }
 
         /// <summary>
@@ -74,13 +98,13 @@ namespace ViGo.API.Controllers
         /// <response code="200">Create Routines successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
         [ProducesResponseType(typeof(IEnumerable<RouteRoutine>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> CreateRouteRoutines(RouteRoutineCreateUpdateModel model,
+        public async Task<IActionResult> CreateRouteRoutines(RouteRoutineCreateModel model,
             CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routines = await routeRoutineServices.CreateRouteRoutinesAsync(model, cancellationToken);
@@ -104,13 +128,13 @@ namespace ViGo.API.Controllers
         /// <response code="200">Route Routines have been updated successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("Route/{routeId}")]
-        [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
         [ProducesResponseType(typeof(IEnumerable<RouteRoutine>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRouteRoutines(Guid routeId, RouteRoutineCreateUpdateModel model,
+        public async Task<IActionResult> UpdateRouteRoutines(Guid routeId, RouteRoutineUpdateModel model,
             CancellationToken cancellationToken)
         {
             if (!routeId.Equals(model.RouteId))
@@ -120,6 +144,41 @@ namespace ViGo.API.Controllers
 
             IEnumerable<RouteRoutine> updatedRoutines = await routeRoutineServices.UpdateRouteRoutinesAsync(model, cancellationToken);
             return StatusCode(200, updatedRoutines);
+        }
+
+        /// <summary>
+        /// Update information for a single Routine
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <returns>
+        /// The updated routine information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Routine has been updated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("{routineId}")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
+        [ProducesResponseType(typeof(RouteRoutine), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateRouteRoutine(Guid routineId, 
+            RouteRoutineSingleUpdateModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!routineId.Equals(model.Id))
+            {
+                throw new ApplicationException("Thông tin lịch trình không trùng khớp! Vui lòng kiểm tra ID của lịch trình");
+            }
+
+            RouteRoutine routeRoutine = await routeRoutineServices.UpdateRouteRoutineAsync(model,
+                cancellationToken);
+
+            return StatusCode(200, routeRoutine);
         }
     }
 }
