@@ -48,6 +48,20 @@ namespace ViGo.Services
                 pagination.PageNumber, pagination.PageSize, totalRecords, context);
         }
 
+        public async Task<RouteRoutineViewModel> GetRouteRoutineAsync(Guid routineId, CancellationToken cancellationToken)
+        {
+            RouteRoutine? routeRoutine = await work.RouteRoutines.GetAsync(routineId,
+                cancellationToken: cancellationToken);
+
+            if (routeRoutine is null)
+            {
+                throw new ApplicationException("Thông tin lịch trình không tồn tại!!");
+            }
+
+            RouteRoutineViewModel routineViewModel = new RouteRoutineViewModel(routeRoutine);
+            return routineViewModel;
+        }
+
         public async Task<IEnumerable<RouteRoutine>> CreateRouteRoutinesAsync(RouteRoutineCreateModel model,
             CancellationToken cancellationToken)
         {

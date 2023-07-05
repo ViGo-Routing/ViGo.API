@@ -41,7 +41,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GetRouteStation(Guid routeId,
+        public async Task<IActionResult> GetRouteRoutines(Guid routeId,
             [FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
@@ -55,6 +55,30 @@ namespace ViGo.API.Controllers
                 pagination, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get information for a RouteRoutine
+        /// </summary>
+        /// <returns>
+        /// Routine information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get routine's information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("{routineId}")]
+        [Authorize]
+        [ProducesResponseType(typeof(RouteRoutineViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> GetRoutine(Guid routineId,
+            CancellationToken cancellationToken)
+        {
+            RouteRoutineViewModel routine = await routeRoutineServices.GetRouteRoutineAsync(routineId,
+                cancellationToken);
+            return StatusCode(200, routine);
         }
 
         /// <summary>
