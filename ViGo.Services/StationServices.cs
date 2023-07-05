@@ -88,13 +88,13 @@ namespace ViGo.Services
 
             // Check for longtitude and latitude
             if (model.Type == StationType.OTHER &&
-                !MapsUtilities.IsInRegion(new PointF((float)model.Latitude, (float)model.Longtitude)))
+                !MapsUtilities.IsInRegion(new PointF((float)model.Latitude, (float)model.Longitude)))
             {
                 throw new ApplicationException("Hiện tại ViGo chỉ hỗ trợ trong khu vực TP.HCM và TP.Thủ Đức!");
             }
 
             Station checkStation = await work.Stations.GetAsync(
-                s => ((s.Longtitude == model.Longtitude
+                s => ((s.Longitude == model.Longitude
                        && s.Latitude == model.Latitude)
                        || s.Address.ToLower().Equals(model.Address.ToLower()))
                     && s.Status == StationStatus.ACTIVE,
@@ -109,7 +109,7 @@ namespace ViGo.Services
             Station station = new Station()
             {
                 Latitude = model.Latitude,
-                Longtitude = model.Longtitude,
+                Longitude = model.Longitude,
                 Name = model.Name,
                 Address = model.Address,
                 Type = model.Type,
@@ -216,17 +216,17 @@ namespace ViGo.Services
             }
 
             // Check for longtitude and latitude
-            if (model.Longtitude.HasValue && model.Latitude.HasValue)
+            if (model.Longitude.HasValue && model.Latitude.HasValue)
             {
                 if (((model.Type.HasValue && model.Type == StationType.OTHER)
                     || (!model.Type.HasValue && station.Type == StationType.OTHER)) &&
-                !MapsUtilities.IsInRegion(new PointF((float)model.Latitude, (float)model.Longtitude)))
+                !MapsUtilities.IsInRegion(new PointF((float)model.Latitude, (float)model.Longitude)))
                 {
                     throw new ApplicationException("Hiện tại ViGo chỉ hỗ trợ trong khu vực TP.HCM và TP.Thủ Đức!");
                 }
 
                 Station checkStation = await work.Stations.GetAsync(
-                s => ((s.Longtitude == model.Longtitude
+                s => ((s.Longitude == model.Longitude
                        && s.Latitude == model.Latitude)
                        || (model.Address != null && s.Address.ToLower().Equals(model.Address.ToLower())))
                     && s.Status == StationStatus.ACTIVE,
@@ -238,11 +238,11 @@ namespace ViGo.Services
                         "đã tồn tại trong hệ thống!!");
                 }
 
-                station.Longtitude = model.Longtitude.Value;
+                station.Longitude = model.Longitude.Value;
                 station.Latitude = model.Latitude.Value;
             }
-            else if ((model.Longtitude.HasValue && !model.Latitude.HasValue)
-                || (!model.Longtitude.HasValue && model.Latitude.HasValue))
+            else if ((model.Longitude.HasValue && !model.Latitude.HasValue)
+                || (!model.Longitude.HasValue && model.Latitude.HasValue))
             {
                 throw new ApplicationException("Thiếu thông tin về tọa độ điểm di chuyển!!");
             }

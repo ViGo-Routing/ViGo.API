@@ -103,7 +103,7 @@ namespace ViGo.Services
 
             // Find Start Station existance
             Station? startStation = await work.Stations.GetAsync(
-             s => ((s.Longtitude == dto.StartStation.Longtitude
+             s => ((s.Longitude == dto.StartStation.Longitude
              && s.Latitude == dto.StartStation.Latitude)
              || s.Address.ToLower().Equals(dto.StartStation.Address.ToLower()))
              && s.Status == StationStatus.ACTIVE,
@@ -112,7 +112,7 @@ namespace ViGo.Services
             {
                 startStation = new Station
                 {
-                    Longtitude = dto.StartStation.Longtitude,
+                    Longitude = dto.StartStation.Longitude,
                     Latitude = dto.StartStation.Latitude,
                     Name = dto.StartStation.Name,
                     Address = dto.StartStation.Address,
@@ -124,7 +124,7 @@ namespace ViGo.Services
 
             // Find End Station existance
             Station? endStation = await work.Stations.GetAsync(
-                s => ((s.Longtitude == dto.EndStation.Longtitude
+                s => ((s.Longitude == dto.EndStation.Longitude
                 && s.Latitude == dto.EndStation.Latitude)
                 || s.Address.ToLower().Equals(dto.EndStation.Address.ToLower()))
                 && s.Status == StationStatus.ACTIVE,
@@ -133,7 +133,7 @@ namespace ViGo.Services
             {
                 endStation = new Station
                 {
-                    Longtitude = dto.EndStation.Longtitude,
+                    Longitude = dto.EndStation.Longitude,
                     Latitude = dto.EndStation.Latitude,
                     Name = dto.EndStation.Name,
                     Address = dto.EndStation.Address,
@@ -576,7 +576,7 @@ namespace ViGo.Services
 
             // Find Start Station existance
             Station startStation = await work.Stations.GetAsync(
-                s => ((s.Longtitude == updateDto.StartStation.Longtitude
+                s => ((s.Longitude == updateDto.StartStation.Longitude
                     && s.Latitude == updateDto.StartStation.Latitude)
                     || s.Address.ToLower().Equals(updateDto.StartStation.Address.ToLower()))
                 && s.Status == StationStatus.ACTIVE,
@@ -585,7 +585,7 @@ namespace ViGo.Services
             {
                 startStation = new Station
                 {
-                    Longtitude = updateDto.StartStation.Longtitude,
+                    Longitude = updateDto.StartStation.Longitude,
                     Latitude = updateDto.StartStation.Latitude,
                     Name = updateDto.StartStation.Name,
                     Address = updateDto.StartStation.Address,
@@ -616,7 +616,7 @@ namespace ViGo.Services
 
             // Find End Station existance
             Station endStation = await work.Stations.GetAsync(
-               s => ((s.Longtitude == updateDto.EndStation.Longtitude
+               s => ((s.Longitude == updateDto.EndStation.Longitude
                    && s.Latitude == updateDto.EndStation.Latitude)
                    || s.Address.ToLower().Equals(updateDto.EndStation.Address.ToLower()))
                && s.Status == StationStatus.ACTIVE,
@@ -625,7 +625,7 @@ namespace ViGo.Services
             {
                 endStation = new Station
                 {
-                    Longtitude = updateDto.EndStation.Longtitude,
+                    Longitude = updateDto.EndStation.Longitude,
                     Latitude = updateDto.EndStation.Latitude,
                     Name = updateDto.EndStation.Name,
                     Address = updateDto.EndStation.Address,

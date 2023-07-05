@@ -516,12 +516,12 @@ namespace ViGo.Services
                             StartLocation = new GoogleMapPoint
                             {
                                 Latitude = startStation.Latitude,
-                                Longtitude = startStation.Longtitude
+                                Longitude = startStation.Longitude
                             },
                             EndLocation = new GoogleMapPoint
                             {
                                 Latitude = endStation.Latitude,
-                                Longtitude = endStation.Longtitude
+                                Longitude = endStation.Longitude
                             }
                         };
 
@@ -663,12 +663,12 @@ namespace ViGo.Services
                         StartLocation = new GoogleMapPoint
                         {
                             Latitude = startStation.Latitude,
-                            Longtitude = startStation.Longtitude
+                            Longitude = startStation.Longitude
                         },
                         EndLocation = new GoogleMapPoint
                         {
                             Latitude = endStation.Latitude,
-                            Longtitude = endStation.Longtitude
+                            Longitude = endStation.Longitude
                         }
                     };
 
@@ -758,12 +758,12 @@ namespace ViGo.Services
                                                         StartLocation = new Utilities.Google.GoogleMapPoint()
                                                         {
                                                             Latitude = startStation.Latitude,
-                                                            Longtitude = startStation.Longtitude
+                                                            Longitude = startStation.Longitude
                                                         },
                                                         EndLocation = new Utilities.Google.GoogleMapPoint()
                                                         {
                                                             Latitude = endStation.Latitude,
-                                                            Longtitude = endStation.Longtitude
+                                                            Longitude = endStation.Longitude
                                                         }
                                                     };
 
