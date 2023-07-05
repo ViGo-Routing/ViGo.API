@@ -126,6 +126,19 @@ namespace ViGo.API
                                 context.Response.Headers.Add("Token-Expired", "true");
                             }
                             return Task.CompletedTask;
+                        },
+
+                        OnMessageReceived = context =>
+                        {
+                            var accessToken = context.Request.Query["access_token"];
+
+                            var path = context.HttpContext.Request.Path;
+                            if (!string.IsNullOrEmpty(accessToken) &&
+                                path.StartsWithSegments("/vigoGpsTrackingHub"))
+                            {
+                                context.Token = accessToken;
+                            }
+                            return Task.CompletedTask;
                         }
                     };
                 });
@@ -160,8 +173,10 @@ namespace ViGo.API
             builder.Services.AddCors(c =>
             {
                 c.AddPolicy("AllowAll", options =>
-                    options.AllowAnyOrigin()
-                    .AllowAnyHeader().AllowAnyMethod());
+                    options
+                    .AllowAnyHeader().AllowAnyMethod()
+                    .SetIsOriginAllowed(host => true)
+                    .AllowCredentials());
             });
 
             var app = builder.Build();
@@ -187,6 +202,7 @@ namespace ViGo.API
             app.MapControllers();
 
             app.MapHub<SignalRHub>("vigoHub");
+            app.MapHub<GpsTrackingSystem>("vigoGpsTrackingHub");
 
             app.Run();
         }

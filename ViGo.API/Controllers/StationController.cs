@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Models.Bookings;
+using ViGo.Models.GoogleMaps;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Repository.Core;

@@ -7,9 +7,9 @@ namespace ViGo.Domain
 {
     public partial class ViGoDBContext : DbContext
     {
-        public ViGoDBContext()
-        {
-        }
+        //public ViGoDBContext()
+        //{
+        //}
 
         public ViGoDBContext(DbContextOptions<ViGoDBContext> options)
             : base(options)

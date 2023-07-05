@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Models.GoogleMaps;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.Utilities.Google
@@ -50,14 +51,5 @@ namespace ViGo.Utilities.Google
         }
     }
      
-    public class GoogleMapPoint
-    {
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-
-        public override string ToString()
-        {
-            return Latitude + "%2C" + Longitude;
-        }
-    }
+    
 }

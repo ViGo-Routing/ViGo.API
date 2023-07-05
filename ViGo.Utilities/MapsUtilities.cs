@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Models.GoogleMaps;
 using ViGo.Utilities.Data;
 using ViGo.Utilities.Google;
 
