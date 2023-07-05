@@ -322,12 +322,24 @@ namespace ViGo.Services
                     && r.RoutineDate >= model.StartDate
                     && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken);
 
+            if (!routeRoutines.Any())
+            {
+                throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
+                    "của chuyến đi đã được thiết lập!!");
+            }
             if (roundTrip != null)
             {
-                routeRoutines = routeRoutines.Concat(await work.RouteRoutines.GetAllAsync(
+                IEnumerable<RouteRoutine> roundTripRoutines = await work.RouteRoutines.GetAllAsync(
                     query => query.Where(r => r.RouteId.Equals(roundTrip.Id)
                     && r.RoutineDate >= model.StartDate
-                    && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken));
+                    && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken);
+
+                if (!roundTripRoutines.Any())
+                {
+                    throw new ApplicationException("Không có lịch trình nào của chuyến về thích hợp với thời gian " +
+                    "của chuyến đi đã được thiết lập!!");
+                }
+                routeRoutines = routeRoutines.Concat(roundTripRoutines);
             }
 
             int bookingDetailCount = routeRoutines.Count();
