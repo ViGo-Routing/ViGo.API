@@ -35,7 +35,7 @@ namespace ViGo.API.SignalR
         [Authorize(Roles = "DRIVER")]
         public async Task SendLocation(Guid tripId, GoogleMapPoint googleMapPoint)
         {
-            _logger.LogInformation("Location received: Lat: {0}, Long: {1}", googleMapPoint.Latitude, googleMapPoint.Longtitude);
+            _logger.LogInformation("Location received: Lat: {0}, Long: {1}", googleMapPoint.Latitude, googleMapPoint.Longitude);
             await _hubContext.Clients.Group(tripId.ToString())
                 .SendAsync("locationTracking", 
                 JsonConvert.SerializeObject(googleMapPoint));

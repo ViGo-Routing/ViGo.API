@@ -11,12 +11,12 @@ namespace ViGo.Models.GoogleMaps
     {
         [JsonProperty("latitude")]
         public double Latitude { get; set; }
-        [JsonProperty("longtitude")]
-        public double Longtitude { get; set; }
+        [JsonProperty("longitude")]
+        public double Longitude { get; set; }
 
         public override string ToString()
         {
-            return Latitude + "%2C" + Longtitude;
+            return Latitude + "%2C" + Longitude;
         }
     }
 }
