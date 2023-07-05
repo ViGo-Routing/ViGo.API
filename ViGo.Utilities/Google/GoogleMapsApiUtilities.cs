@@ -53,11 +53,11 @@ namespace ViGo.Utilities.Google
     public class GoogleMapPoint
     {
         public double Latitude { get; set; }
-        public double Longtitude { get; set; }
+        public double Longitude { get; set; }
 
         public override string ToString()
         {
-            return Latitude + "%2C" + Longtitude;
+            return Latitude + "%2C" + Longitude;
         }
     }
 }
