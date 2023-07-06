@@ -313,7 +313,7 @@ namespace ViGo.Services
 
                     roundTripRoutine = await work.RouteRoutines
                         .GetAsync(r => r.RouteId.Equals(roundTripRoute.Id)
-                            && r.RoutineDate.Equals(routeRoutine.RoutineDate),
+                            && r.RoutineDate.Date.Equals(routeRoutine.RoutineDate.Date),
                             cancellationToken: cancellationToken);
                     
                 } else
@@ -326,13 +326,16 @@ namespace ViGo.Services
 
                     roundTripRoutine = await work.RouteRoutines
                         .GetAsync(r => r.RouteId.Equals(mainRoute.Id)
-                            && r.RoutineDate.Equals(routeRoutine.RoutineDate),
+                            && r.RoutineDate.Date.Equals(routeRoutine.RoutineDate.Date),
                             cancellationToken: cancellationToken);
 
                 }
 
-                await work.RouteRoutines.DeleteAsync(roundTripRoutine,
+                if (roundTripRoutine != null)
+                {
+                    await work.RouteRoutines.DeleteAsync(roundTripRoutine,
                         cancellationToken: cancellationToken);
+                }
             }
 
             await work.SaveChangesAsync(cancellationToken);
