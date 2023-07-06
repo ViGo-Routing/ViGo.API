@@ -88,6 +88,7 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get Routes information for the a specific user
         /// </summary>
+        /// <remarks>Only ADMIN</remarks>
         /// <returns>
         /// List of the user's saved routes
         /// </returns>
