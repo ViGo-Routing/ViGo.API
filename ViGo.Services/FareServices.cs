@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Bson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.FarePolicies;
 using ViGo.Models.Fares;
+using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
+using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 
@@ -257,8 +262,272 @@ namespace ViGo.Services
             return responseModel;
         }
 
+        public async Task<FareViewModel> CreateFareAsync(FareCreateModel model,
+            CancellationToken cancellationToken)
+        {
+            if (model.FarePolicies is null || !model.FarePolicies.Any())
+            {
+                throw new ApplicationException("Chính sách giá không có giá trị nào!!");
+            }
+
+            VehicleType? vehicleType = await work.VehicleTypes.GetAsync(model.VehicleTypeId,
+                cancellationToken: cancellationToken);
+            if (vehicleType is null)
+            {
+                throw new ApplicationException("Loại phương tiện không tồn tại!!!");
+            }
+
+            Fare? checkFare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(model.VehicleTypeId),
+                cancellationToken: cancellationToken);
+            if (checkFare != null)
+            {
+                throw new ApplicationException("Loại phương tiện này đã được thiết lập giá!");
+            }
+
+            if (model.BasePrice <= 0)
+            {
+                throw new ApplicationException("Giá tiền cơ bản phải lớn hơn 0 (đơn vị VND)!");
+            }
+            if (model.BaseDistance <= 0)
+            {
+                throw new ApplicationException("Khoảng cách cơ bản phải lớn 0 (đơn vị km)!");
+            }
+
+            if (model.FarePolicies.Count == 0)
+            {
+                throw new ApplicationException("Chính sách giá chưa được thiết lập!!");
+            }
+
+            Fare fare = new Fare
+            {
+                VehicleTypeId = model.VehicleTypeId,
+                BasePrice = model.BasePrice,
+                BaseDistance = model.BaseDistance
+            };
+
+            await work.Fares.InsertAsync(fare, cancellationToken: cancellationToken);
+
+            IList<FarePolicy> farePolicies = new List<FarePolicy>();
+
+            foreach (FarePolicyListItemModel policy in model.FarePolicies)
+            {
+                IsValidPolicy(policy);
+                farePolicies.Add(new FarePolicy
+                {
+                    FareId = fare.Id,
+                    MinDistance = policy.MinDistance,
+                    MaxDistance = policy.MaxDistance,
+                    PricePerKm = policy.PricePerKm
+                });
+            }
+            IsValidPolicies(model.FarePolicies, fare, 
+                cancellationToken: cancellationToken);
+
+            await work.FarePolicies.InsertAsync(farePolicies,
+                cancellationToken: cancellationToken);
+
+            await work.SaveChangesAsync(cancellationToken);
+
+            IEnumerable<FarePolicyViewModel> farePolicyViewModels =
+                from policy in farePolicies
+                select new FarePolicyViewModel(policy);
+            FareViewModel fareViewModel = new FareViewModel(fare,
+                new VehicleTypeViewModel(vehicleType), 
+                farePolicyViewModels.ToList());
+            return fareViewModel;
+        }
+
+        public async Task<IPagedEnumerable<FareViewModel>> GetFaresAsync(PaginationParameter pagination,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<Fare> fares = await work.Fares.GetAllAsync(cancellationToken: cancellationToken);
+
+            int total = fares.Count();
+
+            fares = fares.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
+
+            IEnumerable<Guid> fareIds = fares.Select(f => f.Id);
+            IEnumerable<Guid> vehicleTypeIds = fares.Select(f => f.VehicleTypeId).Distinct();
+
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(
+                query => query.Where(v => vehicleTypeIds.Contains(v.Id)), cancellationToken: cancellationToken);
+            IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
+                query => query.Where(p => fareIds.Contains(p.FareId)), cancellationToken: cancellationToken);
+
+            IList<FareViewModel> fareModels = new List<FareViewModel>();
+            foreach (Fare fare in fares)
+            {
+                VehicleType vehicleType = vehicleTypes.SingleOrDefault(v => v.Id.Equals(fare.VehicleTypeId));
+                IEnumerable<FarePolicy> policies = farePolicies.Where(p => p.FareId.Equals(fare.Id));
+                IEnumerable<FarePolicyViewModel> policyViewModels = from policy in policies
+                                                                    select new FarePolicyViewModel(policy);
+                fareModels.Add(new FareViewModel(fare, new VehicleTypeViewModel(vehicleType), policyViewModels));
+            }
+
+            return fareModels.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize, total, context);
+        }
+
+        public async Task<FareViewModel> GetFareAsync(Guid fareId, CancellationToken cancellationToken)
+        {
+            Fare? fare = await work.Fares.GetAsync(fareId, cancellationToken: cancellationToken);
+            if (fare is null)
+            {
+                throw new ApplicationException("Cấu hình giá không tồn tại!");
+            }
+
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(fare.VehicleTypeId, 
+                cancellationToken: cancellationToken);
+
+            IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
+                query => query.Where(p => p.FareId.Equals(fare.Id)), cancellationToken: cancellationToken);
+            IEnumerable<FarePolicyViewModel> policyViewModels = from policy in farePolicies
+                                                                select new FarePolicyViewModel(policy);
+
+            return new FareViewModel(fare, new VehicleTypeViewModel(vehicleType), policyViewModels);
+        }
+
+        public async Task<FareViewModel> GetVehicleTypeFareAsync(Guid vehicleTypeId, CancellationToken cancellationToken)
+        {
+            Fare? fare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(vehicleTypeId), 
+                cancellationToken: cancellationToken);
+            if (fare is null)
+            {
+                throw new ApplicationException("Loại phương tiện chưa được thiết lập giá!");
+            }
+
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(fare.VehicleTypeId,
+                cancellationToken: cancellationToken);
+
+            IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
+                query => query.Where(p => p.FareId.Equals(fare.Id)), cancellationToken: cancellationToken);
+            IEnumerable<FarePolicyViewModel> policyViewModels = from policy in farePolicies
+                                                                select new FarePolicyViewModel(policy);
+
+            return new FareViewModel(fare, new VehicleTypeViewModel(vehicleType), policyViewModels);
+        }
+
+        public async Task<FareViewModel> UpdateFareAsync(FareUpdateModel model,
+            CancellationToken cancellationToken)
+        {
+            Fare? fare = await work.Fares.GetAsync(model.Id,
+                cancellationToken: cancellationToken);
+            if (fare is null)
+            {
+                throw new ApplicationException("Cấu hình giá không tồn tại!");
+            }
+
+            IEnumerable<FarePolicy> currentPolicies = await work.FarePolicies
+                    .GetAllAsync(query => query.Where(p => p.FareId.Equals(fare.Id)),
+                    cancellationToken: cancellationToken);
+
+            if (model.BasePrice.HasValue &&
+                model.BasePrice.Value != fare.BasePrice)
+            {
+                if (model.BasePrice <= 0)
+                {
+                    throw new ApplicationException("Giá tiền cơ bản phải lớn hơn 0 (đơn vị VND)!");
+                }
+
+                fare.BasePrice = model.BasePrice.Value;
+            }
+
+            if (model.BaseDistance.HasValue &&
+                model.BaseDistance.Value != fare.BaseDistance)
+            {
+                if (model.FarePolicies is null || model.FarePolicies.Count == 0)
+                {
+                    throw new ApplicationException("Cập nhật khoảng cách cơ bản yêu cầu phải kèm theo " +
+                        "danh sách các chính sách giá phù hợp!");
+                }
+
+                if (model.BaseDistance <= 0)
+                {
+                    throw new ApplicationException("Khoảng cách cơ bản phải lớn 0 (đơn vị km)!");
+                }
+
+                fare.BaseDistance = model.BaseDistance.Value;
+            }
+
+            if (model.FarePolicies != null && model.FarePolicies.Count > 0)
+            {
+                IList<FarePolicy> farePolicies = new List<FarePolicy>();
+
+                foreach (FarePolicyListItemModel policy in model.FarePolicies)
+                {
+                    IsValidPolicy(policy);
+                    farePolicies.Add(new FarePolicy
+                    {
+                        FareId = fare.Id,
+                        MinDistance = policy.MinDistance,
+                        MaxDistance = policy.MaxDistance,
+                        PricePerKm = policy.PricePerKm
+                    });
+                }
+                IsValidPolicies(model.FarePolicies, fare,
+                    cancellationToken: cancellationToken);
+
+                // Delete current policies to insert the new ones
+                foreach (FarePolicy currentPolicy in currentPolicies)
+                {
+                    await work.FarePolicies.DeleteAsync(currentPolicy, 
+                        isSoftDelete: false,
+                        cancellationToken: cancellationToken);
+                }
+
+                // Insert the new ones
+                await work.FarePolicies.InsertAsync(farePolicies,
+                    cancellationToken: cancellationToken);
+
+                currentPolicies = farePolicies;
+            }
+
+            // Update fare
+            await work.Fares.UpdateAsync(fare);
+
+            await work.SaveChangesAsync(cancellationToken);
+
+            IEnumerable<FarePolicyViewModel> farePolicyViewModels =
+                from policy in currentPolicies
+                select new FarePolicyViewModel(policy);
+
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(fare.VehicleTypeId,
+                cancellationToken: cancellationToken);
+
+            FareViewModel fareViewModel = new FareViewModel(fare,
+                new VehicleTypeViewModel(vehicleType),
+                farePolicyViewModels.ToList());
+
+            return fareViewModel;
+        }
+
+        public async Task<Fare> DeleteFareAsync(Guid fareId, CancellationToken cancellationToken)
+        {
+            Fare? fare = await work.Fares.GetAsync(fareId,
+                cancellationToken: cancellationToken);
+            if (fare is null)
+            {
+                throw new ApplicationException("Cấu hình giá không tồn tại!");
+            }
+
+            IEnumerable<FarePolicy> currentPolicies = await work.FarePolicies
+                    .GetAllAsync(query => query.Where(p => p.FareId.Equals(fare.Id)),
+                    cancellationToken: cancellationToken);
+
+            foreach (FarePolicy policy in currentPolicies)
+            {
+                await work.FarePolicies.DeleteAsync(policy, cancellationToken: cancellationToken);
+            }
+            await work.Fares.DeleteAsync(fare, cancellationToken: cancellationToken);
+
+            await work.SaveChangesAsync(cancellationToken);
+
+            return fare;
+        }
+
         #region Private Members
-        private static int PolicyDistanceFindIndex(double distance,
+        private int PolicyDistanceFindIndex(double distance,
             double baseDistance,
             IList<FarePolicyForCalculationModel> farePolicies)
         {
@@ -318,8 +587,116 @@ namespace ViGo.Services
                 || timeTocheck.IsBetween(NextDayMorningBoundary, NightTripMaxBoundary);
         }
         #endregion
+
+        #region FarePolicy
+        private void IsValidPolicy(FarePolicyListItemModel farePolicy)
+        {
+            if (farePolicy.MinDistance <= 0)
+            {
+                throw new ApplicationException("Khoảng cách tối thiểu phải lớn hơn 0!");
+            }
+            if (farePolicy.MaxDistance.HasValue 
+                && farePolicy.MaxDistance.Value <= 0)
+            {
+                throw new ApplicationException("Khoảng cách tối đa phải lớn hơn 0!");
+            }
+            if (farePolicy.PricePerKm <= 1000)
+            {
+                throw new ApplicationException("Giá tiền mỗi km phải lớn hơn 1.000 VND!");
+            }
+
+            if (farePolicy.MaxDistance.HasValue)
+            {
+                if (farePolicy.MinDistance > farePolicy.MaxDistance.Value)
+                {
+                    (farePolicy.MinDistance, farePolicy.MaxDistance) =
+                        (farePolicy.MaxDistance.Value, farePolicy.MinDistance);
+                }
+            }
+            
+        }
+
+        private void IsValidPolicies(IEnumerable<FarePolicyListItemModel> farePolicies,
+            Fare fare, bool isUpdate = true, 
+            CancellationToken cancellationToken = default)
+        {
+            if (!farePolicies.Any())
+            {
+                throw new ApplicationException("Không có chính sách giá nào được thiết lập!!");
+            }
+
+            if (fare is null)
+            {
+                throw new ApplicationException("Thiếu thông tin giá chính!!");
+            }
+
+            farePolicies = farePolicies.OrderBy(f => f.MinDistance);
+            FarePolicyListItemModel minPolicy = farePolicies.FirstOrDefault();
+            if (fare.BaseDistance != minPolicy.MinDistance)
+            {
+                throw new ApplicationException($"Chính sách giá không phù hợp! " +
+                    $"Chính sách giá có khoảng cách tối thiểu nhỏ nhất là {minPolicy.MinDistance} km, trong khi " +
+                    $"khoảng cách cơ bản là {fare.BaseDistance} km (hai giá trị này phải giống nhau)");
+            }
+
+            IEnumerable<FarePolicyListItemModel> maxPolicies = farePolicies.Where(f => f.MaxDistance is null);
+            if (!maxPolicies.Any())
+            {
+                throw new ApplicationException("Chính sách giá không phù hợp! Phải có một chính sách " +
+                    "với khoảng cách tối đa là null (không được cấu hình)!");
+            }
+            if (maxPolicies.Count() > 1)
+            {
+                throw new ApplicationException("Chính sách giá không phù hợp! Chỉ được có một chính sách " +
+                        "với khoảng cách tối đa là null (không được cấu hình)!");
+            }
+
+            IList<FareDistanceRange> fareDistanceRanges = (from policy in farePolicies
+                                                           select new FareDistanceRange(policy.MinDistance, policy.MaxDistance))
+                                                          .ToList();
+
+            if (fareDistanceRanges[fareDistanceRanges.Count - 1].MaxDistance.HasValue)
+            {
+                throw new ApplicationException("Chính sách giá không phù hợp! Chính sách có khoảng cách tối thiểu lớn nhất " +
+                    "phải có khoảng cách tối đa là null (không được cấu hình)!");
+            }
+            for (int i = 0; i < fareDistanceRanges.Count - 1; i++)
+            {
+                FareDistanceRange current = fareDistanceRanges[i];
+                FareDistanceRange next = fareDistanceRanges[i + 1];
+                
+                //if (!current.MaxDistance.HasValue)
+                //{
+                //    throw new ApplicationException("Chính sách giá không phù hợp! Chỉ được có một chính sách " +
+                //        "với khoảng cách tối đa là null (không được cấu hình)!");
+                //}
+                //if (!next.MaxDistance.HasValue)
+                //{
+                //    throw new ApplicationException("Chính sách giá không phù hợp! Chỉ được có một chính sách " +
+                //        "với khoảng cách tối đa là null (không được cấu hình)!");
+                //}
+                if (current.MaxDistance.Value != next.MinDistance)
+                {
+                    throw new ApplicationException("Chính sách giá không phù hợp!");
+                }
+
+                current.IsOverlap(next,
+                    $"Hai chính sách giá bị trùng lặp nhau! " +
+                    $"Lịch trình 1: " +
+                        (current.MaxDistance.HasValue ? 
+                            $"từ {current.MinDistance} km đến {current.MaxDistance} km." 
+                            : $"từ {current.MinDistance} km trở lên.") + 
+                    $"\nLịch trình 2: " + 
+                        (next.MaxDistance.HasValue ?
+                            $"từ {next.MinDistance} km đến {next.MaxDistance} km."
+                            : $"từ {next.MinDistance} km trờ lên."));
+
+            }
+        }
         #endregion
-        
+
+        #endregion
+
         //public async Task<double> TestCalculateTripFare(double distance)
         //{
         //    Guid vehicleTypeGuid = new Guid("2788F072-56CD-4FA6-A51A-79E6F473BF9F");
