@@ -933,12 +933,20 @@ namespace ViGo.Services
             //            cancellationToken: cancellationToken);
             //    }
             //}
+            IEnumerable<RouteRoutine> routines = await work.RouteRoutines.GetAllAsync(
+                query => query.Where(r => r.RouteId.Equals(route.Id)),
+                cancellationToken: cancellationToken);
 
             if (route.Type == RouteType.ROUND_TRIP)
             {
                 if (route.RoundTripRouteId.HasValue)
                 {
                     Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
+                    routines = routines.Concat(await work.RouteRoutines.GetAllAsync(
+                        query => query.Where(r => r.RouteId.Equals(roundTrip.Id)),
+                        cancellationToken: cancellationToken));
+
                     await work.Routes.DeleteAsync(roundTrip, cancellationToken: cancellationToken);
 
                 } else
@@ -946,6 +954,11 @@ namespace ViGo.Services
                     throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
                         "Không thể xóa tuyến đường này. Vui lòng xóa tuyến đường chính!");
                 }
+            }
+
+            foreach (RouteRoutine routine in routines)
+            {
+                await work.RouteRoutines.DeleteAsync(routine, cancellationToken: cancellationToken);
             }
 
             await work.Routes.DeleteAsync(route, cancellationToken: cancellationToken);

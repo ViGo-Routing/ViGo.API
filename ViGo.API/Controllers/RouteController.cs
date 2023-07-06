@@ -88,6 +88,7 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get Routes information for the a specific user
         /// </summary>
+        /// <remarks>Only ADMIN</remarks>
         /// <returns>
         /// List of the user's saved routes
         /// </returns>
@@ -180,7 +181,7 @@ namespace ViGo.API.Controllers
         /// Update Route's information
         /// </summary>
         /// <remarks>
-        ///  Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
+        /// Route's Status cannot be changed here. Use the ChangeStatus endpoint seperately
         /// </remarks>
         /// <returns>
         /// The updated route information
@@ -243,8 +244,10 @@ namespace ViGo.API.Controllers
         /// Delete Route
         /// </summary>
         /// <remarks>
-        /// Only ADMIN can delete.
-        /// Only Route that has EVERY BookingDetails which have not been assigned to any Driver can be deleted.
+        /// Only ADMIN or the user of the Route can delete.
+        /// Only Route that has not been booked can be deleted. Routines that 
+        /// are belong to the Route are also deleted.
+        /// <br />
         /// Soft Delete
         /// </remarks>
         /// <returns>
