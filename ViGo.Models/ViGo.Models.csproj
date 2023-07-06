@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="FarePolicies\" />
     <Folder Include="Wallets\" />
     <Folder Include="VehicleTypes\" />
     <Folder Include="Vehicles\" />
