@@ -180,5 +180,39 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, routeRoutine);
         }
+
+        /// <summary>
+        /// Delete a Route Routine
+        /// </summary>
+        /// <remarks>
+        /// Only ADMIN or the user of the Routine can delete.
+        /// Only Routine that has not been booked can be deleted. Routines that 
+        /// are belong to the RoundTrip Route are also deleted.
+        /// <br />
+        /// Soft Delete
+        /// </remarks>
+        /// <returns>
+        /// The deleted routine information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Routine has been deleted successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpDelete("{routineId}")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
+        [ProducesResponseType(typeof(Domain.Route), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> DeleteRoute(Guid routineId,
+            CancellationToken cancellationToken)
+        {
+
+            RouteRoutine deletedRoutine = await routeRoutineServices.DeleteRouteRoutineAsync(
+                routineId, cancellationToken);
+            return StatusCode(200, deletedRoutine);
+        }
     }
 }

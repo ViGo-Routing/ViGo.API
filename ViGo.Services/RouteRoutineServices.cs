@@ -271,6 +271,75 @@ namespace ViGo.Services
             return routeRoutine;
         }
 
+        public async Task<RouteRoutine> DeleteRouteRoutineAsync(Guid routineId,
+            CancellationToken cancellationToken)
+        {
+            RouteRoutine? routeRoutine = await work.RouteRoutines.GetAsync(routineId,
+                cancellationToken: cancellationToken);
+            if (routeRoutine is null)
+            {
+                throw new ApplicationException("Lịch trình không tồn tại!!");
+            }
+
+            Route route = await work.Routes.GetAsync(routeRoutine.RouteId,
+                cancellationToken: cancellationToken);
+
+            if (!IdentityUtilities.IsAdmin())
+            {
+                if (!route.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new ApplicationException("Bạn không thể thực hiện hành động này!!");
+                }
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(b => b.CustomerRouteRoutineId.Equals(routineId)),
+                cancellationToken: cancellationToken);
+            if (bookingDetails.Any())
+            {
+                throw new ApplicationException("Lịch trình đã được Booking nên không thể xóa!");
+            }
+
+            await work.RouteRoutines.DeleteAsync(routeRoutine, cancellationToken: cancellationToken);
+            
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                RouteRoutine? roundTripRoutine = null;
+                if (route.RoundTripRouteId.HasValue)
+                {
+                    // route is the MainRoute
+                    Route roundTripRoute = await work.Routes.GetAsync(
+                        route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
+                    roundTripRoutine = await work.RouteRoutines
+                        .GetAsync(r => r.RouteId.Equals(roundTripRoute.Id)
+                            && r.RoutineDate.Equals(routeRoutine.RoutineDate),
+                            cancellationToken: cancellationToken);
+                    
+                } else
+                {
+                    // route is the roundtrip Route
+                    Route mainRoute = await work.Routes.GetAsync(
+                        r => r.RoundTripRouteId.HasValue &&
+                        r.RoundTripRouteId.Value.Equals(route.Id),
+                        cancellationToken: cancellationToken);
+
+                    roundTripRoutine = await work.RouteRoutines
+                        .GetAsync(r => r.RouteId.Equals(mainRoute.Id)
+                            && r.RoutineDate.Equals(routeRoutine.RoutineDate),
+                            cancellationToken: cancellationToken);
+
+                }
+
+                await work.RouteRoutines.DeleteAsync(roundTripRoutine,
+                        cancellationToken: cancellationToken);
+            }
+
+            await work.SaveChangesAsync(cancellationToken);
+
+            return routeRoutine;
+        }
+
         #region Validation
 
         private void IsValidRoutine(RouteRoutineListItemModel routine)
