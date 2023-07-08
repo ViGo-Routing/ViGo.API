@@ -17,6 +17,7 @@ namespace ViGo.Domain
             UserLicenses = new HashSet<UserLicense>();
             Vehicles = new HashSet<Vehicle>();
             Wallets = new HashSet<Wallet>();
+            CanceledBookingDetails = new HashSet<BookingDetail>();
         }
 
         public override Guid Id { get; set; }
@@ -58,5 +59,7 @@ namespace ViGo.Domain
         public virtual ICollection<Vehicle> Vehicles { get; set; }
         [JsonIgnore]
         public virtual ICollection<Wallet> Wallets { get; set; }
+        [JsonIgnore]
+        public virtual ICollection<BookingDetail> CanceledBookingDetails { get; set; }
     }
 }

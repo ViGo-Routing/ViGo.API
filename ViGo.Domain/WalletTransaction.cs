@@ -10,7 +10,7 @@ namespace ViGo.Domain
         public override Guid Id { get; set; }
         public Guid WalletId { get; set; }
         public double Amount { get; set; }
-        //public Guid? BookingId { get; set; }
+        public Guid? BookingId { get; set; }
         public Guid? BookingDetailId { get; set; }
         public string? ExternalTransactionId { get; set; }
         public PaymentMethod PaymentMethod { get; set; }

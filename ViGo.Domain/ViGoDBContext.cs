@@ -142,6 +142,11 @@ namespace ViGo.Domain
                     .HasForeignKey(d => d.DriverId)
                     .HasConstraintName("FK_BookingDetail_User_Driver");
 
+                entity.HasOne(d => d.CanceledUser)
+                    .WithMany(p => p.CanceledBookingDetails)
+                    .HasForeignKey(d => d.CanceledUserId)
+                    .HasConstraintName("FK_BookingDetail_CanceledUser");
+
                 entity.HasOne(d => d.EndStation)
                     .WithMany(p => p.BookingDetailEndStations)
                     .HasForeignKey(d => d.EndStationId)
@@ -519,10 +524,10 @@ namespace ViGo.Domain
                     .HasForeignKey(d => d.BookingDetailId)
                     .HasConstraintName("FK_WalletTransaction_BookingDetail");
 
-                //entity.HasOne(d => d.Booking)
-                //    .WithMany(p => p.WalletTransactions)
-                //    .HasForeignKey(d => d.BookingId)
-                //    .HasConstraintName("FK_WalletTransaction_Booking");
+                entity.HasOne(d => d.Booking)
+                    .WithMany(p => p.WalletTransactions)
+                    .HasForeignKey(d => d.BookingId)
+                    .HasConstraintName("FK_WalletTransaction_Booking");
 
                 entity.HasOne(d => d.Wallet)
                     .WithMany(p => p.WalletTransactions)
