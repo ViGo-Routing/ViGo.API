@@ -15,6 +15,7 @@ using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -442,6 +443,145 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
             return booking;
+        }
+
+        public async Task<Booking> CancelBookingAsync(Guid bookingId,
+            CancellationToken cancellationToken)
+        {
+            Booking? booking = await work.Bookings
+                .GetAsync(bookingId, cancellationToken: cancellationToken);
+
+            if (booking is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!!");
+            }
+
+            User? cancelledUser = null;
+            if (!IdentityUtilities.IsAdmin())
+            {
+                Guid currentId = IdentityUtilities.GetCurrentUserId();
+
+                if (!currentId.Equals(booking.CustomerId))
+                {
+                    // Not the accessible user
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
+                }
+
+                // Customer cancels the bookingdetail
+                cancelledUser = await work.Users.GetAsync(booking.CustomerId,
+                    cancellationToken: cancellationToken);
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(bd => bd.BookingId.Equals(booking.Id)),
+                cancellationToken: cancellationToken);
+
+            bookingDetails = bookingDetails.OrderBy(bd => bd.PickupTime);
+
+            DateTime now = DateTimeUtilities.GetDateTimeVnNow();
+            BookingDetail firstPickup = bookingDetails.First();
+            DateTime pickupDateTime = DateOnly.FromDateTime(firstPickup.Date)
+                .ToDateTime(TimeOnly.FromTimeSpan(firstPickup.CustomerDesiredPickupTime));
+
+            // TODO Code for Cancelling Policy
+            if (now > pickupDateTime)
+            {
+                throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
+            }
+
+            TimeSpan difference = pickupDateTime - now;
+
+            double chargeFee = 0;
+            if (difference.TotalHours >= 8)
+            {
+                chargeFee = 0;
+            } else if (difference.TotalHours >= 4)
+            {
+                // 4 hours
+                chargeFee = calculateChargeFee(bookingDetails, 0.2, 0.15);
+            } else
+            {
+                chargeFee = calculateChargeFee(bookingDetails, 0.7, 0.6);
+            }
+
+            chargeFee = FareUtilities.RoundToThousands(chargeFee);
+
+            if (cancelledUser != null)
+            {
+                // User is customer
+                Wallet wallet = await work.Wallets.GetAsync(cancelledUser.Id,
+                    cancellationToken: cancellationToken);
+
+                WalletTransaction walletTransaction = new WalletTransaction
+                {
+                    WalletId = wallet.Id,
+                    BookingId = booking.Id,
+                    Amount = chargeFee,
+                    Type = WalletTransactionType.CANCEL_FEE,
+                    Status = WalletTransactionStatus.PENDING
+                };
+
+                await work.WalletTransactions.InsertAsync(walletTransaction,
+                    cancellationToken: cancellationToken);
+
+                if (wallet.Balance >= chargeFee)
+                {
+                    // Able to be substracted the amount
+                    wallet.Balance -= chargeFee;
+
+                    walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
+
+                    Wallet systemWallet = await work.Wallets.GetAsync(
+                        w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                    WalletTransaction systemTransaction = new WalletTransaction
+                    {
+                        WalletId = systemWallet.Id,
+                        BookingDetailId = booking.Id,
+                        Amount = chargeFee,
+                        Type = WalletTransactionType.CANCEL_FEE,
+                        Status = WalletTransactionStatus.SUCCESSFULL
+                    };
+
+                    systemWallet.Balance += chargeFee;
+
+                    await work.WalletTransactions.InsertAsync(systemTransaction,
+                    cancellationToken: cancellationToken);
+                    await work.Wallets.UpdateAsync(systemWallet);
+
+                    await work.Wallets.UpdateAsync(wallet);
+                }
+            }
+
+            booking.Status = BookingStatus.CANCELED_BY_BOOKER;
+            foreach (BookingDetail bookingDetail in bookingDetails)
+            {
+                bookingDetail.Status = BookingDetailStatus.CANCELLED;
+                bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
+
+                await work.BookingDetails.UpdateAsync(bookingDetail);
+            }
+            await work.Bookings.UpdateAsync(booking);
+            await work.SaveChangesAsync(cancellationToken);
+
+            return booking;
+
+            double calculateChargeFee(IEnumerable<BookingDetail> bookingDetails,
+                double driverSelectedChargePercent, double notSelectedChargePercent)
+            {
+                double fee = 0;
+                foreach (BookingDetail bookingDetail in bookingDetails)
+                {
+                    if (bookingDetail.DriverId.HasValue)
+                    {
+                        fee += bookingDetail.PriceAfterDiscount.Value * driverSelectedChargePercent;
+                    } else
+                    {
+                        fee += bookingDetail.PriceAfterDiscount.Value * notSelectedChargePercent;
+                    }
+                }
+
+                return fee;
+            }
         }
     }
 }
