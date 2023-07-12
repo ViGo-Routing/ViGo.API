@@ -13,6 +13,7 @@ using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
+using ViGo.Utilities;
 
 namespace ViGo.Services
 {
@@ -80,10 +81,14 @@ namespace ViGo.Services
         public async Task<UserLicenseViewModel> CreateUserLicense(UserLicenseCreateModel userLicense, CancellationToken cancellationToken)
         {
             //check current User
-            
+            //if (!userLicense.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+            //{
+            //    throw new ApplicationException("Vai trò của bạn không được phép thực hiện chức năng này!");
+            //}
             UserLicense newUserLicense = new UserLicense
             {
-                UserId = userLicense.UserId,
+                //UserId = userLicense.UserId,
+                UserId = IdentityUtilities.GetCurrentUserId(),
                 FrontSideFile = userLicense.FrontSideFile,
                 BackSideFile = userLicense.BackSideFile,
                 LicenseType = userLicense.LicenseType,
@@ -94,7 +99,7 @@ namespace ViGo.Services
             await work.UserLicenses.InsertAsync(newUserLicense, cancellationToken:cancellationToken);
             var result = await work.SaveChangesAsync(cancellationToken:cancellationToken);
 
-            User user = await work.Users.GetAsync(userLicense.UserId, cancellationToken: cancellationToken);
+            User user = await work.Users.GetAsync(newUserLicense.UserId, cancellationToken: cancellationToken);
             UserViewModel newUserViewModel = new UserViewModel(user);
             UserLicenseViewModel userLicenseView = new UserLicenseViewModel(newUserLicense, newUserViewModel);
             if(result > 0)

@@ -23,7 +23,7 @@ namespace ViGo.Models.BookingDetails
         //public Guid? DriverRouteId { get; set; }
         //public RouteViewModel? DriverRoute { get; set; }
         public Guid CustomerRouteRoutineId { get; set; }
-        public RouteRoutineViewModel CustomerRouteRoutine{ get; set; }
+        public RouteRoutineViewModel CustomerRouteRoutine { get; set; }
         public StationViewModel StartStation { get; set; }
         public StationViewModel EndStation { get; set; }
         public TimeSpan CustomerDesiredPickupTime { get; set; }
@@ -43,6 +43,30 @@ namespace ViGo.Models.BookingDetails
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
+
+        public BookingDetailViewModel(BookingDetail bookingDetail)
+        {
+            Id = bookingDetail.Id;
+            BookingId = bookingDetail.BookingId;            
+            CustomerRouteRoutineId = bookingDetail.CustomerRouteRoutineId;
+            CustomerDesiredPickupTime = bookingDetail.CustomerDesiredPickupTime;
+            AssignedTime = bookingDetail.AssignedTime;
+            Date = bookingDetail.Date;
+            Price = bookingDetail.Price;
+            PriceAfterDiscount = bookingDetail.PriceAfterDiscount;
+            DriverWage = bookingDetail.DriverWage;
+            ArriveAtPickupTime = bookingDetail.ArriveAtPickupTime;
+            PickupTime = bookingDetail.PickupTime;
+            DropoffTime = bookingDetail.DropoffTime;
+            Rate = bookingDetail.Rate;
+            Feedback = bookingDetail.Feedback;
+            Status = bookingDetail.Status;
+            CreatedBy = bookingDetail.CreatedBy;
+            CreatedTime = bookingDetail.CreatedTime;
+            UpdatedTime = bookingDetail.UpdatedTime;
+            UpdatedBy = bookingDetail.UpdatedBy;
+            //Driver = driver;
+        }
 
         public BookingDetailViewModel(BookingDetail bookingDetail,
             RouteRoutineViewModel customerRoutine,
@@ -73,7 +97,7 @@ namespace ViGo.Models.BookingDetails
             UpdatedTime = bookingDetail.UpdatedTime;
             UpdatedBy = bookingDetail.UpdatedBy;
         }
-        
+
         //public BookingDetailViewModel(BookingDetail bookingDetail,
         //    UserViewModel? driver,
         //    //RouteViewModel customerRoute,
