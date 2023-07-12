@@ -15,7 +15,6 @@
     <Folder Include="VehicleTypes\" />
     <Folder Include="Vehicles\" />
     <Folder Include="Settings\" />
-    <Folder Include="Reports\" />
   </ItemGroup>
 
 </Project>

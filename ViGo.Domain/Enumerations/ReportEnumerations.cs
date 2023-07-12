@@ -15,7 +15,8 @@ namespace ViGo.Domain.Enumerations
 
     public enum ReportType : short
     {
-        DRIVER_NOT_COMING = 1,
-        BOOKER_NOT_COMING = 2
+        DRIVER_NOT_COMING = 0,
+        BOOKER_NOT_COMING = 1,
+        OTHER = 2
     }
 }
