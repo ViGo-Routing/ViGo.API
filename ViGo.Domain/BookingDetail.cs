@@ -34,6 +34,7 @@ namespace ViGo.Domain
         public short? Rate { get; set; }
         public string? Feedback { get; set; }
         public BookingDetailStatus Status { get; set; }
+        public Guid? CanceledUserId { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -45,6 +46,9 @@ namespace ViGo.Domain
         [JsonIgnore]
         //[System.Text.Json.Serialization.JsonIgnore]
         public virtual User? Driver { get; set; }
+
+        [JsonIgnore]
+        public virtual User? CanceledUser { get; set; }
         //[JsonIgnore]
         ////[System.Text.Json.Serialization.JsonIgnore]
         //public virtual Route CustomerRoute { get; set; }

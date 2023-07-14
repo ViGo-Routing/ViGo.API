@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Google.Apis.Util;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -716,6 +718,157 @@ namespace ViGo.Services
             return bookingDetail;
         }
 
+        public async Task<BookingDetail> CancelBookingDetailAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetail? bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!!");
+            }
+
+            User? cancelledUser = null;
+
+            Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
+            if (!IdentityUtilities.IsAdmin())
+            {
+                Guid currentId = IdentityUtilities.GetCurrentUserId();
+                if (!currentId.Equals(booking.CustomerId) || 
+                    (bookingDetail.DriverId.HasValue && 
+                    !currentId.Equals(bookingDetail.DriverId.Value)))
+                {
+                    // Not the accessible user
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
+                }
+                
+                if (currentId.Equals(booking.CustomerId))
+                {
+                    // Customer cancels the bookingdetail
+                    cancelledUser = await work.Users.GetAsync(booking.CustomerId,
+                        cancellationToken: cancellationToken);
+                } else
+                {
+                    if (bookingDetail.DriverId.HasValue &&
+                        currentId.Equals(bookingDetail.DriverId.Value))
+                    {
+                        // Driver cancels the bookingdetail
+                        cancelledUser = await work.Users.GetAsync(
+                            bookingDetail.DriverId.Value, cancellationToken: cancellationToken);
+                    }
+                }
+            }
+
+            DateTime now = DateTimeUtilities.GetDateTimeVnNow();
+            DateTime pickupDateTime = DateOnly.FromDateTime(bookingDetail.Date)
+                .ToDateTime(TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
+                
+            // TODO Code for Cancelling Policy
+            if (now > pickupDateTime)
+            {
+                throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
+            }
+
+            TimeSpan difference = pickupDateTime - now;
+            double chargeFee = 0;
+
+            if (difference.TotalHours >= 8)
+            {
+                // 8 hours
+                // No extra fee
+                chargeFee = 0;
+            } else if (difference.TotalHours >= 4)
+            {
+                // 4 hours
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    // Been selected
+                    // 10% extra fee
+                    chargeFee = 0.1;
+                } else
+                {
+                    // No fee
+                    chargeFee = 0;
+                }
+            } else
+            {
+                // 50% extra fee
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    // Been selected
+                    chargeFee = 0.5;
+                } else
+                {
+                    // No fee
+                    chargeFee = 0;
+                }
+            }
+
+            double chargeFeeAmount = bookingDetail.PriceAfterDiscount.Value * chargeFee;
+            chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
+
+            if (cancelledUser != null)
+            {
+                // User is driver or customer
+                Wallet wallet = await work.Wallets.GetAsync(cancelledUser.Id,
+                    cancellationToken: cancellationToken);
+
+                WalletTransaction walletTransaction = new WalletTransaction
+                {
+                    WalletId = wallet.Id,
+                    BookingDetailId = bookingDetail.Id,
+                    Amount = chargeFeeAmount,
+                    Type = WalletTransactionType.CANCEL_FEE,
+                    Status = WalletTransactionStatus.PENDING
+                };
+
+                await work.WalletTransactions.InsertAsync(walletTransaction,
+                    cancellationToken: cancellationToken);
+
+                if (wallet.Balance >= chargeFeeAmount)
+                {
+                    // Able to be substracted the amount
+                    wallet.Balance -= chargeFeeAmount;
+
+                    walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
+
+                    Wallet systemWallet = await work.Wallets.GetAsync(
+                    w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                    WalletTransaction systemTransaction = new WalletTransaction
+                    {
+                        WalletId = systemWallet.Id,
+                        BookingDetailId = bookingDetail.Id,
+                        Amount = chargeFeeAmount,
+                        Type = WalletTransactionType.CANCEL_FEE,
+                        Status = WalletTransactionStatus.SUCCESSFULL
+                    };
+
+                    systemWallet.Balance += chargeFeeAmount;
+
+                    await work.WalletTransactions.InsertAsync(systemTransaction,
+                    cancellationToken: cancellationToken);
+                    await work.Wallets.UpdateAsync(systemWallet);
+
+                    await work.Wallets.UpdateAsync(wallet);
+                }
+
+            }
+
+            bookingDetail.Status = BookingDetailStatus.CANCELLED;
+
+            bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
+
+            await work.BookingDetails.UpdateAsync(bookingDetail);
+
+            await work.SaveChangesAsync(cancellationToken);
+
+            return bookingDetail;
+        }
+
+        #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId, 
             CancellationToken cancellationToken)
         {
@@ -876,5 +1029,7 @@ namespace ViGo.Services
 
             //}
         }
+
+        #endregion
     }
 }
