@@ -26,11 +26,41 @@ namespace ViGo.Utilities
             return hash.ToString();
         }
 
+        public static string HmacSHA256(this string inputData, string key)
+        {
+            byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+            byte[] inputBytes = Encoding.UTF8.GetBytes(inputData);
+            byte[] hashMessage = new HMACSHA256(keyBytes).ComputeHash(inputBytes);
+
+            return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
+        }
+
         //public static bool ValidateHmacSHA512(this string inputHashToValidate,
         //    string rawData, string key)
         //{
         //    string checksum = rawData.HmacSHA512(key);
         //    return checksum.Equals(inputHashToValidate, StringComparison.InvariantCultureIgnoreCase);
         //}
+
+        public static string ToBase64String(Guid guid)
+        {
+            return Convert.ToBase64String(guid.ToByteArray())
+                .Substring(0, 22)
+                .Replace("/", "_")
+                .Replace("+", "-");
+        }
+
+        public static Guid FromBase64String(string base64String)
+        {
+            if (string.IsNullOrEmpty(base64String) || 
+                base64String.Length != 22)
+            {
+                throw new FormatException("Input string was not in a correct format!!");
+            }
+
+            return new Guid(Convert.FromBase64String(base64String
+                .Replace("_", "/")
+                .Replace("-", "+") + "=="));
+        }
     }
 }

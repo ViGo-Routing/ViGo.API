@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -44,7 +45,8 @@ namespace ViGo.Utilities
                 }
                 else if (method == HttpMethod.Post)
                 {
-                    response = await client.PostAsync(queryString, new StringContent(bodyJson));
+                    StringContent content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+                    response = await client.PostAsync(queryString, content);
                 }
 
                 string resultText = await response.Content.ReadAsStringAsync();

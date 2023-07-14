@@ -106,6 +106,24 @@ namespace ViGo.Utilities.Configuration
             => Configuration["Payments:VnPay:SecretKey"];
         #endregion
 
+        #region ZaloPay
+        public static string ZaloPayApiUrl
+            => Configuration["Payments:ZaloPay:Url"];
+
+        public static int ZaloPayAppId
+            => int.Parse(Configuration["Payments:ZaloPay:Appid"]);
+
+        public static string ZaloPayKey1
+            => Configuration["Payments:ZaloPay:Key1"];
+
+        public static string ZaloPayKey2
+            => Configuration["Payments:ZaloPay:Key2"];
+
+        public static string ZaloPayCallback(HttpContext context)
+            => context.GetApiBaseUrl() +
+            Configuration["Payments:ZaloPay:ReturnUrl"];
+        #endregion
+
         #region Background Task
         public static int QueueCapacity
             => int.Parse(Configuration["BackgroundTask:QueueCapacity"]);
