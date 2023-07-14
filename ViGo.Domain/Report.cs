@@ -11,7 +11,9 @@ namespace ViGo.Domain
         public Guid UserId { get; set; }
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
+        public string? ReviewerNote { get; set; }
         public Guid? BookingDetailId { get; set; }
+        public ReportType Type { get; set; }
         public ReportStatus? Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
