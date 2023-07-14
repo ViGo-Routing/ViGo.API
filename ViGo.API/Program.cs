@@ -24,13 +24,14 @@ namespace ViGo.API
                 .ReadFrom.Configuration(builder.Configuration)
                 .Enrich.FromLogContext();
 
+            string logOutputTemplate = "{NewLine}[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} {CorrelationId} {Level:u3}] ({SourceContext}) {Username} {Message:lj}{NewLine}{Exception}{NewLine}";
             if (!builder.Environment.IsProduction())
             {
                 Console.OutputEncoding = Encoding.UTF8;
-                loggerConfig = loggerConfig.WriteTo.Console();
+                loggerConfig = loggerConfig.WriteTo.Console(outputTemplate: logOutputTemplate);
             } else
             {
-                loggerConfig = loggerConfig.WriteTo.AzureApp();
+                loggerConfig = loggerConfig.WriteTo.AzureApp(outputTemplate: logOutputTemplate);
             }
 
             var logger = loggerConfig.CreateLogger();
