@@ -264,8 +264,8 @@ namespace ViGo.Services
         public async Task<(string code, string message)> VnPayPaymentIpnAsync(
             string requestRawUrl,
             IQueryCollection vnPayData,
-            IBackgroundTaskQueue backgroundTaskQueue,
-            IServiceScopeFactory serviceScopeFactory,
+            //IBackgroundTaskQueue backgroundTaskQueue,
+            //IServiceScopeFactory serviceScopeFactory,
             CancellationToken cancellationToken)
         {
             _logger.LogInformation("Begin VNPay IPN...");

@@ -89,6 +89,10 @@ namespace ViGo.API.Controllers
             string message = await paymentServices.VnPayPaymentCallbackAsync(Request.GetDisplayUrl(), Request.Query, cancellationToken);
 
             return StatusCode(200, message);
+            //(string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
+            //    Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
+
+            //return StatusCode(200, new { code = code, message = message });
         }
 
         /// <summary>
@@ -109,7 +113,7 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> VnPayIpn(CancellationToken cancellationToken)
         {
             (string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
-                Request.Query, _backgroundQueue, _serviceScopeFactory, cancellationToken);
+                Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
 
             return StatusCode(200, new { code = code, message = message });
         }
