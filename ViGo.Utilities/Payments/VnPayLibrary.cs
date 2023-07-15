@@ -194,7 +194,7 @@ namespace ViGo.Utilities.Payments
             string rawData = RequestId + "|" + ApiVersion + "|" + Command + "|" +
                 TmnCode + "|" + TxnRef + "|" + TransactionDate + "|" + CreateDate + "|" +
                 IpAddress + "|" + OrderInfo;
-            return rawData.HmacSHA256(secretKey);
+            return rawData.HmacSHA512(secretKey);
         }
     }
 
@@ -260,7 +260,7 @@ namespace ViGo.Utilities.Payments
                  + "|" + PayDate + "|" + TransactionNo + "|" + TransactionType + "|" +
                  TransactionStatus + "|" + OrderInfo + "|" + PromotionCode
                   + "|" + PromotionAmount;
-            string checkSum = rawData.HmacSHA256(secretKey);
+            string checkSum = rawData.HmacSHA512(secretKey);
 
             return checkSum;
         }
