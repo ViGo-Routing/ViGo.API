@@ -171,5 +171,31 @@ namespace ViGo.API.Controllers
             return StatusCode(200, booking);
         }
 
+        /// <summary>
+        /// Cancel a whole Booking
+        /// </summary>
+        /// <returns>
+        /// The canceled Booking
+        /// </returns>
+        /// <response code="400">Booking information is not valid</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Cancel Booking successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("Cancel/{bookingId}")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
+        [ProducesResponseType(typeof(Booking), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> CancelBooking(Guid bookingId,
+            CancellationToken cancellationToken)
+        {
+            Booking booking = await bookingServices.CancelBookingAsync(bookingId, cancellationToken);
+
+            return StatusCode(200, booking);
+        }
+
     }
 }

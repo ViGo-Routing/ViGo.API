@@ -104,7 +104,7 @@ namespace ViGo.Services
             ////BookingDetailViewModel dto = new BookingDetailViewModel(bookingDetail);
             Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId, includeDeleted: true,
                 cancellationToken: cancellationToken);
-            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId, includeDeleted: true, 
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId, includeDeleted: true,
                 cancellationToken: cancellationToken);
 
             BookingDetailViewModel bookingDetailViewModel = new BookingDetailViewModel(bookingDetail, customerRoutineModel,
@@ -115,7 +115,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetDriverAssignedBookingDetailsAsync(Guid driverId, 
+            GetDriverAssignedBookingDetailsAsync(Guid driverId,
             PaginationParameter pagination,
             HttpContext context,
             CancellationToken cancellationToken)
@@ -140,7 +140,7 @@ namespace ViGo.Services
 
             bookingDetails = bookingDetails.ToPagedEnumerable(
                 pagination.PageNumber, pagination.PageSize).Data;
-            
+
             if (!bookingDetails.Any())
             {
                 return new List<BookingDetailViewModel>().ToPagedEnumerable(pagination.PageNumber,
@@ -161,7 +161,7 @@ namespace ViGo.Services
                b => b.EndStationId)).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)), includeDeleted: true, 
+                    s => stationIds.Contains(s.Id)), includeDeleted: true,
                     cancellationToken: cancellationToken);
 
             IEnumerable<Guid> customerRoutineIds = bookingDetails.Select(bd => bd.CustomerRouteRoutineId)
@@ -188,15 +188,15 @@ namespace ViGo.Services
                 join customerRoutine in customerRoutines
                     on bookingDetail.CustomerRouteRoutineId equals customerRoutine.Id
                 select new BookingDetailViewModel(
-                    bookingDetail, new RouteRoutineViewModel(customerRoutine), 
+                    bookingDetail, new RouteRoutineViewModel(customerRoutine),
                     new StationViewModel(customerStartStation),
                     new StationViewModel(customerEndStation), null);
-                    //new RouteViewModel(customerRoute,
-                    //    new StationViewModel(customerStartStation, 1),
-                    //    new StationViewModel(customerEndStation, 2)),
-                    /*new RouteViewModel(driverRoute,
-                        new StationViewModel(driverStartStation),
-                        //new StationViewModel(driverEndStation))); */
+            //new RouteViewModel(customerRoute,
+            //    new StationViewModel(customerStartStation, 1),
+            //    new StationViewModel(customerEndStation, 2)),
+            /*new RouteViewModel(driverRoute,
+                new StationViewModel(driverStartStation),
+                //new StationViewModel(driverEndStation))); */
             //IEnumerable<BookingDetailViewModel> dtos =
             //    from bookingDetail in bookingDetails
             //    select new BookingDetailViewModel(bookingDetail);
@@ -208,7 +208,7 @@ namespace ViGo.Services
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetBookingDetailsAsync(Guid bookingId,
             PaginationParameter pagination,
-            HttpContext context, 
+            HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
@@ -238,7 +238,7 @@ namespace ViGo.Services
                b => b.EndStationId)).Distinct();
             IEnumerable<Station> stations = await work.Stations
                 .GetAllAsync(query => query.Where(
-                    s => stationIds.Contains(s.Id)), includeDeleted: true, 
+                    s => stationIds.Contains(s.Id)), includeDeleted: true,
                     cancellationToken: cancellationToken);
 
             IEnumerable<BookingDetailViewModel> dtos =
@@ -267,7 +267,7 @@ namespace ViGo.Services
                 dtos = dtos.Append(model);
             }
 
-            return dtos.ToPagedEnumerable(pagination.PageNumber, 
+            return dtos.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context);
         }
 
@@ -384,7 +384,7 @@ namespace ViGo.Services
 
                 //await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
                 //await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
-                
+
                 //await work.Wallets.UpdateAsync(systemWallet);
                 //await work.Wallets.UpdateAsync(driverWallet);
             }
@@ -410,6 +410,12 @@ namespace ViGo.Services
                 throw new ApplicationException("Tài xế không tồn tại!!");
             }
 
+            Booking booking = await work.Bookings.GetAsync(
+                bookingDetail.BookingId, cancellationToken: cancellationToken);
+
+            await CheckDriverSchedules(dto.DriverId, bookingDetail,
+                booking, cancellationToken);
+
             bookingDetail.DriverId = dto.DriverId;
             bookingDetail.AssignedTime = DateTimeUtilities.GetDateTimeVnNow();
             bookingDetail.Status = BookingDetailStatus.ASSIGNED;
@@ -420,7 +426,7 @@ namespace ViGo.Services
             return bookingDetail;
         }
 
-        public async Task<double> CalculateDriverWageAsync(Guid bookingDetailId, 
+        public async Task<double> CalculateDriverWageAsync(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {
             BookingDetail bookingDetail = await work.BookingDetails
@@ -456,7 +462,7 @@ namespace ViGo.Services
                     bd => !bd.DriverId.HasValue
                     && bd.Status == BookingDetailStatus.PENDING_ASSIGN
                     // Only for future ones
-                    && bd.Date >= DateTimeUtilities.GetDateTimeVnNow()), 
+                    && bd.Date >= DateTimeUtilities.GetDateTimeVnNow()),
                     cancellationToken: cancellationToken);
 
             // Get Bookings
@@ -475,9 +481,9 @@ namespace ViGo.Services
                 .Select(b => b.StartStationId).Concat(unassignedBookingDetails.Select(b => b.EndStationId))
                 .Distinct();
             IEnumerable<Station> stations = await work.Stations.GetAllAsync(
-                query => query.Where(s => stationIds.Contains(s.Id)), includeDeleted: true, 
+                query => query.Where(s => stationIds.Contains(s.Id)), includeDeleted: true,
                 cancellationToken: cancellationToken);
-            
+
             IList<DriverMappingItem> prioritizedBookingDetails = new List<DriverMappingItem>();
 
             IList<DriverTripsOfDate> driverTrips = await GetDriverSchedulesAsync(driverId, cancellationToken);
@@ -496,7 +502,8 @@ namespace ViGo.Services
                     // Has not been configured or has no trips
                     prioritizedBookingDetails.Add(new DriverMappingItem(
                         bookingDetail, bookingDetail.CustomerDesiredPickupTime.TotalMinutes));
-                } else
+                }
+                else
                 {
                     // Has Trips
                     DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
@@ -505,10 +512,11 @@ namespace ViGo.Services
                     {
                         // No trips in day
                         prioritizedBookingDetails.Add(new DriverMappingItem(
-                            bookingDetail, 
+                            bookingDetail,
                             bookingDetail.CustomerDesiredPickupTime
                                 .Add(TimeSpan.FromMinutes(30)).TotalMinutes)); // Less prioritized
-                    } else
+                    }
+                    else
                     {
                         // Has trips in day
                         DriverTrip addedTrip = new DriverTrip
@@ -544,12 +552,13 @@ namespace ViGo.Services
                                 if (addedTripAsNode.Value.EndTime < nextTrip.BeginTime)
                                 {
                                     // Valid one
-                                    AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
-                                        addedTripAsNode.Value, previousTrip, nextTrip);
+                                    await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
+                                        addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                 }
                             }
                             // Previous and Next cannot be both null
-                        } else
+                        }
+                        else
                         {
                             // Has Previous trip
                             if (addedTripAsNode.Value.BeginTime > previousTrip.EndTime)
@@ -559,17 +568,18 @@ namespace ViGo.Services
                                     if (addedTripAsNode.Value.EndTime < nextTrip.BeginTime)
                                     {
                                         // Valid one
-                                        AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
-                                            addedTripAsNode.Value, previousTrip, nextTrip);
+                                        await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
+                                            addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                     }
-                                } else
+                                }
+                                else
                                 {
                                     // Valid one
-                                    AddToPrioritizedBookingDetails(prioritizedBookingDetails, bookingDetail,
-                                        addedTripAsNode.Value, previousTrip, nextTrip);
+                                    await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
+                                        addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                 }
                             }
-                            
+
                         }
                     }
                 }
@@ -601,13 +611,13 @@ namespace ViGo.Services
                                                                 on bookingDetail.BookingDetail.CustomerRouteRoutineId equals customerRoutine.Id
                                                              join startStation in stations
                                                                 on bookingDetail.BookingDetail.StartStationId equals startStation.Id
-                                                            join endStation in stations
-                                                                on bookingDetail.BookingDetail.EndStationId equals endStation.Id
+                                                             join endStation in stations
+                                                                 on bookingDetail.BookingDetail.EndStationId equals endStation.Id
                                                              select new BookingDetailViewModel(bookingDetail.BookingDetail,
-                                                                 new RouteRoutineViewModel(customerRoutine), 
+                                                                 new RouteRoutineViewModel(customerRoutine),
                                                                  new StationViewModel(startStation), new StationViewModel(endStation), null);
 
-            return availables.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize, 
+            return availables.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize,
                 totalCount, context);
 
         }
@@ -633,80 +643,82 @@ namespace ViGo.Services
                 throw new ApplicationException("Trạng thái Booking không hợp lệ!!");
             }
 
-            IList<DriverTripsOfDate> driverTrips = await GetDriverSchedulesAsync(driverId, cancellationToken);
+            //IList<DriverTripsOfDate> driverTrips = await GetDriverSchedulesAsync(driverId, cancellationToken);
 
-            if (driverTrips.Count == 0)
-            {
-                // Has no trips
-            } else
-            {
-                // Has Trips
-                DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
-                    t => t.Date == DateOnly.FromDateTime(bookingDetail.Date));
-                if (tripsOfDate is null || tripsOfDate.Trips.Count == 0)
-                {
-                    // No trips in day
+            //if (driverTrips.Count == 0)
+            //{
+            //    // Has no trips
+            //} else
+            //{
+            //    // Has Trips
+            //    DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
+            //        t => t.Date == DateOnly.FromDateTime(bookingDetail.Date));
+            //    if (tripsOfDate is null || tripsOfDate.Trips.Count == 0)
+            //    {
+            //        // No trips in day
 
-                } else
-                {
-                    // Has trips in day
-                    TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
-                        bookingDetail.CustomerDesiredPickupTime, booking.Duration);
+            //    } else
+            //    {
+            //        // Has trips in day
+            //        TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
+            //            bookingDetail.CustomerDesiredPickupTime, booking.Duration);
 
-                    Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId, includeDeleted: true, 
-                        cancellationToken: cancellationToken);
-                    Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId, includeDeleted: true, 
-                        cancellationToken: cancellationToken);
+            //        Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId, includeDeleted: true, 
+            //            cancellationToken: cancellationToken);
+            //        Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId, includeDeleted: true, 
+            //            cancellationToken: cancellationToken);
 
-                    DriverTrip addedTrip = new DriverTrip
-                    {
-                        Id = bookingDetail.Id,
-                        BeginTime = bookingDetail.CustomerDesiredPickupTime,
-                        EndTime = bookingDetailEndTime,
-                        StartLocation = new GoogleMapPoint
-                        {
-                            Latitude = startStation.Latitude,
-                            Longitude = startStation.Longitude
-                        },
-                        EndLocation = new GoogleMapPoint
-                        {
-                            Latitude = endStation.Latitude,
-                            Longitude = endStation.Longitude
-                        }
-                    };
+            //        DriverTrip addedTrip = new DriverTrip
+            //        {
+            //            Id = bookingDetail.Id,
+            //            BeginTime = bookingDetail.CustomerDesiredPickupTime,
+            //            EndTime = bookingDetailEndTime,
+            //            StartLocation = new GoogleMapPoint
+            //            {
+            //                Latitude = startStation.Latitude,
+            //                Longitude = startStation.Longitude
+            //            },
+            //            EndLocation = new GoogleMapPoint
+            //            {
+            //                Latitude = endStation.Latitude,
+            //                Longitude = endStation.Longitude
+            //            }
+            //        };
 
-                    IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip).OrderBy(t => t.BeginTime);
+            //        IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip).OrderBy(t => t.BeginTime);
 
-                    LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
-                    LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
+            //        LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
+            //        LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
 
-                    DriverTrip? previousTrip = addedTripAsNode.Previous?.Value;
-                    DriverTrip? nextTrip = addedTripAsNode.Next?.Value;
+            //        DriverTrip? previousTrip = addedTripAsNode.Previous?.Value;
+            //        DriverTrip? nextTrip = addedTripAsNode.Next?.Value;
 
-                    if (previousTrip != null)
-                    {
-                        if (addedTripAsNode.Value.BeginTime <= previousTrip.EndTime)
-                        {
-                            // Invalid one
-                            throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
-                                $"Bạn đang chọn chuyến đi có thời gian bắt đầu ({addedTripAsNode.Value.BeginTime}) " +
-                                $"sớm hơn so với thời gian dự kiến bạn sẽ kết thúc một chuyến đi bạn đã chọn trước đó ({previousTrip.EndTime})");
-                        }
-                    }
+            //        if (previousTrip != null)
+            //        {
+            //            if (addedTripAsNode.Value.BeginTime <= previousTrip.EndTime)
+            //            {
+            //                // Invalid one
+            //                throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+            //                    $"Bạn đang chọn chuyến đi có thời gian bắt đầu ({addedTripAsNode.Value.BeginTime}) " +
+            //                    $"sớm hơn so với thời gian dự kiến bạn sẽ kết thúc một chuyến đi bạn đã chọn trước đó ({previousTrip.EndTime})");
+            //            }
+            //        }
 
-                    if (nextTrip != null)
-                    {
-                        // Has Next trip
-                        if (addedTripAsNode.Value.EndTime >= nextTrip.BeginTime)
-                        {
-                            // Invalid one
-                            throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
-                                $"Bạn đang chọn chuyến đi có thời gian kết thúc dự kiến ({addedTripAsNode.Value.EndTime}) " +
-                                $"trễ hơn so với thời gian bạn phải bắt đầu một chuyến đi bạn đã chọn trước đó ({nextTrip.BeginTime})");
-                        }
-                    }
-                }
-            }
+            //        if (nextTrip != null)
+            //        {
+            //            // Has Next trip
+            //            if (addedTripAsNode.Value.EndTime >= nextTrip.BeginTime)
+            //            {
+            //                // Invalid one
+            //                throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+            //                    $"Bạn đang chọn chuyến đi có thời gian kết thúc dự kiến ({addedTripAsNode.Value.EndTime}) " +
+            //                    $"trễ hơn so với thời gian bạn phải bắt đầu một chuyến đi bạn đã chọn trước đó ({nextTrip.BeginTime})");
+            //            }
+            //        }
+            //    }
+            //}
+            await CheckDriverSchedules(driverId, bookingDetail,
+                booking, cancellationToken);
 
             bookingDetail.DriverId = driverId;
             bookingDetail.AssignedTime = DateTimeUtilities.GetDateTimeVnNow();
@@ -737,20 +749,21 @@ namespace ViGo.Services
             if (!IdentityUtilities.IsAdmin())
             {
                 Guid currentId = IdentityUtilities.GetCurrentUserId();
-                if (!currentId.Equals(booking.CustomerId) || 
-                    (bookingDetail.DriverId.HasValue && 
+                if (!currentId.Equals(booking.CustomerId) ||
+                    (bookingDetail.DriverId.HasValue &&
                     !currentId.Equals(bookingDetail.DriverId.Value)))
                 {
                     // Not the accessible user
                     throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
                 }
-                
+
                 if (currentId.Equals(booking.CustomerId))
                 {
                     // Customer cancels the bookingdetail
                     cancelledUser = await work.Users.GetAsync(booking.CustomerId,
                         cancellationToken: cancellationToken);
-                } else
+                }
+                else
                 {
                     if (bookingDetail.DriverId.HasValue &&
                         currentId.Equals(bookingDetail.DriverId.Value))
@@ -765,45 +778,56 @@ namespace ViGo.Services
             DateTime now = DateTimeUtilities.GetDateTimeVnNow();
             DateTime pickupDateTime = DateOnly.FromDateTime(bookingDetail.Date)
                 .ToDateTime(TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
-                
+
             // TODO Code for Cancelling Policy
             if (now > pickupDateTime)
             {
                 throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
             }
 
-            TimeSpan difference = pickupDateTime - now;
+            if (cancelledUser != null)
+            {
+                if (bookingDetail.Date.IsInCurrentWeek())
+                {
+                    if (cancelledUser.WeeklyCanceledTripRate >= 3)
+                    {
+                        throw new ApplicationException("Số chuyến đi được phép hủy có lịch trình trong tuần này của bạn " +
+                            "đã đạt giới hạn (3 chuyến đi). Bạn không thể hủy thêm chuyến đi nào có lịch trình " +
+                            "trong tuần này nữa!");
+                    }
+                }
+            }
+
             double chargeFee = 0;
 
-            if (difference.TotalHours >= 8)
+            if (!bookingDetail.DriverId.HasValue)
             {
-                // 8 hours
-                // No extra fee
+                // BookingDetail has not been selected by a Driver
+                // No fee
                 chargeFee = 0;
-            } else if (difference.TotalHours >= 4)
+            }
+            else
             {
-                // 4 hours
-                if (bookingDetail.DriverId.HasValue)
+                TimeSpan difference = pickupDateTime - now;
+
+                if (difference.TotalHours >= 6)
                 {
+                    // >= 6 hours
+                    // No extra fee
+                    chargeFee = 0;
+                }
+                else if (difference.TotalHours >= 1)
+                {
+                    // >= 1 hour but < 6h
                     // Been selected
                     // 10% extra fee
                     chargeFee = 0.1;
-                } else
-                {
-                    // No fee
-                    chargeFee = 0;
                 }
-            } else
-            {
-                // 50% extra fee
-                if (bookingDetail.DriverId.HasValue)
+                else
                 {
-                    // Been selected
-                    chargeFee = 0.5;
-                } else
-                {
+                    // 100% extra fee
                     // No fee
-                    chargeFee = 0;
+                    chargeFee = 1;
                 }
             }
 
@@ -836,7 +860,7 @@ namespace ViGo.Services
                     walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
 
                     Wallet systemWallet = await work.Wallets.GetAsync(
-                    w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                        w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
                     WalletTransaction systemTransaction = new WalletTransaction
                     {
                         WalletId = systemWallet.Id,
@@ -861,6 +885,8 @@ namespace ViGo.Services
 
             bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
 
+            // Trigger Background Task for Calculating Cancel Rate
+
             await work.BookingDetails.UpdateAsync(bookingDetail);
 
             await work.SaveChangesAsync(cancellationToken);
@@ -869,7 +895,7 @@ namespace ViGo.Services
         }
 
         #region Private
-        private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId, 
+        private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
             CancellationToken cancellationToken)
         {
             // Get driver current schedules
@@ -934,9 +960,9 @@ namespace ViGo.Services
         }
 
 
-        private async void AddToPrioritizedBookingDetails(IList<DriverMappingItem> prioritizedBookingDetails,
+        private async Task AddToPrioritizedBookingDetailsAsync(IList<DriverMappingItem> prioritizedBookingDetails,
             BookingDetail bookingDetailToAdd, DriverTrip addedTrip,
-            DriverTrip? previousTrip, DriverTrip? nextTrip)
+            DriverTrip? previousTrip, DriverTrip? nextTrip, CancellationToken cancellationToken)
         {
             //TimeSpan addedTripEndTime = addedTrip.EndTime;
 
@@ -948,7 +974,7 @@ namespace ViGo.Services
                     //TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        addedTrip.EndLocation, nextTrip.StartLocation);
+                        addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     if ((nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes > movingDuration + 10)
                     {
@@ -967,10 +993,10 @@ namespace ViGo.Services
                 if (nextTrip is null)
                 {
                     // Only previous trip
-                    
+
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        previousTrip.EndLocation, addedTrip.StartLocation);
+                        previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
 
                     if ((addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes > movingDuration + 10)
                     {
@@ -985,19 +1011,19 @@ namespace ViGo.Services
                     //TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     int movingDurationPrevToAdded = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        previousTrip.EndLocation, addedTrip.StartLocation);
+                        previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
                     int movingDurationAddedToNext = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        addedTrip.EndLocation, nextTrip.StartLocation);
+                        addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     double durationPrevToAdded = (addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes;
                     double durationAddedToNext = (nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes;
 
-                    if (durationPrevToAdded > movingDurationPrevToAdded + 10 
+                    if (durationPrevToAdded > movingDurationPrevToAdded + 10
                         && durationAddedToNext > movingDurationAddedToNext + 10)
                     {
                         // Valid booking details
                         prioritizedBookingDetails.Add(new DriverMappingItem(
-                            bookingDetailToAdd, (durationPrevToAdded - movingDurationPrevToAdded + 
+                            bookingDetailToAdd, (durationPrevToAdded - movingDurationPrevToAdded +
                                                 durationAddedToNext - movingDurationAddedToNext) / 2));
                     }
                 }
@@ -1028,6 +1054,85 @@ namespace ViGo.Services
             //    }
 
             //}
+        }
+
+        private async Task CheckDriverSchedules(Guid driverId,
+            BookingDetail bookingDetail,
+            Booking booking,
+            CancellationToken cancellationToken)
+        {
+            IList<DriverTripsOfDate> driverTrips = await GetDriverSchedulesAsync(driverId, cancellationToken);
+            if (driverTrips.Count == 0)
+            {
+                // Has no trips
+            }
+            else
+            {
+                // Has trips
+                DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
+                    t => t.Date == DateOnly.FromDateTime(bookingDetail.Date));
+                if (tripsOfDate is null || tripsOfDate.Trips.Count == 0)
+                {
+                    // No trips in day
+                }
+                else
+                {
+                    // Has trips in day
+                    TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
+                        bookingDetail.CustomerDesiredPickupTime, booking.Duration);
+
+                    Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                        cancellationToken: cancellationToken);
+                    Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                        cancellationToken: cancellationToken);
+
+                    DriverTrip addedTrip = new DriverTrip
+                    {
+                        Id = bookingDetail.Id,
+                        BeginTime = bookingDetail.CustomerDesiredPickupTime,
+                        EndTime = bookingDetailEndTime,
+                        StartLocation = new GoogleMapPoint
+                        {
+                            Latitude = startStation.Latitude,
+                            Longitude = startStation.Longitude
+                        },
+                        EndLocation = new GoogleMapPoint
+                        {
+                            Latitude = endStation.Latitude,
+                            Longitude = endStation.Longitude
+                        }
+                    };
+
+                    IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip);
+                    LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
+                    LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
+
+                    DriverTrip? previousTrip = addedTripAsNode.Previous?.Value;
+                    DriverTrip? nextTrip = addedTripAsNode.Next?.Value;
+
+                    if (previousTrip != null)
+                    {
+                        if (addedTripAsNode.Value.BeginTime <= previousTrip.EndTime)
+                        {
+                            // Invalid
+                            throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                $"Bạn đang chọn chuyến đi có thời gian bắt đầu ({addedTripAsNode.Value.BeginTime}) " +
+                                $"sớm hơn so với thời gian dự kiến bạn sẽ kết thúc một chuyến đi bạn đã chọn trước đó ({previousTrip.EndTime})");
+                        }
+                    }
+
+                    if (nextTrip != null)
+                    {
+                        // Has Next Trip
+                        if (addedTripAsNode.Value.EndTime >= nextTrip.BeginTime)
+                        {
+                            throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                $"Bạn đang chọn chuyến đi có thời gian kết thúc dự kiến ({addedTripAsNode.Value.EndTime}) " +
+                                $"trễ hơn so với thời gian bạn phải bắt đầu một chuyến đi bạn đã chọn trước đó ({nextTrip.BeginTime})");
+                        }
+                    }
+                }
+            }
         }
 
         #endregion

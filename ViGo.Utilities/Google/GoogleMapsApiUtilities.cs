@@ -21,7 +21,7 @@ namespace ViGo.Utilities.Google
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static async Task<int> GetDistanceBetweenTwoPointsAsync(GoogleMapPoint origin,
-            GoogleMapPoint destination)
+            GoogleMapPoint destination, CancellationToken cancellationToken)
         {
             IEnumerable<KeyValuePair<string, string>> parameters = new List<KeyValuePair<string, string>>()
             {
@@ -32,7 +32,7 @@ namespace ViGo.Utilities.Google
 
             DistanceMatrixResponse? response = await HttpClientUtilities.SendRequestAsync
                 <DistanceMatrixResponse, object>(baseUrl + "/distancematrix/json", HttpMethod.Get,
-                parameters);
+                parameters, cancellationToken: cancellationToken);
             if (response != null)
             {
                 Row? firstRow = response.Rows.FirstOrDefault();

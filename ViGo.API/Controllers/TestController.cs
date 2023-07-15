@@ -43,13 +43,14 @@ namespace ViGo.API.Controllers
             ///  }
             ///}
         /// </remarks>
-        /// <param name="distanceRequest"></param>
         /// <returns></returns>
         [HttpPost("Distance")]
-        public async Task<IActionResult> GetDistanceBetweenTwoPoints([FromBody] DistanceRequest distanceRequest)
+        public async Task<IActionResult> GetDistanceBetweenTwoPoints(
+            [FromBody] DistanceRequest distanceRequest,
+            CancellationToken cancellationToken)
         {
             double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                distanceRequest.Origin, distanceRequest.Destination);
+                distanceRequest.Origin, distanceRequest.Destination, cancellationToken);
             return StatusCode(200, distance);
         }
 

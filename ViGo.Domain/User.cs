@@ -33,6 +33,8 @@ namespace ViGo.Domain
         public UserRole Role { get; set; }
 
         public double? Rating { get; set; }
+        public double CanceledTripRate { get; set; }
+        public double WeeklyCanceledTripRate { get; set; }
         public UserStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }

@@ -229,6 +229,34 @@ namespace ViGo.Utilities.Payments
         public string ZaloPayTransactionToken { get; set; }
     }
 
+    public class ZaloPayQueryViGoResponse
+    {
+        public int ReturnCode { get; set; }
+
+        public string ReturnMessage { get; set; }
+
+        public int SubReturnCode { get; set; }
+
+        public string SubReturnMessage { get; set; }
+
+        public bool IsProcessing { get; set; }
+
+        public bool Amount { get; set; }
+
+        public string ZaloPayTransactionToken { get; set; }
+
+        public ZaloPayQueryViGoResponse(ZaloPayQueryResponse response)
+        {
+            ReturnCode = response.ReturnCode;
+            ReturnMessage = response.ReturnMessage;
+            SubReturnCode = response.SubReturnCode;
+            SubReturnMessage = response.SubReturnMessage;
+            IsProcessing = response.IsProcessing;
+            Amount = response.Amount;
+            ZaloPayTransactionToken = response.ZaloPayTransactionToken;
+        }
+    }
+
     public class ZaloPayEmbedData
     {
         [JsonProperty("redirecturl")]

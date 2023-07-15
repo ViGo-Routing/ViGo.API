@@ -39,6 +39,7 @@ namespace ViGo.Models.BookingDetails
         public short? Rate { get; set; }
         public string? Feedback { get; set; }
         public BookingDetailStatus Status { get; set; }
+        public Guid? CanceledUserId { get; set; } 
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -65,6 +66,7 @@ namespace ViGo.Models.BookingDetails
             CreatedTime = bookingDetail.CreatedTime;
             UpdatedTime = bookingDetail.UpdatedTime;
             UpdatedBy = bookingDetail.UpdatedBy;
+            CanceledUserId = bookingDetail.CanceledUserId;
             //Driver = driver;
         }
 
@@ -72,30 +74,31 @@ namespace ViGo.Models.BookingDetails
             RouteRoutineViewModel customerRoutine,
             StationViewModel startStation, StationViewModel endStation,
             UserViewModel? driver)
+            : this(bookingDetail)
         {
-            Id = bookingDetail.Id;
+            //Id = bookingDetail.Id;
             Driver = driver;
             //CustomerRouteId = bookingDetail.CustomerRouteId;
-            CustomerRouteRoutineId = bookingDetail.CustomerRouteRoutineId;
+            //CustomerRouteRoutineId = bookingDetail.CustomerRouteRoutineId;
             CustomerRouteRoutine = customerRoutine;
             StartStation = startStation;
             EndStation = endStation;
-            CustomerDesiredPickupTime = bookingDetail.CustomerDesiredPickupTime;
-            AssignedTime = bookingDetail.AssignedTime;
-            Date = bookingDetail.Date;
-            Price = bookingDetail.Price;
-            PriceAfterDiscount = bookingDetail.PriceAfterDiscount;
-            DriverWage = bookingDetail.DriverWage;
-            ArriveAtPickupTime = bookingDetail.ArriveAtPickupTime;
-            PickupTime = bookingDetail.PickupTime;
-            DropoffTime = bookingDetail.DropoffTime;
-            Rate = bookingDetail.Rate;
-            Feedback = bookingDetail.Feedback;
-            Status = bookingDetail.Status;
-            CreatedTime = bookingDetail.CreatedTime;
-            CreatedBy = bookingDetail.CreatedBy;
-            UpdatedTime = bookingDetail.UpdatedTime;
-            UpdatedBy = bookingDetail.UpdatedBy;
+            //CustomerDesiredPickupTime = bookingDetail.CustomerDesiredPickupTime;
+            //AssignedTime = bookingDetail.AssignedTime;
+            //Date = bookingDetail.Date;
+            //Price = bookingDetail.Price;
+            //PriceAfterDiscount = bookingDetail.PriceAfterDiscount;
+            //DriverWage = bookingDetail.DriverWage;
+            //ArriveAtPickupTime = bookingDetail.ArriveAtPickupTime;
+            //PickupTime = bookingDetail.PickupTime;
+            //DropoffTime = bookingDetail.DropoffTime;
+            //Rate = bookingDetail.Rate;
+            //Feedback = bookingDetail.Feedback;
+            //Status = bookingDetail.Status;
+            //CreatedTime = bookingDetail.CreatedTime;
+            //CreatedBy = bookingDetail.CreatedBy;
+            //UpdatedTime = bookingDetail.UpdatedTime;
+            //UpdatedBy = bookingDetail.UpdatedBy;
         }
 
         //public BookingDetailViewModel(BookingDetail bookingDetail,

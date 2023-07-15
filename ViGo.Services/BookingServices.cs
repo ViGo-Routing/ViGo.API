@@ -489,21 +489,49 @@ namespace ViGo.Services
                 throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
             }
 
-            TimeSpan difference = pickupDateTime - now;
+            if (cancelledUser != null)
+            {
+                int tripsInWeek = bookingDetails.Count(
+                d => d.Date.IsInCurrentWeek());
 
-            double chargeFee = 0;
-            if (difference.TotalHours >= 8)
-            {
-                chargeFee = 0;
-            } else if (difference.TotalHours >= 4)
-            {
-                // 4 hours
-                chargeFee = calculateChargeFee(bookingDetails, 0.2, 0.15);
-            } else
-            {
-                chargeFee = calculateChargeFee(bookingDetails, 0.7, 0.6);
+                if (cancelledUser.WeeklyCanceledTripRate + tripsInWeek > 3)
+                {
+                    throw new ApplicationException("Số chuyến đi được phép hủy có lịch trình trong tuần này của bạn " +
+                            "đã đạt giới hạn (3 chuyến đi). Bạn không thể hủy thêm chuyến đi nào có lịch trình " +
+                            "trong tuần này nữa!");
+                }
             }
 
+            double chargeFee = 0;
+
+            if (!firstPickup.DriverId.HasValue)
+            {
+                // No driver
+                // No fee
+                chargeFee = 0;
+            } else
+            {
+                // Has driver
+                TimeSpan difference = pickupDateTime - now;
+
+                if (difference.TotalHours >= 6)
+                {
+                    chargeFee = 0;
+                }
+                else if (difference.TotalHours >= 1)
+                {
+                    // < 6 hours and >= 1 hour
+                    //chargeFee = calculateChargeFee(bookingDetails, 0.2, 0.15);
+                    chargeFee = 0.1;
+                }
+                else
+                {
+                    //chargeFee = calculateChargeFee(bookingDetails, 0.7, 0.6);
+                    chargeFee = 1;
+                }
+            }
+
+            double chargeFeeAmount = firstPickup.PriceAfterDiscount.Value * chargeFee;
             chargeFee = FareUtilities.RoundToThousands(chargeFee);
 
             if (cancelledUser != null)
@@ -560,28 +588,29 @@ namespace ViGo.Services
 
                 await work.BookingDetails.UpdateAsync(bookingDetail);
             }
+
             await work.Bookings.UpdateAsync(booking);
+
+            // Trigger Background Task for Calculating Cancel Rate
+
+
             await work.SaveChangesAsync(cancellationToken);
 
             return booking;
 
-            double calculateChargeFee(IEnumerable<BookingDetail> bookingDetails,
-                double driverSelectedChargePercent, double notSelectedChargePercent)
-            {
-                double fee = 0;
-                foreach (BookingDetail bookingDetail in bookingDetails)
-                {
-                    if (bookingDetail.DriverId.HasValue)
-                    {
-                        fee += bookingDetail.PriceAfterDiscount.Value * driverSelectedChargePercent;
-                    } else
-                    {
-                        fee += bookingDetail.PriceAfterDiscount.Value * notSelectedChargePercent;
-                    }
-                }
+            //double calculateChargeFee(IEnumerable<BookingDetail> bookingDetails,
+            //    double chargePercent)
+            //{
+            //    double fee = 0;
+            //    foreach (BookingDetail bookingDetail in bookingDetails)
+            //    {
 
-                return fee;
-            }
+            //            fee += bookingDetail.PriceAfterDiscount.Value * driverSelectedChargePercent;
+
+            //    }
+
+            //    return fee;
+            //}
         }
     }
 }

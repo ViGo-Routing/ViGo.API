@@ -99,6 +99,9 @@ namespace ViGo.Utilities.Configuration
         public static string VnPayPaymentUrl
             => Configuration["Payments:VnPay:Url"];
 
+        public static string VnPayQueryUrl
+            => Configuration["Payments:VnPay:QueryUrl"];
+
         public static string VnPayTmnCode
             => Configuration["Payments:VnPay:TmnCode"];
 

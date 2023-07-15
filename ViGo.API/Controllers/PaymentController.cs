@@ -45,30 +45,60 @@ namespace ViGo.API.Controllers
             _backgroundQueue = queue;
         }
 
-        #region VnPay
-
         /// <summary>
-        /// Generate Payment URL for VNPay.
+        /// Create Topup Transaction and get the payment URL
         /// </summary>
         /// <remarks>
+        /// Allowed Payment Method: ZALO or VNPAY
+        /// <br />
+        /// If the current logged-in user is Admin, UserId is required
         /// </remarks>
         /// <returns>
-        /// The created URL
+        /// The created topup transaction
         /// </returns>
         /// <response code="400">Some information is not valid</response>
-        /// <response code="200">Payment URL is created successfully</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Transaction URL is created successfully</response>
         /// <response code="500">Server error</response>
-        [HttpPost("Generate/VnPay")]
-        [ProducesResponseType(typeof(string), 200)]
+        [HttpPost("Generate/Topup")]
+        [ProducesResponseType(typeof(TopupTransactionViewModel), 200)]
+        [Authorize]
         [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> GenerateVnPayPaymentUrl(TopupTransactionCreateModel model,
+        public async Task<IActionResult> GenerateTopupTransaction(TopupTransactionCreateModel model,
             CancellationToken cancellationToken)
         {
-            string paymentUrl = await paymentServices.GenerateVnPayPaymentUrlAsync(model, PaymentMethod.VNPAY, HttpContext, 
-                cancellationToken);
-            return StatusCode(200, paymentUrl);
+            TopupTransactionViewModel? viewModel = await paymentServices
+                .CreateTopUpTransactionRequest(model, HttpContext, cancellationToken);
+
+            return StatusCode(200, viewModel);
         }
+
+        #region VnPay
+
+        ///// <summary>
+        ///// Generate Payment URL for VNPay.
+        ///// </summary>
+        ///// <remarks>
+        ///// </remarks>
+        ///// <returns>
+        ///// The created URL
+        ///// </returns>
+        ///// <response code="400">Some information is not valid</response>
+        ///// <response code="200">Payment URL is created successfully</response>
+        ///// <response code="500">Server error</response>
+        //[HttpPost("Generate/VnPay")]
+        //[ProducesResponseType(typeof(string), 200)]
+        //[ProducesResponseType(400)]
+        //[ProducesResponseType(500)]
+        //public async Task<IActionResult> GenerateVnPayPaymentUrl(TopupTransactionCreateModel model,
+        //    CancellationToken cancellationToken)
+        //{
+        //    string paymentUrl = await paymentServices.GenerateVnPayPaymentUrlAsync(model, PaymentMethod.VNPAY, HttpContext, 
+        //        cancellationToken);
+        //    return StatusCode(200, paymentUrl);
+        //}
 
         /// <summary>
         /// VNPay Callback URL
@@ -115,37 +145,37 @@ namespace ViGo.API.Controllers
             (string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
                 Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
 
-            return StatusCode(200, new { code = code, message = message });
+            return StatusCode(200, new { RspCode = code, Message = message });
         }
         #endregion
 
         #region ZaloPay
-        /// <summary>
-        /// Create ZaloPay Order
-        /// </summary>
-        /// <remarks>
-        /// </remarks>
-        /// <returns>
-        /// The created order with Order URL
-        /// </returns>
-        /// <response code="400">Some information is not valid</response>
-        /// <response code="401">Unauthorized</response>
-        /// <response code="200">Order URL is created successfully</response>
-        /// <response code="500">Server error</response>
-        [HttpPost("Generate/ZaloPay")]
-        [ProducesResponseType(typeof(TopupTransactionViewModel), 200)]
-        [Authorize]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(401)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> GenerateZaloPayOrder(TopupTransactionCreateModel model,
-            CancellationToken cancellationToken)
-        {
-            TopupTransactionViewModel? viewModel = await paymentServices
-                .CreateTopUpTransactionRequest(model, PaymentMethod.ZALO, HttpContext, cancellationToken);
+        ///// <summary>
+        ///// Create ZaloPay Order
+        ///// </summary>
+        ///// <remarks>
+        ///// </remarks>
+        ///// <returns>
+        ///// The created order with Order URL
+        ///// </returns>
+        ///// <response code="400">Some information is not valid</response>
+        ///// <response code="401">Unauthorized</response>
+        ///// <response code="200">Order URL is created successfully</response>
+        ///// <response code="500">Server error</response>
+        //[HttpPost("Generate/ZaloPay")]
+        //[ProducesResponseType(typeof(TopupTransactionViewModel), 200)]
+        //[Authorize]
+        //[ProducesResponseType(400)]
+        //[ProducesResponseType(401)]
+        //[ProducesResponseType(500)]
+        //public async Task<IActionResult> GenerateZaloPayOrder(TopupTransactionCreateModel model,
+        //    CancellationToken cancellationToken)
+        //{
+        //    TopupTransactionViewModel? viewModel = await paymentServices
+        //        .CreateTopUpTransactionRequest(model, PaymentMethod.ZALO, HttpContext, cancellationToken);
 
-            return StatusCode(200, viewModel);
-        }
+        //    return StatusCode(200, viewModel);
+        //}
 
         /// <summary>
         /// ZaloPay Callback URL
@@ -179,16 +209,38 @@ namespace ViGo.API.Controllers
         /// <response code="200">Payment is queried successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost("Query/ZaloPay/{walletTransactionId}")]
-        [ProducesResponseType(typeof(ZaloPayQueryResponse), 200)]
+        [ProducesResponseType(typeof(ZaloPayQueryViGoResponse), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> ZaloPayQuery(
             Guid walletTransactionId,
             CancellationToken cancellationToken)
         {
-            ZaloPayQueryResponse response = await paymentServices.ZaloPayGetOrderStatus(walletTransactionId, 
+            ZaloPayQueryViGoResponse response = await paymentServices.ZaloPayGetOrderStatus(walletTransactionId, 
                 HttpContext,
                 cancellationToken);
+            return StatusCode(200, response);
+        }
+
+        /// <summary>
+        /// VnPay Query Order status
+        /// </summary>
+        /// <returns>
+        /// Param as the wallet transaction Id
+        /// </returns>
+        /// <response code="400">Some information is not valid</response>
+        /// <response code="200">Payment is queried successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Query/VnPay/{walletTransactionId}")]
+        [ProducesResponseType(typeof(VnPayQueryViGoResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> VnPayQuery(
+            Guid walletTransactionId,
+            CancellationToken cancellationToken)
+        {
+            VnPayQueryViGoResponse response = await paymentServices
+                .GetVnPayTransactionStatus(walletTransactionId, HttpContext, cancellationToken);
             return StatusCode(200, response);
         }
         #endregion

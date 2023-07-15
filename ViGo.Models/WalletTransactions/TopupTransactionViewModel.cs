@@ -28,6 +28,7 @@ namespace ViGo.Models.WalletTransactions
             {
                 throw new InvalidOperationException();
             }
+
             Id = walletTransaction.Id;
             UserId = userId;
             Amount = walletTransaction.Amount;
