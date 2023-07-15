@@ -23,7 +23,8 @@ namespace ViGo.Utilities
             string requestUrl,
             HttpMethod method,
             IEnumerable<KeyValuePair<string, string>>? parameters = null,
-            M? body = null
+            M? body = null,
+            CancellationToken cancellationToken = default
             ) where T : class where M : class
         {
             T? result = null;
@@ -46,7 +47,7 @@ namespace ViGo.Utilities
                 else if (method == HttpMethod.Post)
                 {
                     StringContent content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
-                    response = await client.PostAsync(queryString, content);
+                    response = await client.PostAsync(queryString, content, cancellationToken);
                 }
 
                 string resultText = await response.Content.ReadAsStringAsync();

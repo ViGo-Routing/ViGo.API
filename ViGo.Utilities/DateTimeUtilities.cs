@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,17 @@ namespace ViGo.Utilities
         public static long GetTimeStamp()
         {
             return GetTimeStamp(GetDateTimeVnNow());
+        }
+
+        public static bool IsInCurrentWeek(this DateTime dateTimeToCheck)
+        {
+            Calendar calendar = DateTimeFormatInfo
+                .CurrentInfo.Calendar;
+            DateTime now = GetDateTimeVnNow();
+            var currentDate = now.Date.AddDays(-1 * (int)calendar.GetDayOfWeek(now));
+            var dateToCheck = dateTimeToCheck.Date.AddDays(-1 * (int)calendar.GetDayOfWeek(dateTimeToCheck));
+
+            return currentDate == dateToCheck;
         }
     }
 }

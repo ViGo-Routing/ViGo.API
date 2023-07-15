@@ -11,6 +11,6 @@ namespace ViGo.Models.WalletTransactions
     {
         public Guid? UserId { get; set; }
         public double Amount { get; set; }
-        //public PaymentMethod? PaymentMethod { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
     }
 }
