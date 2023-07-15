@@ -387,6 +387,10 @@ namespace ViGo.Services
                 ViGoConfiguration.VnPayQueryUrl, HttpMethod.Post,
                 body: vnPayQueryRequest, cancellationToken: cancellationToken);
 
+            //if (!response.IsValidResponse(ViGoConfiguration.VnPayHashSecret))
+            //{
+            //    throw new ApplicationException("Checksum không hợp lệ!!");
+            //}
             return new VnPayQueryViGoResponse(response);
         }
 
