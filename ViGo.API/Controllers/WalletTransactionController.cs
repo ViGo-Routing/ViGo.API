@@ -34,15 +34,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
-        [HttpGet]
-        public async Task<IActionResult> GetAllWalletsAsync([FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        [Authorize]
+        [HttpGet("{walletId}")]
+        public async Task<IActionResult> GetAllWalletTransactionsAsync(Guid walletId,
+            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
         {
             if (pagination is null)
             {
                 pagination = PaginationParameter.Default;
             }
-            IPagedEnumerable<WalletTransactionViewModel> walletTransactions = await walletTransactionServices.GetAllWalletTransaction(pagination, HttpContext, cancellationToken);
+            IPagedEnumerable<WalletTransactionViewModel> walletTransactions = await 
+                walletTransactionServices.GetAllWalletTransactionsAsync(walletId,
+                    pagination, HttpContext, cancellationToken);
             return StatusCode(200, walletTransactions);
         }
     }

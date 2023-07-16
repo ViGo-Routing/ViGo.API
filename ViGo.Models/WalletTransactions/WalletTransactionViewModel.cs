@@ -28,7 +28,24 @@ namespace ViGo.Models.WalletTransactions
         public bool IsDeleted { get; set; }
         public BookingViewModel? Booking { get; set; }
         public BookingDetailViewModel? BookingDetail { get; set; }
-        public WalletViewModel Wallet { get; set; } = null!;
+        public WalletViewModel? Wallet { get; set; } = null!;
+
+        public WalletTransactionViewModel(WalletTransaction walletTransaction)
+        {
+            Id = walletTransaction.Id;
+            WalletId = walletTransaction.WalletId;
+            Amount = walletTransaction.Amount;
+            BookingDetailId = walletTransaction.BookingDetailId;
+            ExternalTransactionId = walletTransaction.ExternalTransactionId;
+            Type = walletTransaction.Type;
+            Status = walletTransaction.Status;
+            CreatedTime = walletTransaction.CreatedTime;
+            CreatedBy = walletTransaction.CreatedBy;
+            UpdatedTime = walletTransaction.UpdatedTime;
+            UpdatedBy = walletTransaction.UpdatedBy;
+            IsDeleted = walletTransaction.IsDeleted;
+            //Wallet = wallet;
+        }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet)
         {
