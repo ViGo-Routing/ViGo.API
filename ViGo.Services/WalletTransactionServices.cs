@@ -88,6 +88,29 @@ namespace ViGo.Services
 
         }
 
+        public async Task<WalletTransactionViewModel> GetTransactionAsync(Guid walletTransactionId,
+            CancellationToken cancellationToken)
+        {
+            WalletTransaction walletTransaction = await work.WalletTransactions.GetAsync(walletTransactionId,
+                cancellationToken: cancellationToken);
+            if (walletTransaction is null)
+            {
+                throw new ApplicationException("Giao dịch không tồn tại!!");
+            }
+
+            if (!IdentityUtilities.IsAdmin())
+            {
+                Wallet wallet = await work.Wallets.GetAsync(walletTransaction.WalletId,
+                cancellationToken: cancellationToken);
+                if (!wallet.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!!");
+                }
+            }
+
+            return new WalletTransactionViewModel(walletTransaction);
+        }
+
         //public async Task<WalletTransactionViewModel> CreateTransactionAsync(Guid walletId, WalletTransactionCreateModel walletCreate, CancellationToken cancellationToken)
         //{
         //    Wallet wallet = await work.Wallets.GetAsync(walletId, cancellationToken: cancellationToken);
