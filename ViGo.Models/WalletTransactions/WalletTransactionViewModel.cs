@@ -18,6 +18,7 @@ namespace ViGo.Models.WalletTransactions
         public double Amount { get; set; }
         public Guid? BookingId { get; set; }
         public Guid? BookingDetailId { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
         public string? ExternalTransactionId { get; set; }
         public WalletTransactionType Type { get; set; }
         public WalletTransactionStatus Status { get; set; }
@@ -44,59 +45,63 @@ namespace ViGo.Models.WalletTransactions
             UpdatedTime = walletTransaction.UpdatedTime;
             UpdatedBy = walletTransaction.UpdatedBy;
             IsDeleted = walletTransaction.IsDeleted;
+            PaymentMethod = walletTransaction.PaymentMethod;
             //Wallet = wallet;
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet)
+            : this (walletTransaction)
         {
-            Id = walletTransaction.Id;
-            WalletId = walletTransaction.WalletId;
-            Amount = walletTransaction.Amount;
-            BookingDetailId = walletTransaction.BookingDetailId;
-            ExternalTransactionId = walletTransaction.ExternalTransactionId;
-            Type = walletTransaction.Type;
-            Status = walletTransaction.Status;
-            CreatedTime = walletTransaction.CreatedTime;
-            CreatedBy = walletTransaction.CreatedBy;
-            UpdatedTime = walletTransaction.UpdatedTime;
-            UpdatedBy = walletTransaction.UpdatedBy;
-            IsDeleted = walletTransaction.IsDeleted;
+            //Id = walletTransaction.Id;
+            //WalletId = walletTransaction.WalletId;
+            //Amount = walletTransaction.Amount;
+            //BookingDetailId = walletTransaction.BookingDetailId;
+            //ExternalTransactionId = walletTransaction.ExternalTransactionId;
+            //Type = walletTransaction.Type;
+            //Status = walletTransaction.Status;
+            //CreatedTime = walletTransaction.CreatedTime;
+            //CreatedBy = walletTransaction.CreatedBy;
+            //UpdatedTime = walletTransaction.UpdatedTime;
+            //UpdatedBy = walletTransaction.UpdatedBy;
+            //IsDeleted = walletTransaction.IsDeleted;
             Wallet = wallet;
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet, BookingViewModel booking)
+            : this (walletTransaction, wallet)
         {
-            Id = walletTransaction.Id;
-            WalletId = walletTransaction.WalletId;
-            Amount = walletTransaction.Amount;
-            BookingDetailId = walletTransaction.BookingDetailId;
-            ExternalTransactionId = walletTransaction.ExternalTransactionId;
-            Type = walletTransaction.Type;
-            Status = walletTransaction.Status;
-            CreatedTime = walletTransaction.CreatedTime;
-            CreatedBy = walletTransaction.CreatedBy;
-            UpdatedTime = walletTransaction.UpdatedTime;
-            UpdatedBy = walletTransaction.UpdatedBy;
-            IsDeleted = walletTransaction.IsDeleted;
-            Wallet = wallet;
+            //Id = walletTransaction.Id;
+            //WalletId = walletTransaction.WalletId;
+            //Amount = walletTransaction.Amount;
+            //BookingDetailId = walletTransaction.BookingDetailId;
+            //ExternalTransactionId = walletTransaction.ExternalTransactionId;
+            //Type = walletTransaction.Type;
+            //Status = walletTransaction.Status;
+            //CreatedTime = walletTransaction.CreatedTime;
+            //CreatedBy = walletTransaction.CreatedBy;
+            //UpdatedTime = walletTransaction.UpdatedTime;
+            //UpdatedBy = walletTransaction.UpdatedBy;
+            //IsDeleted = walletTransaction.IsDeleted;
+            //Wallet = wallet;
             Booking = booking;
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet, BookingViewModel? booking, BookingDetailViewModel? bookingDetail)
+            : this (walletTransaction, wallet)
         {
-            Id = walletTransaction.Id;
-            WalletId = walletTransaction.WalletId;
-            Amount = walletTransaction.Amount;
-            BookingDetailId = walletTransaction.BookingDetailId;
-            ExternalTransactionId = walletTransaction.ExternalTransactionId;
-            Type = walletTransaction.Type;
-            Status = walletTransaction.Status;
-            CreatedTime = walletTransaction.CreatedTime;
-            CreatedBy = walletTransaction.CreatedBy;
-            UpdatedTime = walletTransaction.UpdatedTime;
-            UpdatedBy = walletTransaction.UpdatedBy;
-            IsDeleted = walletTransaction.IsDeleted;
-            Wallet = wallet;
+            //Id = walletTransaction.Id;
+            //WalletId = walletTransaction.WalletId;
+            //Amount = walletTransaction.Amount;
+            //BookingDetailId = walletTransaction.BookingDetailId;
+            //ExternalTransactionId = walletTransaction.ExternalTransactionId;
+            //Type = walletTransaction.Type;
+            //Status = walletTransaction.Status;
+            //CreatedTime = walletTransaction.CreatedTime;
+            //CreatedBy = walletTransaction.CreatedBy;
+            //UpdatedTime = walletTransaction.UpdatedTime;
+            //UpdatedBy = walletTransaction.UpdatedBy;
+            //IsDeleted = walletTransaction.IsDeleted;
+            //Wallet = wallet;
             Booking = booking;
             BookingDetail = bookingDetail;
         }
