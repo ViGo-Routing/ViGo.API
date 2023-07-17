@@ -14,6 +14,8 @@ namespace ViGo.Models.Events
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
         public EventStatus Status { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
 
         public EventViewModel(Event ev)
         {
@@ -21,6 +23,8 @@ namespace ViGo.Models.Events
             Title = ev.Title;
             Content = ev.Content;
             Status = ev.Status;
+            StartDate = ev.StartDate;
+            EndDate = ev.EndDate;
         }
     }
 }

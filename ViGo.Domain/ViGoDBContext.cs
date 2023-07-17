@@ -167,6 +167,10 @@ namespace ViGo.Domain
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
                 entity.Property(e => e.Title).HasMaxLength(255);
+
+                entity.Property(e => e.EndDate).HasColumnType("date");
+
+                entity.Property(e => e.StartDate).HasColumnType("date");
             });
 
             modelBuilder.Entity<Fare>(entity =>
