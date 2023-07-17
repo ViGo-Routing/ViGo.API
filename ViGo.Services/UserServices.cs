@@ -314,6 +314,7 @@ namespace ViGo.Services
             user.FcmToken = model.FcmToken;
 
             await work.Users.UpdateAsync(user);
+            await work.SaveChangesAsync(cancellationToken);
 
             return user;
         }
