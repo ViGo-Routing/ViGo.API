@@ -39,7 +39,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200"> list successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<UserViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -115,7 +115,7 @@ namespace ViGo.API.Controllers
         /// </returns>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Generated Firebase Token successfully</response>
         /// <response code="500">Server error</response>
         [HttpPost("Generate-Firebase-Token")]
         public async Task<IActionResult> GenerateFirebaseToken(string phone,
@@ -131,7 +131,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -154,7 +154,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Updated successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IEnumerable<User>), 200)]
         [ProducesResponseType(401)]

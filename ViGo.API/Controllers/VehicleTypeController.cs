@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Models.Vehicles;
 using ViGo.Models.VehicleTypes;
@@ -28,7 +29,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get list of Vehicle Type successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<VehicleType>), 200)]
         [ProducesResponseType(401)]
@@ -54,7 +55,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get Vehicle Type successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(VehicleType), 200)]
         [ProducesResponseType(401)]
@@ -88,13 +89,13 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Create successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(VehicleType), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles ="ADMIN")]
         [HttpPost]
         public async Task<IActionResult> CreateVehicleTypeAsync([FromBody] VehicleTypeCreateModel vehicleTypeCreate, CancellationToken cancellationToken)
         {
@@ -122,13 +123,13 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Updated successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(VehicleType), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize(Roles ="ADMIN")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVehicleTypeAsync(Guid id, [FromBody] VehicleTypeUpdateModel vehicleTypeCreate)
         {

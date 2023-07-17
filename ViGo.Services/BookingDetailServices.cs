@@ -894,6 +894,34 @@ namespace ViGo.Services
             return bookingDetail;
         }
 
+        public async Task<BookingDetailViewModel> UserUpdateFeedback(Guid id, BookingDetailFeedbackModel feedback)
+        {
+            var currentBookingDetail = await work.BookingDetails.GetAsync(id);
+            Guid bookingID = currentBookingDetail.BookingId;
+            Booking booking = await work.Bookings.GetAsync(bookingID);
+            if(booking.CustomerId != IdentityUtilities.GetCurrentUserId())
+            {
+                throw new ApplicationException("Bạn chỉ được phép đánh giá chuyến đi của mình thôi!");
+            }
+
+
+            if (currentBookingDetail == null)
+            {
+                throw new ApplicationException("Booking Detail ID không tồn tại!");
+            }
+            else
+            {
+                if(feedback.Rate != null) currentBookingDetail.Rate = feedback.Rate;
+                if (feedback.Feedback != null) currentBookingDetail.Feedback = feedback.Feedback;
+            }
+            await work.BookingDetails.UpdateAsync(currentBookingDetail);
+            await work.SaveChangesAsync();
+
+            BookingDetailViewModel bookingDetailView = new BookingDetailViewModel(currentBookingDetail);
+            return bookingDetailView;
+            
+        }
+
         #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
             CancellationToken cancellationToken)
