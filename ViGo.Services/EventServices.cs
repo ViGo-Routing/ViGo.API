@@ -11,6 +11,8 @@ using ViGo.Models.Events;
 using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
+using ViGo.Utilities;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
@@ -67,15 +69,20 @@ namespace ViGo.Services
 
         public async Task<EventViewModel> CreateEvent(EventCreateModel eventCreate, CancellationToken cancellationToken)
         {
+            //eventCreate.StartDate.DateTimeValidate(minimum: DateTimeUtilities.GetDateTimeVnNow(), minErrorMessage: "Ngày bắt đầu không hợp lệ!");
+            eventCreate.EndDate.DateTimeValidate(minimum: eventCreate.StartDate, minErrorMessage: "Ngày kết thúc phải sau ngày bắt đầu!");
+
             Event newEvent = new Event
             {
                 Title = eventCreate.Title,
                 Content = eventCreate.Content,
+                StartDate = eventCreate.StartDate,
+                EndDate = eventCreate.EndDate,
                 Status = EventStatus.ACTIVE,
             };
 
-            await work.Events.InsertAsync(newEvent, cancellationToken:cancellationToken);
-            var result = await work.SaveChangesAsync(cancellationToken:cancellationToken);
+            await work.Events.InsertAsync(newEvent, cancellationToken: cancellationToken);
+            var result = await work.SaveChangesAsync(cancellationToken: cancellationToken);
             EventViewModel eventView = new EventViewModel(newEvent);
             if (result > 0)
             {
@@ -87,16 +94,30 @@ namespace ViGo.Services
         public async Task<EventViewModel> UpdateEvent(Guid id, EventUpdateModel eventUpdate)
         {
             var currentEvent = await work.Events.GetAsync(id);
+            if (currentEvent == null)
+            {
+                throw new ApplicationException("Event không tồn tại!");
+            }
             if (currentEvent != null)
             {
-                if(eventUpdate.Title != null) currentEvent.Title = eventUpdate.Title;
-                if(eventUpdate.Content != null) currentEvent.Content = eventUpdate.Content;
-                if(eventUpdate.Status != null) currentEvent.Status = (EventStatus)eventUpdate.Status;
+                if (eventUpdate.Title != null) currentEvent.Title = eventUpdate.Title;
+                if (eventUpdate.Content != null) currentEvent.Content = eventUpdate.Content;                
+                if (eventUpdate.StartDate != null)
+                {
+                    eventUpdate.StartDate.Value.DateTimeValidate(maximum: eventUpdate.EndDate, maxErrorMessage: "Ngày bắt đầu phải trước ngày kết thúc!");
+                    currentEvent.StartDate = (DateTime)eventUpdate.StartDate;
+                }
+                if (eventUpdate.EndDate != null)
+                {
+                    eventUpdate.EndDate.Value.DateTimeValidate(minimum: eventUpdate.StartDate, minErrorMessage: "Ngày kết thúc phải sau ngày bắt đầu!");
+                    currentEvent.EndDate = (DateTime)eventUpdate.EndDate;
+                }                
+                if (eventUpdate.Status != null) currentEvent.Status = (EventStatus)eventUpdate.Status;
             }
 
             await work.Events.UpdateAsync(currentEvent!);
             await work.SaveChangesAsync();
-            EventViewModel eventView = new EventViewModel(currentEvent);
+            EventViewModel eventView = new EventViewModel(currentEvent!);
             return eventView;
         }
     }
