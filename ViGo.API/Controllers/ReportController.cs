@@ -25,7 +25,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get list of Reports successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<ReportViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -50,7 +50,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<ReportViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -75,7 +75,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(ReportViewModel), 200)]
         [ProducesResponseType(401)]
@@ -99,7 +99,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Created successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(ReportViewModel), 200)]
         [ProducesResponseType(401)]
@@ -122,7 +122,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Updated successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(ReportViewModel), 200)]
         [ProducesResponseType(401)]
@@ -141,7 +141,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Updated successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(ReportViewModel), 200)]
         [ProducesResponseType(401)]
