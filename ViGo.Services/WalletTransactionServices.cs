@@ -50,7 +50,7 @@ namespace ViGo.Services
                     pagination.PageNumber, pagination.PageSize, totalRecords, context, true);
             }
 
-            walletTransactions = walletTransactions.OrderBy(w => w.CreatedTime)
+            walletTransactions = walletTransactions.OrderByDescending(w => w.CreatedTime)
                 .ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
             //IEnumerable<Guid> walletsId = walletTransactions.Select(x => x.WalletId);
