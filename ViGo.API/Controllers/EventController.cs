@@ -27,7 +27,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get list of Events successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<EventViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -52,7 +52,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get list successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(IPagedEnumerable<EventViewModel>), 200)]
         [ProducesResponseType(401)]
@@ -78,7 +78,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Get Event successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(EventViewModel), 200)]
         [ProducesResponseType(401)]
@@ -102,7 +102,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Created successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(EventViewModel), 200)]
         [ProducesResponseType(401)]
@@ -110,7 +110,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPost]
-        public async Task<IActionResult> CreateEvent(EventCreateModel eventCreate, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateEvent([FromBody]EventCreateModel eventCreate, CancellationToken cancellationToken)
         {
             EventViewModel eventView = await eventServices.CreateEvent(eventCreate, cancellationToken);
             if (eventView == null)
@@ -125,7 +125,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
-        /// <response code="200">Login successfully</response>
+        /// <response code="200">Updated successfully</response>
         /// <response code="500">Server error</response>
         [ProducesResponseType(typeof(EventViewModel), 200)]
         [ProducesResponseType(401)]
@@ -133,7 +133,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(Guid id, EventUpdateModel eventUpdate)
+        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody]EventUpdateModel eventUpdate)
         {
             EventViewModel eventView = await eventServices.UpdateEvent(id, eventUpdate);
             return StatusCode(200, eventView);

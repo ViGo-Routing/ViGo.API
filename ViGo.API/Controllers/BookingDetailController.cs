@@ -304,5 +304,27 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, bookingDetail);
         }
+
+        /// <summary>
+        /// User give feedback on Booking Detail
+        /// </summary>
+        /// <response code="400">Booking Detail information is not valid</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Feedback successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("Feedback/{bookingDetailId}")]
+        [Authorize(Roles ="CUSTOMER")]
+        [ProducesResponseType(typeof(BookingDetailViewModel), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId, [FromBody]BookingDetailFeedbackModel feedback)
+        {
+            BookingDetailViewModel bookingDetailView = await bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback);
+            return StatusCode(200, bookingDetailView);
+        }
+
     }
 }
