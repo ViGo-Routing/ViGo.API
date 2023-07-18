@@ -279,7 +279,7 @@ namespace ViGo.Services
                                             // Send data to mobile application
                                             await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                                                 {
-                                                    {"action", "topup" },
+                                                    {"action", "payment" },
                                                     { "walletTransactionId", walletTransaction.Id.ToString() },
                                                     { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                                                     { "isSuccess", "true" },
@@ -296,7 +296,7 @@ namespace ViGo.Services
                                             // Send data to mobile application
                                             await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                                                 {
-                                                    {"action", "topup" },
+                                                    {"action", "payment" },
                                                     { "walletTransactionId", walletTransaction.Id.ToString() },
                                                     { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                                                     { "isSuccess", "false" },
@@ -350,7 +350,7 @@ namespace ViGo.Services
                     // Send data to mobile application
                     await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                     {
-                        {"action", "topup" },
+                        {"action", "payment" },
                         { "walletTransactionId", walletTransaction.Id.ToString() },
                         { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                         { "isSuccess", "false" },
