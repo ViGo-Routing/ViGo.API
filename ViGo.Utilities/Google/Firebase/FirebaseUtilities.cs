@@ -9,6 +9,17 @@ namespace ViGo.Utilities.Google.Firebase
 {
     public static class FirebaseUtilities
     {
+        public static Dictionary<string, string> GenerateFirebaseMessageData(
+            string action, Dictionary<string, string> data)
+        {
+            Dictionary<string, string> results = new Dictionary<string, string>()
+            {
+                {"action", action },
+            };
+            results = results.Concat(data).ToDictionary(x => x.Key, x => x.Value);
+            return results;
+        }
+
         public static async Task<string> SendNotificationToDeviceAsync(string fcmToken,
             string title, string content, string? imageUrl = null, CancellationToken cancellationToken = default)
         {
