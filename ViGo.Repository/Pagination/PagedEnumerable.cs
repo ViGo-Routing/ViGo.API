@@ -138,7 +138,7 @@ namespace ViGo.Repository.Pagination
         /// <summary>
         /// Has Next Page
         /// </summary>
-        public bool HasNextPage => PageNumber + 1 < TotalPages;
+        public bool HasNextPage => PageNumber + 1 <= TotalPages;
 
         /// <summary>
         /// Next Page
