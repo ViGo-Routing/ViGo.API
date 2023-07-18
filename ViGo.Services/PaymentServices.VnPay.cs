@@ -273,35 +273,41 @@ namespace ViGo.Services
                                     {
                                         if (walletTransaction.Status == WalletTransactionStatus.SUCCESSFULL)
                                         {
-                                            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
-                                            "Quý khách đã thực hiện thanh toán topup bằng VNPay thành công!!", cancellationToken: cancellationToken);
-
-                                            // Send data to mobile application
-                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
-                                                {
-                                                    {"action", "payment" },
+                                            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                                            {
+                                                {"action", "payment" },
                                                     { "walletTransactionId", walletTransaction.Id.ToString() },
                                                     { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                                                     { "isSuccess", "true" },
                                                     { "message", "Thanh toán bằng VNPay thành công!" }
-                                                }, cancellationToken);
+                                            };
+
+                                            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
+                                            "Quý khách đã thực hiện thanh toán topup bằng VNPay thành công!!", data: dataToSend,
+                                            cancellationToken: cancellationToken);
+
+                                            // Send data to mobile application
+                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
 
                                         }
                                         else
                                         {
                                             // FAILED
+                                            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                                            {
+                                                {"action", "payment" },
+                                                { "walletTransactionId", walletTransaction.Id.ToString() },
+                                                { "paymentMethod", PaymentMethod.VNPAY.ToString() },
+                                                { "isSuccess", "false" },
+                                                { "message", "Thanh toán bằng VNPay thất bại!" }
+                                            };
+
                                             await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
-                                           "Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", cancellationToken: cancellationToken);
+                                           "Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", data: dataToSend,
+                                           cancellationToken: cancellationToken);
 
                                             // Send data to mobile application
-                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
-                                                {
-                                                    {"action", "payment" },
-                                                    { "walletTransactionId", walletTransaction.Id.ToString() },
-                                                    { "paymentMethod", PaymentMethod.VNPAY.ToString() },
-                                                    { "isSuccess", "false" },
-                                                    { "message", "Thanh toán bằng VNPay thất bại!" }
-                                                }, cancellationToken);
+                                            await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
                                         }
 
                                     }
@@ -344,18 +350,22 @@ namespace ViGo.Services
                 if (walletTransaction != null && fcmToken != null
                     && !string.IsNullOrEmpty(fcmToken))
                 {
-                    await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
-                                           "Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", cancellationToken: cancellationToken);
 
-                    // Send data to mobile application
-                    await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
+                    Dictionary<string, string> dataToSend = new Dictionary<string, string>()
                     {
                         {"action", "payment" },
                         { "walletTransactionId", walletTransaction.Id.ToString() },
                         { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                         { "isSuccess", "false" },
                         { "message", "Thanh toán bằng VNPay thất bại!" }
-                    }, cancellationToken);
+                    };
+
+                    await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
+                                           "Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", data: dataToSend, 
+                                           cancellationToken: cancellationToken);
+
+                    // Send data to mobile application
+                    await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
                 }
 
                 return ("99", "Unknown Error: " + ex.GeneratorErrorMessage());

@@ -21,7 +21,8 @@ namespace ViGo.Utilities.Google.Firebase
         }
 
         public static async Task<string> SendNotificationToDeviceAsync(string fcmToken,
-            string title, string content, string? imageUrl = null, CancellationToken cancellationToken = default)
+            string title, string content, Dictionary<string, string>? data = null,
+            string? imageUrl = null, CancellationToken cancellationToken = default)
         {
             Notification notification = new Notification
             {
@@ -34,6 +35,10 @@ namespace ViGo.Utilities.Google.Firebase
                 Notification = notification,
                 Token = fcmToken,
             };
+            if (data != null)
+            {
+                message.Data = data;
+            }
 
             string response = await FirebaseMessaging.DefaultInstance
                 .SendAsync(message, cancellationToken);
@@ -59,7 +64,8 @@ namespace ViGo.Utilities.Google.Firebase
 
         public static async Task<IEnumerable<string>> SendNotificationToDevicesAsync
             (IList<string> fcmTokens,
-            string title, string content, string? imageUrl = null, CancellationToken cancellationToken = default)
+            string title, string content, Dictionary<string, string>? data = null,
+            string? imageUrl = null, CancellationToken cancellationToken = default)
         {
             Notification notification = new Notification
             {
@@ -72,6 +78,10 @@ namespace ViGo.Utilities.Google.Firebase
                 Notification = notification,
                 Tokens = fcmTokens.ToList()
             };
+            if (data != null)
+            {
+                message.Data = data;
+            }
 
             var response = await FirebaseMessaging.DefaultInstance
                 .SendMulticastAsync(message, cancellationToken);
@@ -127,7 +137,8 @@ namespace ViGo.Utilities.Google.Firebase
         }
 
         public static async Task<string> SendNotificationToTopicAsync(
-            string topic, string title, string content, string? imageUrl = null, CancellationToken cancellationToken = default)
+            string topic, string title, string content, Dictionary<string, string>? data = null, 
+            string? imageUrl = null, CancellationToken cancellationToken = default)
         {
             Notification notification = new Notification
             {
@@ -141,6 +152,10 @@ namespace ViGo.Utilities.Google.Firebase
                 Notification = notification,
                 Topic = topic
             };
+            if (data != null)
+            {
+                message.Data = data;
+            }
 
             string response = await FirebaseMessaging.DefaultInstance
                 .SendAsync(message, cancellationToken);
