@@ -131,7 +131,7 @@ namespace ViGo.Services
                 .GetAsync(walletTransactionId, cancellationToken: cancellationToken);
             if (walletTransaction is null ||
                string.IsNullOrEmpty(walletTransaction.ExternalTransactionId)
-               || !walletTransaction.ExternalTransactionId.Contains("ZaloPay"))
+               || walletTransaction.PaymentMethod != PaymentMethod.ZALO)
             {
                 throw new ApplicationException("Giao dịch không tồn tại!!");
             }

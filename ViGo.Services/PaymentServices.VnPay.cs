@@ -66,7 +66,7 @@ namespace ViGo.Services
             //walletTransaction.ExternalTransactionId = txnRef;
             //await work.SaveChangesAsync(cancellationToken);
 
-            return (new TopupTransactionViewModel(walletTransaction, model.UserId.Value, paymentUrl, null), 
+            return (new TopupTransactionViewModel(walletTransaction, model.UserId.Value, paymentUrl, null),
                 txnRef);
         }
 
@@ -279,11 +279,13 @@ namespace ViGo.Services
                                             // Send data to mobile application
                                             await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                                                 {
+                                                    {"action", "topup" },
                                                     { "walletTransactionId", walletTransaction.Id.ToString() },
                                                     { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                                                     { "isSuccess", "true" },
                                                     { "message", "Thanh toán bằng VNPay thành công!" }
                                                 }, cancellationToken);
+
                                         }
                                         else
                                         {
@@ -294,6 +296,7 @@ namespace ViGo.Services
                                             // Send data to mobile application
                                             await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                                                 {
+                                                    {"action", "topup" },
                                                     { "walletTransactionId", walletTransaction.Id.ToString() },
                                                     { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                                                     { "isSuccess", "false" },
@@ -347,6 +350,7 @@ namespace ViGo.Services
                     // Send data to mobile application
                     await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, new Dictionary<string, string>()
                     {
+                        {"action", "topup" },
                         { "walletTransactionId", walletTransaction.Id.ToString() },
                         { "paymentMethod", PaymentMethod.VNPAY.ToString() },
                         { "isSuccess", "false" },
@@ -361,7 +365,7 @@ namespace ViGo.Services
             return (code, message);
         }
 
-        public async Task<VnPayQueryViGoResponse> 
+        public async Task<VnPayQueryViGoResponse>
             GetVnPayTransactionStatus(Guid walletTransactionId,
             HttpContext httpContext, CancellationToken cancellationToken)
         {
@@ -369,7 +373,7 @@ namespace ViGo.Services
                 .GetAsync(walletTransactionId, cancellationToken: cancellationToken);
             if (walletTransaction is null ||
                 string.IsNullOrEmpty(walletTransaction.ExternalTransactionId)
-                || !walletTransaction.ExternalTransactionId.Contains("VnPay"))
+                || walletTransaction.PaymentMethod != PaymentMethod.VNPAY)
             {
                 throw new ApplicationException("Giao dịch không tồn tại!!");
             }
@@ -377,7 +381,7 @@ namespace ViGo.Services
             string[] external = walletTransaction.ExternalTransactionId.Split("_VnPay_");
             string vnPayTransactionRef = external[0];
             long vnPayTransactionNo = Convert.ToInt64(external[1]);
-            
+
 
             VnPayQueryRequest vnPayQueryRequest = new VnPayQueryRequest(
                 vnPayTransactionRef, vnPayTransactionNo, walletTransaction.CreatedTime, httpContext);
