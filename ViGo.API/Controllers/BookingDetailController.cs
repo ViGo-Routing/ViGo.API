@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services;
+using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
@@ -18,10 +21,18 @@ namespace ViGo.API.Controllers
 
         private ILogger<BookingDetailController> _logger;
 
-        public BookingDetailController(IUnitOfWork work, ILogger<BookingDetailController> logger)
+        private IBackgroundTaskQueue _backgroundQueue;
+        private IServiceScopeFactory _serviceScopeFactory;
+
+        public BookingDetailController(IUnitOfWork work, 
+            ILogger<BookingDetailController> logger,
+            IBackgroundTaskQueue backgroundQueue,
+            IServiceScopeFactory serviceScopeFactory)
         {
             bookingDetailServices = new BookingDetailServices(work, logger);
             _logger = logger;
+            _backgroundQueue = backgroundQueue;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         /// <summary>
@@ -299,8 +310,38 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CancelBookingDetail(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {
-            BookingDetail bookingDetail = await bookingDetailServices
+            (BookingDetail bookingDetail, Guid? userId, bool isInWeek) = await bookingDetailServices
                 .CancelBookingDetailAsync(bookingDetailId, cancellationToken);
+
+            if (bookingDetail != null 
+                && bookingDetail.Status == BookingDetailStatus.CANCELLED
+                && userId != null)
+            {
+                // Calculate Trip canceling rate
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRate(userId.Value, token);
+                    }
+                });
+
+                if (isInWeek)
+                {
+                    // Calculate Weekly Trip canceling rate
+                    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                    {
+                        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                        {
+                            IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                            BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                            await backgroundServices.CalculateWeeklyTripCancelRate(userId.Value, 1, token);
+                        }
+                    });
+                }
+            }
 
             return StatusCode(200, bookingDetail);
         }
