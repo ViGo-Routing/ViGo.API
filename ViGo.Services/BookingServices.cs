@@ -584,7 +584,7 @@ namespace ViGo.Services
                         WalletTransaction systemTransaction = new WalletTransaction
                         {
                             WalletId = systemWallet.Id,
-                            BookingDetailId = booking.Id,
+                            BookingId = booking.Id,
                             Amount = chargeFee,
                             Type = WalletTransactionType.CANCEL_FEE,
                             Status = WalletTransactionStatus.SUCCESSFULL
