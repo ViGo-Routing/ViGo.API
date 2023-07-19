@@ -192,5 +192,24 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, user);
         }
+
+        /// <summary>
+        /// Update User Status
+        /// </summary>
+        /// <response code="401">Update failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Updated successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpPut("UpdateStatus/{id}")]
+        public async Task<IActionResult> ChangeUserStatus(Guid id, [FromBody] UserChangeStatusModel statusModel)
+        {
+            UserViewModel userView = await userServices.ChangeUserStatus(id, statusModel);
+            return StatusCode(200, userView);
+        }
     }
 }
