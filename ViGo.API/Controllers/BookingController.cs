@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
 using ViGo.Models.Routes;
@@ -10,6 +12,7 @@ using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
+using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
@@ -23,12 +26,19 @@ namespace ViGo.API.Controllers
         //private TripMappingServices tripMappingServices;
 
         private ILogger<BookingController> _logger;
+        private IBackgroundTaskQueue _backgroundQueue;
+        private IServiceScopeFactory _serviceScopeFactory;
 
-        public BookingController(IUnitOfWork work, ILogger<BookingController> logger)
+        public BookingController(IUnitOfWork work, 
+            ILogger<BookingController> logger,
+            IServiceScopeFactory serviceScopeFactory,
+            IBackgroundTaskQueue backgroundQueue)
         {
             bookingServices = new BookingServices(work, logger);
             fareServices = new FareServices(work, logger);
             _logger = logger;
+            _serviceScopeFactory = serviceScopeFactory;
+            _backgroundQueue = backgroundQueue;
         }
 
         /// <summary>
@@ -134,7 +144,6 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Create new Booking for User's Route and Routine
         /// </summary>
-        /// <param name="dto">Booking information to be created</param>
         /// <returns>
         /// The newly added booking
         /// </returns>
@@ -145,7 +154,7 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpPost]
         [Authorize(Roles = "CUSTOMER,ADMIN")]
-        [ProducesResponseType(typeof(Domain.Booking), 200)]
+        [ProducesResponseType(typeof(Booking), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
@@ -155,18 +164,19 @@ namespace ViGo.API.Controllers
         {
             Booking booking = await bookingServices.CreateBookingAsync(dto, cancellationToken);
 
-            //if (booking != null)
-            //{
-            //    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
-            //    {
-            //        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
-            //        {
-            //            IUnitOfWork work = new UnitOfWork(scope.ServiceProvider);
-            //            TripMappingServices tripMappingServices = new TripMappingServices(work);
-            //            await tripMappingServices.MapBooking(booking, _logger);
-            //        }
-            //    });
-            //}
+            if (booking != null)
+            {
+                // Calculate Trip canceling rate
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRate(booking.CustomerId, token);
+                    }
+                });
+            }
 
             return StatusCode(200, booking);
         }
@@ -192,8 +202,37 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CancelBooking(Guid bookingId,
             CancellationToken cancellationToken)
         {
-            Booking booking = await bookingServices.CancelBookingAsync(bookingId, cancellationToken);
+            (Booking booking, Guid? customerId, int inWeekCount) = 
+                await bookingServices.CancelBookingAsync(bookingId, cancellationToken);
 
+            if (booking != null && booking.Status == BookingStatus.CANCELED_BY_BOOKER
+                && customerId != null)
+            {
+                // Calculate Trip canceling rate
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRate(customerId.Value, token);
+                    }
+                });
+
+                if (inWeekCount > 0)
+                {
+                    // Calculate Weekly Trip canceling rate
+                    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                    {
+                        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                        {
+                            IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                            BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                            await backgroundServices.CalculateWeeklyTripCancelRate(customerId.Value, inWeekCount, token);
+                        }
+                    });
+                }
+            }
             return StatusCode(200, booking);
         }
 

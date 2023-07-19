@@ -15,6 +15,7 @@ using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -230,15 +231,29 @@ namespace ViGo.Services
             return newUser;
         }
 
-        public async Task<User> GetUserByIdAsync(Guid id)
+        public async Task<UserViewModel> GetUserByIdAsync(Guid id)
         {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                id = IdentityUtilities.GetCurrentUserId();
+            }
+
             User user = await work.Users.GetAsync(id);
-            return user;
+            return new UserViewModel(user);
         }
 
-        public async Task<User> UpdateUserAsync(Guid id, UserUpdateModel userUpdate)
+        public async Task<User> UpdateUserAsync(Guid id, 
+            UserUpdateModel userUpdate)
         {
-            User currentUser = await GetUserByIdAsync(id);
+            if (!IdentityUtilities.IsAdmin())
+            {
+                if (!id.Equals(IdentityUtilities.GetCurrentUserId()))
+                {
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
+                }
+            }
+
+            User currentUser = await work.Users.GetAsync(id);
 
             if (currentUser != null)
             {
