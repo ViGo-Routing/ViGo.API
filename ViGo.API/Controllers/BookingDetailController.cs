@@ -205,7 +205,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CalculateTripCancelRate(bookingDetail.DriverId.Value, token);
+                        await backgroundServices.CalculateTripCancelRateAsync(bookingDetail.DriverId.Value, token);
                     }
                 });
             }
@@ -251,7 +251,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CalculateTripCancelRate(bookingDetail.DriverId.Value, token);
+                        await backgroundServices.CalculateTripCancelRateAsync(bookingDetail.DriverId.Value, token);
                     }
                 });
             }
@@ -355,7 +355,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CalculateTripCancelRate(userId.Value, token);
+                        await backgroundServices.CalculateTripCancelRateAsync(userId.Value, token);
                     }
                 });
 
@@ -368,7 +368,7 @@ namespace ViGo.API.Controllers
                         {
                             IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                             BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                            await backgroundServices.CalculateWeeklyTripCancelRate(userId.Value, 1, token);
+                            await backgroundServices.CalculateWeeklyTripCancelRateAsync(userId.Value, 1, token);
                         }
                     });
                 }
@@ -395,8 +395,23 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId, 
             [FromBody]BookingDetailFeedbackModel feedback, CancellationToken cancellationToken)
         {
-            BookingDetailViewModel bookingDetailView = await 
+           (BookingDetailViewModel bookingDetailView, Guid driverId) = await 
                 bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback, cancellationToken);
+            
+            if (bookingDetailView != null)
+            {
+                // Calculate Rating
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateDriverRatingAsync(driverId, token);
+                    }
+                });
+            }
+            
             return StatusCode(200, bookingDetailView);
         }
 
