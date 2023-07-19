@@ -133,15 +133,15 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Get successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
+        [ProducesResponseType(typeof(UserViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize]
         [HttpGet("{userId}")]
         public async Task<IActionResult> GetUserByIdAsync(Guid userId)
         {
-            User user = await userServices.GetUserByIdAsync(userId);
+            UserViewModel user = await userServices.GetUserByIdAsync(userId);
             if (user == null)
             {
                 throw new ApplicationException("UserID không tồn tại!");
@@ -160,7 +160,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize]
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
         {
