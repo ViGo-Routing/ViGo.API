@@ -19,7 +19,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task CalculateTripCancelRate(Guid userId,
+        public async Task CalculateTripCancelRateAsync(Guid userId,
             CancellationToken cancellationToken)
         {
             _logger.LogInformation("====== BEGIN TASK - CALCULATE TRIP CANCEL RATE ======");
@@ -153,7 +153,7 @@ namespace ViGo.Services
             }
         }
 
-        public async Task CalculateWeeklyTripCancelRate(Guid userId,
+        public async Task CalculateWeeklyTripCancelRateAsync(Guid userId,
             int inWeekCancelCount, CancellationToken cancellationToken)
         {
             _logger.LogInformation("====== BEGIN TASK - CALCULATE WEEKLY TRIP CANCEL RATE ======");
@@ -206,6 +206,52 @@ namespace ViGo.Services
             {
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
             }
+        }
+
+        public async Task CalculateDriverRatingAsync(Guid driverId,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - CALCULATE DRIVER RATING ======");
+            _logger.LogInformation("====== DriverId: {0} ======", driverId);
+            try
+            {
+                User? user = await work.Users.GetAsync(driverId,
+                cancellationToken: cancellationToken);
+                if (user is null ||
+                    user.Role != UserRole.DRIVER)
+                {
+                    throw new ApplicationException("Invalid User!!");
+                }
+
+                // Get All ArriveAtDropOff/Completed Booking Details
+                // And have Rating
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.DriverId.HasValue && d.DriverId.Equals(driverId)
+                        && (d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF
+                        || d.Status == BookingDetailStatus.COMPLETED)
+                        && d.Rate.HasValue
+                        ), cancellationToken: cancellationToken);
+
+                if (bookingDetails.Any())
+                {
+                    double avgRating = Math.Round(
+                    bookingDetails.Average(d => d.Rate.Value), 2);
+
+                    _logger.LogInformation("Driver's Rating: " + avgRating);
+
+                    user.Rating = avgRating;
+
+                    await work.Users.UpdateAsync(user);
+                    await work.SaveChangesAsync(cancellationToken);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+            
         }
     }
 }

@@ -1192,7 +1192,7 @@ namespace ViGo.Services
             return (bookingDetail, cancelledUser?.Id, isInWeek);
         }
 
-        public async Task<BookingDetailViewModel> UserUpdateFeedback(
+        public async Task<(BookingDetailViewModel, Guid)> UserUpdateFeedback(
             Guid id, BookingDetailFeedbackModel feedback,
             CancellationToken cancellationToken)
         {
@@ -1204,10 +1204,15 @@ namespace ViGo.Services
                 throw new ApplicationException("Chuyến đi không tồn tại!!");
             }
             if (!currentBookingDetail.DriverId.HasValue ||
-                currentBookingDetail.Status != BookingDetailStatus.ARRIVE_AT_DROPOFF
-                || currentBookingDetail.Status != BookingDetailStatus.COMPLETED)
+                (currentBookingDetail.Status != BookingDetailStatus.ARRIVE_AT_DROPOFF
+                && currentBookingDetail.Status != BookingDetailStatus.COMPLETED))
             {
                 throw new ApplicationException("Trạng thái chuyến đi không hợp lệ để đánh giá!!");
+            }
+
+            if (currentBookingDetail.Rate.HasValue)
+            {
+                throw new ApplicationException("Chuyến đi đã được đánh giá rồi!");
             }
 
             Guid bookingID = currentBookingDetail.BookingId;
@@ -1277,7 +1282,7 @@ namespace ViGo.Services
             }
 
             BookingDetailViewModel bookingDetailView = new BookingDetailViewModel(currentBookingDetail);
-            return bookingDetailView;
+            return (bookingDetailView, driver.Id);
             
         }
 

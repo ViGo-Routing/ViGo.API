@@ -173,7 +173,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CalculateTripCancelRate(booking.CustomerId, token);
+                        await backgroundServices.CalculateTripCancelRateAsync(booking.CustomerId, token);
                     }
                 });
             }
@@ -215,7 +215,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CalculateTripCancelRate(customerId.Value, token);
+                        await backgroundServices.CalculateTripCancelRateAsync(customerId.Value, token);
                     }
                 });
 
@@ -228,7 +228,7 @@ namespace ViGo.API.Controllers
                         {
                             IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                             BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                            await backgroundServices.CalculateWeeklyTripCancelRate(customerId.Value, inWeekCount, token);
+                            await backgroundServices.CalculateWeeklyTripCancelRateAsync(customerId.Value, inWeekCount, token);
                         }
                     });
                 }
