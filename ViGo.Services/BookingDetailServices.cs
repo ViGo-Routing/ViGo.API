@@ -21,6 +21,7 @@ using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google;
 using ViGo.Utilities.Google.Firebase;
@@ -947,7 +948,7 @@ namespace ViGo.Services
             return bookingDetail;
         }
 
-        public async Task<BookingDetail> CancelBookingDetailAsync(Guid bookingDetailId,
+        public async Task<(BookingDetail, Guid?, bool)> CancelBookingDetailAsync(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {
             BookingDetail? bookingDetail = await work.BookingDetails
@@ -958,6 +959,8 @@ namespace ViGo.Services
                 throw new ApplicationException("Chuyến đi không tồn tại!!!");
             }
 
+            bool isInWeek = false;
+
             User? cancelledUser = null;
 
             Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
@@ -966,7 +969,7 @@ namespace ViGo.Services
             if (!IdentityUtilities.IsAdmin())
             {
                 Guid currentId = IdentityUtilities.GetCurrentUserId();
-                if (!currentId.Equals(booking.CustomerId) ||
+                if (!currentId.Equals(booking.CustomerId) &&
                     (bookingDetail.DriverId.HasValue &&
                     !currentId.Equals(bookingDetail.DriverId.Value)))
                 {
@@ -1012,6 +1015,7 @@ namespace ViGo.Services
                             "đã đạt giới hạn (3 chuyến đi). Bạn không thể hủy thêm chuyến đi nào có lịch trình " +
                             "trong tuần này nữa!");
                     }
+                    isInWeek = true;
                 }
             }
 
@@ -1054,7 +1058,8 @@ namespace ViGo.Services
             if (cancelledUser != null)
             {
                 // User is driver or customer
-                Wallet wallet = await work.Wallets.GetAsync(cancelledUser.Id,
+                Wallet wallet = await work.Wallets.GetAsync(
+                    w => w.UserId.Equals(cancelledUser.Id),
                     cancellationToken: cancellationToken);
 
                 WalletTransaction walletTransaction = new WalletTransaction
@@ -1179,7 +1184,7 @@ namespace ViGo.Services
                     customerNotification, customerFcm, dataToSend, cancellationToken);
             }
 
-            return bookingDetail;
+            return (bookingDetail, cancelledUser?.Id, isInWeek);
         }
 
         public async Task<BookingDetailViewModel> UserUpdateFeedback(

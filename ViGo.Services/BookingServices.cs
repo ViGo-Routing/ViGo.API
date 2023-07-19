@@ -538,7 +538,8 @@ namespace ViGo.Services
             if (cancelledUser != null)
             {
                 // User is customer
-                Wallet wallet = await work.Wallets.GetAsync(cancelledUser.Id,
+                Wallet wallet = await work.Wallets.GetAsync(
+                    w => w.UserId.Equals(cancelledUser.Id),
                     cancellationToken: cancellationToken);
 
                 WalletTransaction walletTransaction = new WalletTransaction
