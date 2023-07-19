@@ -963,6 +963,11 @@ namespace ViGo.Services
 
             User? cancelledUser = null;
 
+            if (bookingDetail.Status == BookingDetailStatus.CANCELLED)
+            {
+                return (bookingDetail, null, false);
+            }
+
             Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
                 cancellationToken: cancellationToken);
 

@@ -44,7 +44,14 @@ namespace ViGo.Services
                         d => d.Status == BookingDetailStatus.CANCELLED
                         && d.CanceledUserId.HasValue &&
                         d.CanceledUserId.Equals(userId)), cancellationToken: cancellationToken);
-                int canceledTripsCount = canceledBookingDetailsByUser.Count();
+                
+                int canceledTripsCount = canceledBookingDetailsByUser.Count() - 10;
+
+                if (canceledTripsCount <= 0)
+                {
+                    // No rate calculating for the first 10 Canceled Booking Details
+                    return;
+                }
 
                 // Get total number of user's trips
                 int totalTrips = 0;

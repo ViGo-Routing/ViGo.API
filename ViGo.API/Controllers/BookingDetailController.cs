@@ -194,6 +194,21 @@ namespace ViGo.API.Controllers
 
             BookingDetail bookingDetail = await bookingDetailServices
                 .AssignDriverAsync(dto, cancellationToken);
+
+            if (bookingDetail != null &&
+                bookingDetail.Status == BookingDetailStatus.ASSIGNED
+                && bookingDetail.DriverId.HasValue)
+            {
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRate(bookingDetail.DriverId.Value, token);
+                    }
+                });
+            }
             return StatusCode(200, bookingDetail);
         }
 
@@ -225,6 +240,22 @@ namespace ViGo.API.Controllers
 
             BookingDetail bookingDetail = await bookingDetailServices
                 .DriverPicksBookingDetailAsync(bookingDetailId, cancellationToken);
+
+            if (bookingDetail != null &&
+                bookingDetail.Status == BookingDetailStatus.ASSIGNED
+                && bookingDetail.DriverId.HasValue)
+            {
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRate(bookingDetail.DriverId.Value, token);
+                    }
+                });
+            }
+            
             return StatusCode(200, bookingDetail);
         }
 
