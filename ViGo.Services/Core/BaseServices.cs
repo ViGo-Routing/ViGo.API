@@ -20,4 +20,15 @@ namespace ViGo.Services.Core
             _logger = logger;
         }
     }
+
+    public abstract class UseNotificationServices : BaseServices
+    {
+        protected NotificationServices notificationServices;
+
+        protected UseNotificationServices(IUnitOfWork work, ILogger logger) 
+            : base(work, logger)
+        {
+            notificationServices = new NotificationServices(work, logger);
+        }
+    }
 }

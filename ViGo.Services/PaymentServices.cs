@@ -24,13 +24,14 @@ using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public partial class PaymentServices : BaseServices
+    public partial class PaymentServices : UseNotificationServices
     {
         private delegate Task<(TopupTransactionViewModel, string)> internalCreateTopupTransaction
             (TopupTransactionCreateModel model, WalletTransaction walletTransaction,
             HttpContext httpContext, CancellationToken cancellationToken);
 
-        public PaymentServices(IUnitOfWork work, ILogger logger) : base(work, logger)
+        public PaymentServices(IUnitOfWork work, ILogger logger) 
+            : base(work, logger)
         {
         }
 

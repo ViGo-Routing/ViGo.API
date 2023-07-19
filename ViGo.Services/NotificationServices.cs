@@ -220,5 +220,52 @@ namespace ViGo.Services
 
             return notification;
         }
+
+        internal async Task<Notification> CreateFirebaseNotificationAsync(
+            NotificationCreateModel model, string fcmToken,
+            Dictionary<string, string> dataToSend,
+            CancellationToken cancellationToken)
+        {
+            Notification notification = new Notification
+            {
+                Title = model.Title,
+                Description = model.Description,
+                Type = model.Type,
+                UserId = model.UserId,
+                EventId = model.EventId,
+                Status = NotificationStatus.ACTIVE,
+                CreatedBy = model.UserId.Value,
+                UpdatedBy = model.UserId.Value
+            };
+
+            await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
+            await work.SaveChangesAsync(cancellationToken);
+
+            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
+                                          model.Description, data: dataToSend,
+                                              cancellationToken: cancellationToken);
+
+            // Send data to mobile application
+            //await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
+
+            //if (model.IsSentToUser && model.UserId.HasValue)
+            //{
+            //    // Send Push Notification to user
+            //    User? user = await work.Users.GetAsync(model.UserId.Value, cancellationToken: cancellationToken);
+            //    if (user is null)
+            //    {
+            //        throw new ApplicationException("Thông tin người dùng không tồn tại!!");
+            //    }
+
+            //    string? fcmToken = user.FcmToken;
+            //    if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+            //    {
+            //        await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken,
+            //            model.Title, model.Description, cancellationToken: cancellationToken);
+            //    }
+            //}
+
+            return notification;
+        }
     }
 }

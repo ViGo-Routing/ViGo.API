@@ -9,6 +9,7 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
+using ViGo.Models.Notifications;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
@@ -20,7 +21,7 @@ using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public class BookingServices : BaseServices
+    public class BookingServices : UseNotificationServices
     {
         public BookingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
@@ -596,6 +597,86 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
 
+            // Send notification to Driver and Customer
+
+            User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.Booking },
+                { "bookingId", booking.Id.ToString() },
+            };
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = "Hành trình đã bị hủy!",
+                    Description = $"Các chuyến đi trong hành trình của bạn đã " +
+                    $"được hủy thành công!!",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
+
+            // Send to driver of each Booking Detail
+            IEnumerable<BookingDetail> assignedDetails = bookingDetails.Where(
+                d => d.DriverId.HasValue);
+            IEnumerable<Guid> stationIds = assignedDetails.Select(
+                d => d.StartStationId).Concat(assignedDetails.Select(d => d.EndStationId))
+                .Distinct();
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(s => stationIds.Contains(s.Id)),
+                includeDeleted: true,
+                cancellationToken: cancellationToken);
+
+            foreach (BookingDetail detail in assignedDetails)
+            {
+                if (detail.DriverId.HasValue)
+                {
+                    User driver = await work.Users.GetAsync(
+                        detail.DriverId.Value, cancellationToken: cancellationToken);
+                    string? driverFcm = driver.FcmToken;
+                    if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+                    {
+                        Station startStation = stations.SingleOrDefault(
+                            s => s.Id.Equals(detail.StartStationId));
+                        Station endStation = stations.SingleOrDefault(
+                            s => s.Id.Equals(detail.EndStationId));
+
+                        Dictionary<string, string> dataToSendDriver = new Dictionary<string, string>()
+                        {
+                            {"action", NotificationAction.BookingDetail },
+                            { "bookingDetailId", detail.Id.ToString() },
+                        };
+
+                        NotificationCreateModel driverNotification = new NotificationCreateModel()
+                        {
+                            UserId = driver.Id,
+                            Title = "Chuyến đi đã bị hủy!",
+                            Description = $"{detail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                            Type = NotificationType.SPECIFIC_USER
+                        };
+
+                        await notificationServices.CreateFirebaseNotificationAsync(
+                            driverNotification, driverFcm, dataToSendDriver, cancellationToken);
+                    }
+                }
+            }
             return booking;
 
             //double calculateChargeFee(IEnumerable<BookingDetail> bookingDetails,
