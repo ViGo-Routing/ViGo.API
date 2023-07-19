@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -327,6 +328,25 @@ namespace ViGo.Services
                 throw new ApplicationException("Người dùng không tồn tại!!");
             }
             return user.FcmToken;
+        }
+
+        public async Task<UserViewModel> ChangeUserStatus(Guid id, UserChangeStatusModel statusChange)
+        {
+            var currentUser = await work.Users.GetAsync(id);
+            if (currentUser is null)
+            {
+                throw new ApplicationException("User không tồn tại!");
+            }
+            else
+            {
+                currentUser.Status = (UserStatus)statusChange.Status;
+            }
+
+            await work.Users.UpdateAsync(currentUser); 
+            await work.SaveChangesAsync();
+            UserViewModel userView = new UserViewModel(currentUser);
+            return userView;
+            
         }
     }
 }
