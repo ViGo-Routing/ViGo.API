@@ -107,7 +107,8 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,STAFF")]
-        public async Task<IActionResult> CreateNotificationAsync(NotificationCreateModel model, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateNotificationAsync(NotificationCreateModel model, 
+            CancellationToken cancellationToken)
         {
             Notification notification = await notificationServices.CreateNotificationAsync(model, cancellationToken);
             return StatusCode(200, notification);

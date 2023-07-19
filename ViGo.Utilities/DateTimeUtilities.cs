@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Domain;
 
 namespace ViGo.Utilities
 {
@@ -47,6 +48,12 @@ namespace ViGo.Utilities
             var dateToCheck = dateTimeToCheck.Date.AddDays(-1 * (int)calendar.GetDayOfWeek(dateTimeToCheck));
 
             return currentDate == dateToCheck;
+        }
+
+        public static string PickUpDateTime(this BookingDetail bookingDetail)
+        {
+            return $"{bookingDetail.CustomerDesiredPickupTime.ToString(@"hh\:mm")} " +
+                $"{bookingDetail.Date.ToString("dd/MM/yyyy")}";
         }
     }
 }

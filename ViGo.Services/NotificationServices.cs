@@ -222,7 +222,9 @@ namespace ViGo.Services
         }
 
         internal async Task<Notification> CreateFirebaseNotificationAsync(
-            NotificationCreateModel model, CancellationToken cancellationToken)
+            NotificationCreateModel model, string fcmToken,
+            Dictionary<string, string> dataToSend,
+            CancellationToken cancellationToken)
         {
             Notification notification = new Notification
             {
@@ -235,8 +237,16 @@ namespace ViGo.Services
                 CreatedBy = model.UserId.Value,
                 UpdatedBy = model.UserId.Value
             };
+
             await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
+
+            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
+                                          model.Description, data: dataToSend,
+                                              cancellationToken: cancellationToken);
+
+            // Send data to mobile application
+            //await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
 
             //if (model.IsSentToUser && model.UserId.HasValue)
             //{

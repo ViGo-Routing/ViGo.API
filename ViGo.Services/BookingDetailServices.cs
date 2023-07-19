@@ -12,6 +12,7 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.GoogleMaps;
+using ViGo.Models.Notifications;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
@@ -22,10 +23,12 @@ using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google;
+using ViGo.Utilities.Google.Firebase;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
-    public class BookingDetailServices : BaseServices
+    public class BookingDetailServices : UseNotificationServices
     {
         public BookingDetailServices(IUnitOfWork work,
             ILogger logger) : base(work, logger)
@@ -316,80 +319,168 @@ namespace ViGo.Services
             }
 
             bookingDetail.Status = updateDto.Status;
+
+            Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+            
+            string title = "";
+            string description = "";
+
             switch (updateDto.Status)
             {
                 case BookingDetailStatus.ARRIVE_AT_PICKUP:
                     bookingDetail.ArriveAtPickupTime = updateDto.Time;
+
+                    Station startStation = await work.Stations.GetAsync(
+                        bookingDetail.StartStationId, cancellationToken: cancellationToken);
+
+                    title = "Tài xế đã đến điểm đón - " + startStation.Name;
+                    description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
                 case BookingDetailStatus.GOING:
                     bookingDetail.PickupTime = updateDto.Time;
+
+                    title = "Chuyến đi của bạn đã được bắt đầu!";
+                    description = "Chúc bạn có một chuyến đi an toàn và vui vẻ nhé!";
                     break;
                 case BookingDetailStatus.ARRIVE_AT_DROPOFF:
                     bookingDetail.DropoffTime = updateDto.Time;
+
+                    Station startStationDropOff = await work.Stations.GetAsync(
+                        bookingDetail.StartStationId, cancellationToken: cancellationToken);
+
+                    Station endStation = await work.Stations.GetAsync(
+                        bookingDetail.EndStationId, cancellationToken: cancellationToken);
+                    title = "Chuyến đi của bạn đã hoàn thành!";
+                    description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStationDropOff.Name} đến {endStation.Name}";
                     break;
             }
 
+            //NotificationCreateModel notification = new NotificationCreateModel()
+            //{
+            //    Type = NotificationType.SPECIFIC_USER,
+            //    UserId = booking.CustomerId,
+            //    Title = title,
+            //    Description = description
+            //};
+
             await work.BookingDetails.UpdateAsync(bookingDetail);
+
+            // Send notification to Customer
+            User customer = await work.Users.GetAsync(booking.CustomerId,
+                cancellationToken: cancellationToken);
+
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = title,
+                    Description = description,
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
+
+            //if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+            //{
+            //    // Calculate driver wage
+            //    // Withdraw from System Wallet to pay for Driver
+            //    FareServices fareServices = new FareServices(work, _logger);
+            //    if (!bookingDetail.PriceAfterDiscount.HasValue)
+            //    {
+            //        throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
+            //    }
+
+            //    double driverWage = await fareServices.CalculateDriverWage(
+            //        bookingDetail.PriceAfterDiscount.Value, cancellationToken);
+
+            //    // Get SYSTEM WALLET
+            //    Wallet systemWallet = await work.Wallets.GetAsync(w =>
+            //        w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+            //    if (systemWallet is null)
+            //    {
+            //        throw new Exception("Chưa có ví dành cho hệ thống!!");
+            //    }
+
+            //    //WalletTransaction systemTransaction_Withdraw = new WalletTransaction
+            //    //{
+            //    //    WalletId = systemWallet.Id,
+            //    //    Amount = driverWage,
+            //    //    BookingDetailId = bookingDetail.Id,
+            //    //    BookingId = bookingDetail.BookingId,
+            //    //    Type = WalletTransactionType.PAY_FOR_DRIVER,
+            //    //    Status = WalletTransactionStatus.SUCCESSFULL,
+            //    //};
+
+            //    //Wallet driverWallet = await work.Wallets.GetAsync(w =>
+            //    //    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+            //    //if (driverWallet is null)
+            //    //{
+            //    //    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
+            //    //}
+
+            //    //WalletTransaction driverTransaction_Add = new WalletTransaction
+            //    //{
+            //    //    WalletId = driverWallet.Id,
+            //    //    Amount = driverWage,
+            //    //    BookingDetailId = bookingDetail.Id,
+            //    //    BookingId = bookingDetail.BookingId,
+            //    //    Type = WalletTransactionType.TRIP_INCOME,
+            //    //    Status = WalletTransactionStatus.SUCCESSFULL
+            //    //};
+
+            //    //systemWallet.Balance -= driverWage;
+            //    //driverWallet.Balance += driverWage;
+
+            //    //await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
+            //    //await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+
+            //    //await work.Wallets.UpdateAsync(systemWallet);
+            //    //await work.Wallets.UpdateAsync(driverWallet);
+            //}
+
+            await work.SaveChangesAsync(cancellationToken);
 
             if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
             {
-                // Calculate driver wage
-                // Withdraw from System Wallet to pay for Driver
-                FareServices fareServices = new FareServices(work, _logger);
-                if (!bookingDetail.PriceAfterDiscount.HasValue)
+                // Send notification to request rating
+                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
                 {
-                    throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
+                    NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Type = NotificationType.SPECIFIC_USER,
+                        Title = "Chuyến đi của bạn như thế nào?",
+                        Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
+
+                    };
+
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                       requestRatingNotification, customerFcm, dataToSend, cancellationToken);
                 }
 
-                double driverWage = await fareServices.CalculateDriverWage(
-                    bookingDetail.PriceAfterDiscount.Value, cancellationToken);
-
-                // Get SYSTEM WALLET
-                Wallet systemWallet = await work.Wallets.GetAsync(w =>
-                    w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
-                if (systemWallet is null)
-                {
-                    throw new Exception("Chưa có ví dành cho hệ thống!!");
-                }
-
-                //WalletTransaction systemTransaction_Withdraw = new WalletTransaction
-                //{
-                //    WalletId = systemWallet.Id,
-                //    Amount = driverWage,
-                //    BookingDetailId = bookingDetail.Id,
-                //    BookingId = bookingDetail.BookingId,
-                //    Type = WalletTransactionType.PAY_FOR_DRIVER,
-                //    Status = WalletTransactionStatus.SUCCESSFULL,
-                //};
-
-                //Wallet driverWallet = await work.Wallets.GetAsync(w =>
-                //    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
-                //if (driverWallet is null)
-                //{
-                //    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
-                //}
-
-                //WalletTransaction driverTransaction_Add = new WalletTransaction
-                //{
-                //    WalletId = driverWallet.Id,
-                //    Amount = driverWage,
-                //    BookingDetailId = bookingDetail.Id,
-                //    BookingId = bookingDetail.BookingId,
-                //    Type = WalletTransactionType.TRIP_INCOME,
-                //    Status = WalletTransactionStatus.SUCCESSFULL
-                //};
-
-                //systemWallet.Balance -= driverWage;
-                //driverWallet.Balance += driverWage;
-
-                //await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
-                //await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
-
-                //await work.Wallets.UpdateAsync(systemWallet);
-                //await work.Wallets.UpdateAsync(driverWallet);
+                // Trigger Background Tasks for calculating Driver Wage
             }
-
-            await work.SaveChangesAsync(cancellationToken);
 
             return bookingDetail;
         }
@@ -422,6 +513,69 @@ namespace ViGo.Services
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync(cancellationToken);
+
+            // Send notification to Driver and Customer
+            //User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
+            User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+
+            string? driverFcm = driver.FcmToken;
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                NotificationCreateModel driverNotification = new NotificationCreateModel()
+                {
+                    UserId = driver.Id,
+                    Title = "Chọn chuyến đi thành công!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(driverFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    driverNotification, driverFcm, dataToSend, cancellationToken);
+            }
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = "Chuyến đi của bạn đã có tài xế!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
 
             return bookingDetail;
         }
@@ -727,6 +881,69 @@ namespace ViGo.Services
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync(cancellationToken);
 
+            // Send notification to Driver and Customer
+            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
+            User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+
+            string? driverFcm = driver.FcmToken;
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                NotificationCreateModel driverNotification = new NotificationCreateModel()
+                {
+                    UserId = driverId,
+                    Title = "Chọn chuyến đi thành công!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(driverFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    driverNotification, driverFcm, dataToSend, cancellationToken);
+            }
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = "Chuyến đi của bạn đã có tài xế!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
+
             return bookingDetail;
         }
 
@@ -891,31 +1108,163 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
 
+            // Send notification to Driver and Customer
+            User? driver = null;
+            if (bookingDetail.DriverId.HasValue)
+            {
+                driver = await work.Users.GetAsync(bookingDetail.DriverId.Value, 
+                    cancellationToken: cancellationToken);
+                 
+            }
+
+            User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+
+            string? driverFcm = driver?.FcmToken;
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
+            if (driver != null 
+                && driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                NotificationCreateModel driverNotification = new NotificationCreateModel()
+                {
+                    UserId = driver.Id,
+                    Title = "Chuyến đi đã bị hủy!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(driverFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    driverNotification, driverFcm, dataToSend, cancellationToken);
+            }
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = "Chuyến đi đã bị hủy!",
+                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
+
             return bookingDetail;
         }
 
-        public async Task<BookingDetailViewModel> UserUpdateFeedback(Guid id, BookingDetailFeedbackModel feedback)
+        public async Task<BookingDetailViewModel> UserUpdateFeedback(
+            Guid id, BookingDetailFeedbackModel feedback,
+            CancellationToken cancellationToken)
         {
-            var currentBookingDetail = await work.BookingDetails.GetAsync(id);
+            var currentBookingDetail = await work.BookingDetails.GetAsync(id,
+                cancellationToken: cancellationToken);
+
+            if (currentBookingDetail is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!");
+            }
+            if (!currentBookingDetail.DriverId.HasValue ||
+                currentBookingDetail.Status != BookingDetailStatus.ARRIVE_AT_DROPOFF
+                || currentBookingDetail.Status != BookingDetailStatus.COMPLETED)
+            {
+                throw new ApplicationException("Trạng thái chuyến đi không hợp lệ để đánh giá!!");
+            }
+
             Guid bookingID = currentBookingDetail.BookingId;
-            Booking booking = await work.Bookings.GetAsync(bookingID);
+            Booking booking = await work.Bookings.GetAsync(bookingID,
+                cancellationToken: cancellationToken);
+
             if(booking.CustomerId != IdentityUtilities.GetCurrentUserId())
             {
-                throw new ApplicationException("Bạn chỉ được phép đánh giá chuyến đi của mình thôi!");
+                throw new AccessDeniedException("Bạn chỉ được phép đánh giá chuyến đi của mình thôi!");
             }
 
+            //if (currentBookingDetail == null)
+            //{
+            //    throw new ApplicationException("Booking Detail ID không tồn tại!");
+            //}
+            //else
+            //{
+            if (feedback.Rate <= 0 || feedback.Rate > 5)
+            {
+                throw new ApplicationException("Đánh giá phải từ 1 đến 5 sao!");
+            }
+            feedback.Feedback.StringValidate(
+                allowEmpty: true,
+                minLength: 5,
+                minLengthErrorMessage: "Đánh giá phải có từ 5 kí tự trở lên!!",
+                maxLength: 500,
+                maxLengthErrorMessage: "Đánh giá không được vượt quá 500 kí tự!!");
 
-            if (currentBookingDetail == null)
-            {
-                throw new ApplicationException("Booking Detail ID không tồn tại!");
-            }
-            else
-            {
-                if(feedback.Rate != null) currentBookingDetail.Rate = feedback.Rate;
-                if (feedback.Feedback != null) currentBookingDetail.Feedback = feedback.Feedback;
-            }
+            currentBookingDetail.Rate = feedback.Rate;
+            currentBookingDetail.Feedback = feedback.Feedback;
+
+            //}
             await work.BookingDetails.UpdateAsync(currentBookingDetail);
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
+
+            // Send notification to Driver
+            User driver = await work.Users.GetAsync(currentBookingDetail.DriverId.Value,
+                cancellationToken: cancellationToken);
+            string? driverFcm = driver.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.Booking },
+                { "bookingDetailId", currentBookingDetail.Id.ToString() },
+            };
+
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = driver.Id,
+                    Title = "Bạn có một đánh giá mới!",
+                    Description = $"",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, driverFcm, dataToSend, cancellationToken);
+            }
 
             BookingDetailViewModel bookingDetailView = new BookingDetailViewModel(currentBookingDetail);
             return bookingDetailView;

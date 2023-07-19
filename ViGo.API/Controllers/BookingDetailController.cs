@@ -320,9 +320,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId, [FromBody]BookingDetailFeedbackModel feedback)
+        public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId, 
+            [FromBody]BookingDetailFeedbackModel feedback, CancellationToken cancellationToken)
         {
-            BookingDetailViewModel bookingDetailView = await bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback);
+            BookingDetailViewModel bookingDetailView = await 
+                bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback, cancellationToken);
             return StatusCode(200, bookingDetailView);
         }
 
