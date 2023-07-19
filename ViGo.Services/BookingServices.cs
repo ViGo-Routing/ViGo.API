@@ -551,9 +551,9 @@ namespace ViGo.Services
                 }
 
                 double chargeFeeAmount = firstPickup.PriceAfterDiscount.Value * chargeFee;
-                chargeFee = FareUtilities.RoundToThousands(chargeFee);
+                chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
 
-                if (cancelledUser != null)
+                if (cancelledUser != null && chargeFeeAmount > 0)
                 {
                     // User is customer
                     Wallet wallet = await work.Wallets.GetAsync(
@@ -564,7 +564,7 @@ namespace ViGo.Services
                     {
                         WalletId = wallet.Id,
                         BookingId = booking.Id,
-                        Amount = chargeFee,
+                        Amount = chargeFeeAmount,
                         Type = WalletTransactionType.CANCEL_FEE,
                         Status = WalletTransactionStatus.PENDING
                     };
@@ -572,10 +572,10 @@ namespace ViGo.Services
                     await work.WalletTransactions.InsertAsync(walletTransaction,
                         cancellationToken: cancellationToken);
 
-                    if (wallet.Balance >= chargeFee)
+                    if (wallet.Balance >= chargeFeeAmount)
                     {
                         // Able to be substracted the amount
-                        wallet.Balance -= chargeFee;
+                        wallet.Balance -= chargeFeeAmount;
 
                         walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
 
@@ -585,12 +585,12 @@ namespace ViGo.Services
                         {
                             WalletId = systemWallet.Id,
                             BookingId = booking.Id,
-                            Amount = chargeFee,
+                            Amount = chargeFeeAmount,
                             Type = WalletTransactionType.CANCEL_FEE,
                             Status = WalletTransactionStatus.SUCCESSFULL
                         };
 
-                        systemWallet.Balance += chargeFee;
+                        systemWallet.Balance += chargeFeeAmount;
 
                         await work.WalletTransactions.InsertAsync(systemTransaction,
                         cancellationToken: cancellationToken);

@@ -1060,7 +1060,7 @@ namespace ViGo.Services
             double chargeFeeAmount = bookingDetail.PriceAfterDiscount.Value * chargeFee;
             chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
 
-            if (cancelledUser != null)
+            if (cancelledUser != null && chargeFeeAmount > 0)
             {
                 // User is driver or customer
                 Wallet wallet = await work.Wallets.GetAsync(
