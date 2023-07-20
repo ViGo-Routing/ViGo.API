@@ -66,7 +66,8 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [HttpGet("User/{userId}")]
-        public async Task<IActionResult> GetWalletByUserId(Guid userId, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetWalletByUserId(Guid userId, 
+            CancellationToken cancellationToken)
         {
             WalletViewModel wallet = await walletServices.GetWalletByUserId(userId, cancellationToken);
             return StatusCode(200, wallet);
@@ -85,9 +86,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateWalletStatusById(Guid id, WalletUpdateModel walletStatusUpdate)
+        public async Task<IActionResult> UpdateWalletStatusById(Guid id, 
+            WalletUpdateModel walletStatusUpdate, CancellationToken cancellationToken)
         {
-            WalletViewModel wallet = await walletServices.UpdateWalletStatusById(id, walletStatusUpdate);
+            WalletViewModel wallet = await walletServices
+                .UpdateWalletStatusById(id, walletStatusUpdate, cancellationToken);
             return StatusCode(200, wallet);
         }
     }

@@ -12,6 +12,7 @@ using ViGo.Models.Wallets;
 using ViGo.Repository.Core;
 using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
+using ViGo.Utilities;
 
 namespace ViGo.Services
 {
@@ -41,7 +42,8 @@ namespace ViGo.Services
         //    return wallet;
         //}
 
-        public async Task<IPagedEnumerable<WalletViewModel>> GetAllWalletsAsync(PaginationParameter pagination, HttpContext context, CancellationToken cancellationToken)
+        public async Task<IPagedEnumerable<WalletViewModel>> GetAllWalletsAsync(
+            PaginationParameter pagination, HttpContext context, CancellationToken cancellationToken)
         {
             //IEnumerable<Wallet> wallets = await work.Wallets.GetAllAsync(q => q.Where(
             //    items => items.Type.Equals(WalletType.PERSONAL)), cancellationToken: cancellationToken);
@@ -63,18 +65,36 @@ namespace ViGo.Services
         }
         public async Task<WalletViewModel> GetWalletByUserId(Guid userId, CancellationToken cancellationToken)
         {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                userId = IdentityUtilities.GetCurrentUserId();
+            }
+
             Wallet wallet = await work.Wallets.GetAsync(q => q.UserId.Equals(userId), cancellationToken : cancellationToken);
+            
+            if (wallet is null)
+            {
+                throw new ApplicationException("Ví của người dùng không tồn tại!!");
+            }
+
             Guid userID = wallet.UserId;
-            User user = await work.Users.GetAsync(userID);
+            User user = await work.Users.GetAsync(userID, cancellationToken: cancellationToken);
             UserViewModel userView = new UserViewModel(user);
             WalletViewModel walletView = new WalletViewModel(wallet, userView);
 
             return walletView;
         }
 
-        public async Task<WalletViewModel> UpdateWalletStatusById(Guid id, WalletUpdateModel walletUpdate)
+        public async Task<WalletViewModel> UpdateWalletStatusById(Guid id, 
+            WalletUpdateModel walletUpdate, CancellationToken cancellationToken)
         {
-            var currentWallet = await work.Wallets.GetAsync(id);
+            var currentWallet = await work.Wallets.GetAsync(id,
+                cancellationToken: cancellationToken);
+
+            if (currentWallet is null)
+            {
+                throw new ApplicationException("Ví của người dùng không tồn tại!!");
+            }
 
             currentWallet.Status = walletUpdate.Status;
 
@@ -82,7 +102,7 @@ namespace ViGo.Services
             await work.SaveChangesAsync();
 
             Guid userID = currentWallet.UserId;
-            User user = await work.Users.GetAsync(userID);
+            User user = await work.Users.GetAsync(userID, cancellationToken: cancellationToken);
             UserViewModel userView = new UserViewModel(user);
             WalletViewModel walletView = new WalletViewModel(currentWallet, userView);
             return walletView;
