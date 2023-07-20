@@ -142,12 +142,12 @@ namespace ViGo.Services
             HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<User> users
-                = await work.Users.GetAllAsync();
+                = await work.Users.GetAllAsync(cancellationToken: cancellationToken);
 
             int totalRecords = users.Count();
 
             return users.ToPagedEnumerable(pagination.PageNumber, 
-                pagination.PageSize, totalRecords, context);
+                pagination.PageSize, totalRecords, context, isOriginalSource: true);
         }
 
         public async Task<User> RegisterAsync(UserRegisterModel dto,
