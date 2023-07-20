@@ -142,8 +142,22 @@ namespace ViGo.API.Controllers
         // Not tested yet!
         public async Task<IActionResult> VnPayIpn(CancellationToken cancellationToken)
         {
-            (string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
+            (string code, string message, Guid? userId) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
                 Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
+
+            if (userId != null)
+            {
+                // Check for pending withdrawal transactions
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CheckForPendingTransactions(userId.Value, token);
+                    }
+                });
+            }
 
             return StatusCode(200, new { RspCode = code, Message = message });
         }

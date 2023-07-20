@@ -402,63 +402,83 @@ namespace ViGo.Services
                     customerNotification, customerFcm, dataToSend, cancellationToken);
             }
 
-            //if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
-            //{
-            //    // Calculate driver wage
-            //    // Withdraw from System Wallet to pay for Driver
-            //    FareServices fareServices = new FareServices(work, _logger);
-            //    if (!bookingDetail.PriceAfterDiscount.HasValue)
-            //    {
-            //        throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
-            //    }
+            if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+            {
+                // Calculate driver wage
+                FareServices fareServices = new FareServices(work, _logger);
 
-            //    double driverWage = await fareServices.CalculateDriverWage(
-            //        bookingDetail.PriceAfterDiscount.Value, cancellationToken);
+                if (!bookingDetail.PriceAfterDiscount.HasValue
+                    || !bookingDetail.Price.HasValue)
+                {
+                    throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
+                }
 
-            //    // Get SYSTEM WALLET
-            //    Wallet systemWallet = await work.Wallets.GetAsync(w =>
-            //        w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
-            //    if (systemWallet is null)
-            //    {
-            //        throw new Exception("Chưa có ví dành cho hệ thống!!");
-            //    }
+                double driverWage = await fareServices.CalculateDriverWage(
+                    bookingDetail.Price.Value, cancellationToken);
 
-            //    //WalletTransaction systemTransaction_Withdraw = new WalletTransaction
-            //    //{
-            //    //    WalletId = systemWallet.Id,
-            //    //    Amount = driverWage,
-            //    //    BookingDetailId = bookingDetail.Id,
-            //    //    BookingId = bookingDetail.BookingId,
-            //    //    Type = WalletTransactionType.PAY_FOR_DRIVER,
-            //    //    Status = WalletTransactionStatus.SUCCESSFULL,
-            //    //};
+                // Get Customer Wallet
+                Wallet customerWallet = await work.Wallets.GetAsync(
+                    w => w.UserId.Equals(customer.Id), cancellationToken: cancellationToken);
 
-            //    //Wallet driverWallet = await work.Wallets.GetAsync(w =>
-            //    //    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
-            //    //if (driverWallet is null)
-            //    //{
-            //    //    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
-            //    //}
+                WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
+                {
+                    WalletId = customerWallet.Id,
+                    Amount = bookingDetail.PriceAfterDiscount.Value,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_PAID,
+                    Status = WalletTransactionStatus.PENDING
+                };
+                if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
+                {
+                    customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
+                    
+                    customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
+                        }
 
-            //    //WalletTransaction driverTransaction_Add = new WalletTransaction
-            //    //{
-            //    //    WalletId = driverWallet.Id,
-            //    //    Amount = driverWage,
-            //    //    BookingDetailId = bookingDetail.Id,
-            //    //    BookingId = bookingDetail.BookingId,
-            //    //    Type = WalletTransactionType.TRIP_INCOME,
-            //    //    Status = WalletTransactionStatus.SUCCESSFULL
-            //    //};
+                // Get SYSTEM WALLET
+                Wallet systemWallet = await work.Wallets.GetAsync(w =>
+                    w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                if (systemWallet is null)
+                {
+                    throw new Exception("Chưa có ví dành cho hệ thống!!");
+                }
 
-            //    //systemWallet.Balance -= driverWage;
-            //    //driverWallet.Balance += driverWage;
+                WalletTransaction systemTransaction_Add = new WalletTransaction
+                {
+                    WalletId = systemWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_PAID,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                };
 
-            //    //await work.WalletTransactions.InsertAsync(systemTransaction_Withdraw, cancellationToken: cancellationToken);
-            //    //await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+                Wallet driverWallet = await work.Wallets.GetAsync(w =>
+                    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+                if (driverWallet is null)
+                {
+                    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
+                }
 
-            //    //await work.Wallets.UpdateAsync(systemWallet);
-            //    //await work.Wallets.UpdateAsync(driverWallet);
-            //}
+                WalletTransaction driverTransaction_Add = new WalletTransaction
+                {
+                    WalletId = driverWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_INCOME,
+                    Status = WalletTransactionStatus.SUCCESSFULL
+                };
+
+                systemWallet.Balance -= driverWage;
+                driverWallet.Balance += driverWage;
+
+                await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction_Add, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+
+                await work.Wallets.UpdateAsync(customerWallet);
+                await work.Wallets.UpdateAsync(systemWallet);
+                await work.Wallets.UpdateAsync(driverWallet);
+            }
 
             await work.SaveChangesAsync(cancellationToken);
 
