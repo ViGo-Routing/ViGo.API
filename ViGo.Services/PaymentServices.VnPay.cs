@@ -142,7 +142,7 @@ namespace ViGo.Services
             return message;
         }
 
-        public async Task<(string code, string message)> VnPayPaymentIpnAsync(
+        public async Task<(string, string, Guid?)> VnPayPaymentIpnAsync(
             string requestRawUrl,
             IQueryCollection vnPayData,
             //IBackgroundTaskQueue backgroundTaskQueue,
@@ -156,6 +156,7 @@ namespace ViGo.Services
             Wallet? wallet = null;
             string? fcmToken = null;
             User? user = null;
+            Guid? returnUserId = null;
 
             NotificationCreateModel notification = new NotificationCreateModel()
             {
@@ -230,6 +231,7 @@ namespace ViGo.Services
                                         // Check for Failed Canceled Fee withdrawal
 
                                         _logger.LogInformation("Topup has been paid successfully!! WalletTransactionId={0}, VNPay TransactionId={1}", walletTransaction.Id, vnPayTransactionId);
+
                                     }
                                     else
                                     {
@@ -278,6 +280,11 @@ namespace ViGo.Services
                                     fcmToken = user.FcmToken;
 
                                     notification.UserId = user.Id;
+
+                                    if (walletTransaction.Status == WalletTransactionStatus.SUCCESSFULL)
+                                    {
+                                        returnUserId = user.Id;
+                                    }
 
                                     if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
                                     {
@@ -396,11 +403,11 @@ namespace ViGo.Services
                     await notificationServices.CreateFirebaseNotificationAsync(notification, fcmToken, dataToSend, cancellationToken);
                 }
 
-                return ("99", "Unknown Error: " + ex.GeneratorErrorMessage());
+                return ("99", "Unknown Error: " + ex.GeneratorErrorMessage(), returnUserId);
             }
 
             _logger.LogInformation("VNPay IPN: Code: {code}, message: {message}", code, message);
-            return (code, message);
+            return (code, message, returnUserId);
         }
 
         public async Task<VnPayQueryViGoResponse>
