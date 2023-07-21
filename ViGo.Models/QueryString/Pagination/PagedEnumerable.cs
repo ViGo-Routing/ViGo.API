@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using ViGo.Repository.Pagination;
 
-namespace ViGo.Repository.Pagination
+namespace ViGo.Models.QueryString.Pagination
 {
     /// <summary>
     /// Represents a list of entities that is paged
@@ -27,7 +26,7 @@ namespace ViGo.Repository.Pagination
         /// <param name="route">Route of the retrieving action</param>
         /// <param name="isOriginalSource">True if the source has not been paged. 
         /// The paging process with take place in this constructor</param>
-        public PagedEnumerable(IEnumerable<T> source, 
+        public PagedEnumerable(IEnumerable<T> source,
             int pageNumber, int pageSize, int totalRecords,
             string baseUri, string route, bool isOriginalSource = false)
         {

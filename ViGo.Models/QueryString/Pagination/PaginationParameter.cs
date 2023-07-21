@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.Repository.Pagination
+namespace ViGo.Models.QueryString.Pagination
 {
     public class PaginationParameter
     {

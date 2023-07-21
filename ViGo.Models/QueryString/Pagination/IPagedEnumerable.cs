@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.Repository.Pagination
+namespace ViGo.Models.QueryString.Pagination
 {
     /// <summary>
     /// Represents a list of entities that is paged
