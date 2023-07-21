@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
 

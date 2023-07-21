@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Models.Reports;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers

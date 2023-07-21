@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Extensions;

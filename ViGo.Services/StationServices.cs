@@ -11,11 +11,12 @@ using ViGo.Domain.Enumerations;
 using ViGo.Models.GoogleMaps;
 using ViGo.Models.Stations;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Google;
 using ViGo.Utilities.Validator;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {

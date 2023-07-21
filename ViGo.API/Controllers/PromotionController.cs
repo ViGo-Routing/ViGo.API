@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.Notifications;
 using ViGo.Models.Promotions;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers

@@ -10,8 +10,9 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {

@@ -4,7 +4,7 @@ using System.Data;
 using System.Threading;
 using ViGo.Models.Events;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers

@@ -10,7 +10,7 @@ using ViGo.Domain;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;

@@ -12,11 +12,12 @@ using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {

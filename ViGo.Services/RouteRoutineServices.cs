@@ -12,8 +12,9 @@ using ViGo.Utilities.Validator;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using Microsoft.Extensions.Logging;
-using ViGo.Repository.Pagination;
 using Microsoft.AspNetCore.Http;
+using ViGo.Models.QueryString.Pagination;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
