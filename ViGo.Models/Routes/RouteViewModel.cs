@@ -24,6 +24,7 @@ namespace ViGo.Models.Routes
         public double? Duration { get; set; }
         public RouteStatus Status { get; set; }
         public RouteType Type { get; set; }
+        public RoutineType RoutineType { get; set; }
         public Guid? RoundTripRouteId { get; set; }
         public StationViewModel StartStation { get; set; }
         public StationViewModel EndStation { get; set; }
@@ -67,6 +68,7 @@ namespace ViGo.Models.Routes
             EndStation = endStation;
             User = user;
             Type = route.Type;
+            RoutineType = route.RoutineType;
             RoundTripRouteId = route.RoundTripRouteId;
             //RouteRoutines = new List<RouteRoutineListItemDto>();
             //RouteStations = new List<RouteStationListItemDto>();
