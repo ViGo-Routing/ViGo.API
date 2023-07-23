@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
@@ -76,6 +78,15 @@ namespace ViGo.Models.Routes
             : this (route, startStation, endStation, user)
         {
             RoundTripRoute = roundTripRoute;
+        }
+    }
+
+    public class RouteSortingParameters : SortingParameters
+    {
+        public RouteSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Route.CreatedTime)));
         }
     }
 }

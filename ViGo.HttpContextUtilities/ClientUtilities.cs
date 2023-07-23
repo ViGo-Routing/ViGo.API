@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.Utilities
+namespace ViGo.HttpContextUtilities
 {
     public static class ClientUtilities
     {

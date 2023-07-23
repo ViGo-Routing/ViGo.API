@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Repository;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Extensions;
@@ -81,16 +81,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,DRIVER")]
         public async Task<IActionResult> GetDriverAssignedBookingDetails(
-            Guid driverId, [FromQuery] PaginationParameter? pagination,
+            Guid driverId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingDetailSortingParameters sorting,
+            [FromQuery] BookingDetailFilterParameters filters,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(
-                    driverId, pagination, HttpContext,
+                    driverId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -112,18 +114,20 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         public async Task<IActionResult> GetBookingDetails(Guid bookingId,
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingDetailSortingParameters sorting,
+            [FromQuery] BookingDetailFilterParameters filters,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetBookingDetailsAsync(
                     bookingId, 
-                    pagination, HttpContext,
+                    pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -291,6 +295,7 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get list of available Booking Details that driver can pick to drive
         /// </summary>
+        /// <remarks>Custom Sorting is not applicable.</remarks>
         /// <returns>
         /// List of available Booking Details
         /// </returns>
@@ -305,13 +310,14 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,DRIVER")]
         public async Task<IActionResult> GetDriverAvailableBookingDetails(
-            Guid driverId, [FromQuery] PaginationParameter? pagination,
+            Guid driverId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingDetailFilterParameters filters,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
                     driverId, pagination, HttpContext,

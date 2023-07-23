@@ -10,10 +10,11 @@ using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
 using ViGo.Models.Notifications;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
@@ -29,7 +30,8 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingViewModel>>
             GetBookingsAsync(Guid? userId,
-            PaginationParameter pagination,
+            PaginationParameter pagination, BookingSortingParameters sorting,
+            BookingFilterParameters filters,
             HttpContext context,
             CancellationToken cancellationToken)
         {
@@ -40,6 +42,18 @@ namespace ViGo.Services
                         (userId != null && userId.HasValue) ?
                         b.CustomerId.Equals(userId.Value)
                         : true), cancellationToken: cancellationToken);
+
+            bookings = bookings.Where(
+                b =>
+                {
+                    return
+                    (!filters.MinStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) >= filters.MinStartDate.Value)
+                    && (!filters.MaxStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) <= filters.MaxStartDate.Value)
+                    && (!filters.MinEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MinEndDate.Value)
+                    && (!filters.MaxEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MaxEndDate.Value);
+                });
+
+            bookings = bookings.Sort(sorting.OrderBy);
 
             int totalRecords = bookings.Count();
 

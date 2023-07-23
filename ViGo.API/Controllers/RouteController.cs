@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
@@ -70,17 +70,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRoutesCurrentUser(
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] RouteSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<RouteViewModel> dtos = await
                 routeServices.GetRoutesAsync(IdentityUtilities.GetCurrentUserId(),
-                pagination, HttpContext,
+                pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -105,17 +106,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRoutes(Guid userId,
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] RouteSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<RouteViewModel> dtos = await
                 routeServices.GetRoutesAsync(userId, 
-                pagination, HttpContext,
+                pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -140,16 +142,17 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRoutes(
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] RouteSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<RouteViewModel> dtos = await
-                routeServices.GetRoutesAsync(null, pagination, HttpContext,
+                routeServices.GetRoutesAsync(null, pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
         }

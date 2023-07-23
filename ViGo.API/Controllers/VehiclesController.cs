@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
 
@@ -39,15 +39,17 @@ namespace ViGo.API.Controllers
         [Authorize(Roles = "ADMIN")]
         [HttpGet]
         public async Task<IActionResult> GetAllVehiclesAsync(
-            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] VehicleSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<VehiclesViewModel> vehicles = await
-                vehicleServices.GetAllVehiclesAsync(pagination, HttpContext, cancellationToken);
+                vehicleServices.GetAllVehiclesAsync(pagination, sorting, HttpContext, cancellationToken);
 
             return StatusCode(200, vehicles);
         }

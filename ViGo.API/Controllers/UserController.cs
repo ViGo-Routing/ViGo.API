@@ -10,7 +10,7 @@ using ViGo.Domain;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
@@ -48,16 +48,17 @@ namespace ViGo.API.Controllers
         //[Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsersAsync(
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] UserSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<Domain.User> users =
-                await userServices.GetUsersAsync(pagination, HttpContext, cancellationToken);
+                await userServices.GetUsersAsync(pagination, sorting, HttpContext, cancellationToken);
             return StatusCode(200, users);
         }
 

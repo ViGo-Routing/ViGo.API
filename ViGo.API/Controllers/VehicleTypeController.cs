@@ -4,7 +4,7 @@ using ViGo.Domain;
 using ViGo.Models.Vehicles;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Extensions;
 
@@ -27,26 +27,26 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get list of Vehicle Type
         /// </summary>
+        /// <remarks>Pagination and Sorting are not applicable</remarks>
         /// <response code="401">Login failed</response>
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Get list of Vehicle Type successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IPagedEnumerable<VehicleType>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<VehicleTypeViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAllVehicleTypesAsync(
-            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllVehicleTypesAsync(CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
-            IPagedEnumerable<VehicleType> vehicleTypes = await
-                vehicleTypeServices.GetAllVehicleTypesAsync(pagination, HttpContext, cancellationToken);
+            IEnumerable<VehicleTypeViewModel> vehicleTypes = await
+                vehicleTypeServices.GetAllVehicleTypesAsync(/*pagination,*/ HttpContext, cancellationToken);
             return StatusCode(200, vehicleTypes);
         }
 
@@ -57,17 +57,17 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200">Get Vehicle Type successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(VehicleType), 200)]
+        [ProducesResponseType(typeof(VehicleTypeViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleTypeByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             //try
             //{
-            VehicleType vehicleType = await vehicleTypeServices.GetVehicleTypeByIdAsync(id, cancellationToken);
+            VehicleTypeViewModel vehicleType = await vehicleTypeServices.GetVehicleTypeByIdAsync(id, cancellationToken);
             if (vehicleType == null)
             {
                 throw new ApplicationException("Vehicle Type ID không tồn tại!");

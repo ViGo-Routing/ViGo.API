@@ -14,11 +14,12 @@ using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -240,7 +241,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId,
-            PaginationParameter pagination,
+            PaginationParameter pagination, RouteSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
@@ -272,6 +273,8 @@ namespace ViGo.Services
                     }
                     return false;
                 });
+
+            routes = routes.Sort(sorting.OrderBy);
 
             int totalRecords = routes.Count();
 

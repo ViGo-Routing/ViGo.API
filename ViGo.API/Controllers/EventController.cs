@@ -4,7 +4,7 @@ using System.Data;
 using System.Threading;
 using ViGo.Models.Events;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -36,14 +36,16 @@ namespace ViGo.API.Controllers
         [Authorize(Roles = "ADMIN")]
         [HttpGet]
         public async Task<IActionResult> GetAllEvents(
-            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] EventSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<EventViewModel> eventView = await
-                eventServices.GetAllEvents(pagination, HttpContext, cancellationToken);
+                eventServices.GetAllEvents(pagination, sorting, HttpContext, cancellationToken);
             return StatusCode(200, eventView);
         }
 
@@ -60,15 +62,17 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN, CUSTOMER")]
         [HttpGet("GetByStatus")]
-        public async Task<IActionResult> GetAllEventsActive(
-            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllActiveEvents(
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] EventSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<EventViewModel> eventView = await
-                eventServices.GetAllEventsActive(pagination, HttpContext, cancellationToken);
+                eventServices.GetAllActiveEvents(pagination, sorting, HttpContext, cancellationToken);
             return StatusCode(200, eventView);
 
         }
@@ -86,7 +90,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN, CUSTOMER")]
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetiGetEventByIDd(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetEventByIDd(Guid id, CancellationToken cancellationToken)
         {
             EventViewModel eventView = await eventServices.GetEventByID(id, cancellationToken);
             if (eventView == null)

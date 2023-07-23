@@ -12,11 +12,12 @@ using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -139,11 +140,13 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<User>> GetUsersAsync(PaginationParameter pagination,
+            UserSortingParameters sorting,
             HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<User> users
                 = await work.Users.GetAllAsync(cancellationToken: cancellationToken);
 
+            users = users.Sort(sorting.OrderBy);
             int totalRecords = users.Count();
 
             return users.ToPagedEnumerable(pagination.PageNumber, 

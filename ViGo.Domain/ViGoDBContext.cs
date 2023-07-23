@@ -171,6 +171,10 @@ namespace ViGo.Domain
                 entity.Property(e => e.EndDate).HasColumnType("date");
 
                 entity.Property(e => e.StartDate).HasColumnType("date");
+
+                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+
+                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
             });
 
             modelBuilder.Entity<Fare>(entity =>

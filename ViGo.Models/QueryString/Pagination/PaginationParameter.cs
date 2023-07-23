@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ViGo.Repository.Pagination
+namespace ViGo.Models.QueryString.Pagination
 {
     public class PaginationParameter
     {
-        public static PaginationParameter Default => new PaginationParameter();
+        //public static PaginationParameter Default => new PaginationParameter();
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
 
@@ -20,8 +20,8 @@ namespace ViGo.Repository.Pagination
 
         public PaginationParameter(int pageNumber, int pageSize)
         {
-            PageNumber = pageNumber < 1 ? 1 : pageNumber;
-            PageSize = pageSize < 1 ? 1 : pageSize;
+            PageNumber = pageNumber;
+            PageSize = pageSize;
         }
     }
 }

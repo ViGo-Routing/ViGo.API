@@ -12,8 +12,9 @@ using ViGo.Utilities.Validator;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using Microsoft.Extensions.Logging;
-using ViGo.Repository.Pagination;
 using Microsoft.AspNetCore.Http;
+using ViGo.Models.QueryString.Pagination;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -23,20 +24,22 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IPagedEnumerable<RouteRoutineViewModel>>
+        public async Task<IEnumerable<RouteRoutineViewModel>>
             GetRouteRoutinesAsync(Guid routeId,
             PaginationParameter pagination,
-            HttpContext context,
-            CancellationToken cancellationToken)
+            HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<RouteRoutine> routeRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(routeId)), cancellationToken: cancellationToken);
 
-            int totalRecords = routeRoutines.Count();
+            routeRoutines = routeRoutines.OrderBy(r => r.RoutineDate)
+                .ThenBy(r => r.PickupTime);
 
-            routeRoutines = routeRoutines.ToPagedEnumerable(
-                pagination.PageNumber, pagination.PageSize).Data;
+            //int totalRecords = routeRoutines.Count();
+
+            //routeRoutines = routeRoutines.ToPagedEnumerable(
+            //    pagination.PageNumber, pagination.PageSize).Data;
 
             IEnumerable<RouteRoutineViewModel> models =
                 from routeRoutine in routeRoutines
@@ -44,8 +47,9 @@ namespace ViGo.Services
             models = models.OrderBy(r => r.RoutineDate)
                 .ThenBy(r => r.PickupTime);
 
-            return models.ToPagedEnumerable(
-                pagination.PageNumber, pagination.PageSize, totalRecords, context);
+            //return models.ToPagedEnumerable(
+            //    pagination.PageNumber, pagination.PageSize, totalRecords, context);
+            return models;
         }
 
         public async Task<RouteRoutineViewModel> GetRouteRoutineAsync(Guid routineId, CancellationToken cancellationToken)

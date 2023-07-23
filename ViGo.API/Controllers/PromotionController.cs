@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.Notifications;
 using ViGo.Models.Promotions;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -45,16 +45,17 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<IActionResult> GetPromotionsAsync(
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] PromotionSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<PromotionViewModel> models = await promotionServices
-                .GetPromotionsAsync(null, pagination, HttpContext,
+                .GetPromotionsAsync(null, pagination, sorting, HttpContext,
                     cancellationToken);
             return StatusCode(200, models);
         }
@@ -81,16 +82,17 @@ namespace ViGo.API.Controllers
         [Authorize]
         public async Task<IActionResult> GetPromotionsAsync(
             Guid eventId,
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] PromotionSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<PromotionViewModel> models = await promotionServices
-                .GetPromotionsAsync(eventId, pagination, HttpContext,
+                .GetPromotionsAsync(eventId, pagination, sorting, HttpContext,
                     cancellationToken);
             return StatusCode(200, models);
         }

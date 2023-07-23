@@ -5,9 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using ViGo.Repository.Pagination;
 
-namespace ViGo.Repository.Pagination
+namespace ViGo.Models.QueryString.Pagination
 {
     /// <summary>
     /// Represents a list of entities that is paged
@@ -27,12 +26,16 @@ namespace ViGo.Repository.Pagination
         /// <param name="route">Route of the retrieving action</param>
         /// <param name="isOriginalSource">True if the source has not been paged. 
         /// The paging process with take place in this constructor</param>
-        public PagedEnumerable(IEnumerable<T> source, 
+        public PagedEnumerable(IEnumerable<T> source,
             int pageNumber, int pageSize, int totalRecords,
             string baseUri, string route, bool isOriginalSource = false)
         {
-            // Minimum allowed page size is 1
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            // Minimum allowed page number is 1
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            // Minimum allowed page size is 1, -1 to get all
+            pageSize = pageSize == -1 ? totalRecords :
+                pageSize < 1 ? 1 : pageSize;
 
             TotalCount = totalRecords;
             TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
@@ -64,8 +67,12 @@ namespace ViGo.Repository.Pagination
         public PagedEnumerable(IEnumerable<T> source,
             int pageNumber, int pageSize)
         {
-            // Minimum allowed page size is 1
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            // Minimum allowed page number is 1
+            pageNumber = (pageNumber < 1 || pageSize == -1) ? 1 : pageNumber;
+
+            // Minimum allowed page size is 1, -1 to get all
+            pageSize = pageSize == -1 ? source.Count() :
+                pageSize < 1 ? 1 : pageSize;
 
             TotalCount = source.Count();
             TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);

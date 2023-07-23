@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
@@ -110,5 +112,30 @@ namespace ViGo.Models.BookingDetails
         //    //CustomerRoute = customerRoute;
         //    DriverRoute = driverRoute;
         //}
+    }
+
+    public class BookingDetailSortingParameters : SortingParameters
+    {
+        public BookingDetailSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(BookingDetail.Date)),
+                new SortingCriteria(nameof(BookingDetail.CustomerDesiredPickupTime)));
+        }
+    }
+
+    public class BookingDetailFilterParameters
+    {
+        public DateOnly? MinDate { get; set; }
+        public DateOnly? MaxDate { get; set; }
+        public TimeOnly? MinPickupTime { get; set; }
+        public TimeOnly? MaxPickupTime { get; set; }
+        public double? StartLocationLat { get; set; }
+        public double? StartLocationLng { get; set; }
+        public double? StartLocationRadius { get; set; }
+        public double? EndLocationLat { get; set; }
+        public double? EndLocationLng { get; set; }
+        public double? EndLocationRadius { get; set; }
+        public BookingDetailStatus? Status { get; set; }
     }
 }

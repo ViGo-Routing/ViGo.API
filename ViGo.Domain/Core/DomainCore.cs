@@ -22,7 +22,7 @@ namespace ViGo.Domain
     }
 
     public partial class Event
-        : BaseEntity
+        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
     {
 
     }

@@ -46,6 +46,8 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(p => p.FareId.Equals(fareId)),
                  cancellationToken: cancellationToken);
 
+            farePolicies = farePolicies.OrderBy(p => p.MinDistance);
+
             IEnumerable<FarePolicyViewModel> models = from policy in farePolicies
                                                       select new FarePolicyViewModel(policy);
             return models;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Models.UserLicenses;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -35,15 +35,18 @@ namespace ViGo.API.Controllers
         [Authorize(Roles = "ADMIN")]
         [HttpGet]
         public async Task<IActionResult> GetAllUserLicenses(
-            [FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] UserLicenseSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<UserLicenseViewModel> userLicenseViews = await 
-                userLicenseServices.GetAllUserLicenses(pagination, HttpContext, cancellationToken);
+                userLicenseServices.GetAllUserLicenses(pagination, sorting,
+                HttpContext, cancellationToken);
 
             return StatusCode(200, userLicenseViews);
         }
@@ -55,7 +58,7 @@ namespace ViGo.API.Controllers
         /// <response code="400">Some information is invalid</response>
         /// <response code="200"> User License successfully</response>
         /// <response code="500">Server error</response>
-        [ProducesResponseType(typeof(IPagedEnumerable<UserLicenseViewModel>), 200)]
+        [ProducesResponseType(typeof(UserLicenseViewModel), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
@@ -132,9 +135,12 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUserLicense(Guid id, [FromBody] UserLicenseUpdateModel userLicenseUpdateModel)
+        public async Task<IActionResult> UpdateUserLicense(Guid id, 
+            [FromBody] UserLicenseUpdateModel userLicenseUpdateModel,
+            CancellationToken cancellationToken)
         {
-            UserLicenseViewModel userLicense = await userLicenseServices.UpdateUserLicense(id, userLicenseUpdateModel);
+            UserLicenseViewModel userLicense = await userLicenseServices
+                .UpdateUserLicense(id, userLicenseUpdateModel, cancellationToken);
             return StatusCode(200, userLicense);
         }
     }

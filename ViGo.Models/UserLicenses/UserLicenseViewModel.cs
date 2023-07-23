@@ -7,6 +7,8 @@ using ViGo.Domain.Enumerations;
 using ViGo.Domain;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 
 namespace ViGo.Models.UserLicenses
 {
@@ -53,5 +55,15 @@ namespace ViGo.Models.UserLicenses
             User = user;
         }
 
+    }
+
+    public class UserLicenseSortingParameters : SortingParameters
+    {
+        public UserLicenseSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(UserLicense.UserId)),
+                new SortingCriteria(nameof(UserLicense.Status)));
+        }
     }
 }

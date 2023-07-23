@@ -5,7 +5,7 @@ using ViGo.Domain;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Extensions;
@@ -28,6 +28,7 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get list of RouteRoutines for a specific route
         /// </summary>
+        /// <remarks>Sorting is not applicable. Routines will be sorted by RoutineDate and PickupTime</remarks>
         /// <returns>
         /// List of Route's Routines
         /// </returns>
@@ -37,20 +38,20 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet("Route/{routeId}")]
         [Authorize]
-        [ProducesResponseType(typeof(IPagedEnumerable<RouteRoutineViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<RouteRoutineViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetRouteRoutines(Guid routeId,
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
-            IPagedEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices
+            IEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices
                 .GetRouteRoutinesAsync(routeId, 
                 pagination, HttpContext,
                 cancellationToken);
@@ -88,7 +89,6 @@ namespace ViGo.API.Controllers
         /// The route should not have Routines already configured. 
         /// Configured Routines should use Update endpoint
         /// </remarks>
-        /// <param name="model">Routines information to be created</param>
         /// <returns>
         /// The newly added routines
         /// </returns>

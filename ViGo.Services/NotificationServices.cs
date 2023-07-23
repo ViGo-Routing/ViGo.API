@@ -11,12 +11,13 @@ using ViGo.Models.Events;
 using ViGo.Models.Notifications;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -28,7 +29,7 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<NotificationViewModel>>
             GetNotificationsAsync(Guid userId,
-            PaginationParameter pagination,
+            PaginationParameter pagination, NotificationSortingParameters sorting,
             HttpContext context, 
             CancellationToken cancellationToken)
         {
@@ -41,6 +42,8 @@ namespace ViGo.Services
             IEnumerable<Notification> notifications = await work.Notifications
                 .GetAllAsync(query => query.Where(
                     n => n.UserId.HasValue && n.UserId.Equals(userId)), cancellationToken: cancellationToken);
+
+            notifications = notifications.Sort(sorting.OrderBy);
 
             int totalRecords = notifications.Count();
 

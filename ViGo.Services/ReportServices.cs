@@ -12,9 +12,10 @@ using ViGo.Models.BookingDetails;
 using ViGo.Models.Reports;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -23,11 +24,14 @@ namespace ViGo.Services
         public ReportServices(IUnitOfWork work, ILogger logger) : base(work, logger) { }
 
         public async Task<IPagedEnumerable<ReportViewModel>> GetAllReports(
-            PaginationParameter pagination,
+            PaginationParameter pagination, ReportSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Report> reports = await work.Reports.GetAllAsync(cancellationToken: cancellationToken);
+
+            reports = reports.Sort(sorting.OrderBy);
+            
             int totalRecords = reports.Count();
             reports = reports.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
@@ -55,13 +59,15 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<ReportViewModel>> GetAllReportsByUserID(
-            PaginationParameter pagination,
+            PaginationParameter pagination, ReportSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             Guid userId = IdentityUtilities.GetCurrentUserId();
             IEnumerable<Report> reports = await work.Reports.GetAllAsync(
                 q => q.Where(x => x.UserId.Equals(userId)),cancellationToken: cancellationToken);
+
+            reports = reports.Sort(sorting.OrderBy);
             int totalRecords = reports.Count();
 
             reports = reports.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;

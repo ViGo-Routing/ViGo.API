@@ -12,8 +12,9 @@ using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -24,11 +25,13 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<VehiclesViewModel>> GetAllVehiclesAsync(
-            PaginationParameter pagination,
+            PaginationParameter pagination, VehicleSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(cancellationToken: cancellationToken);
+
+            vehicles = vehicles.Sort(sorting.OrderBy);
 
             int totalRecords = vehicles.Count();
 

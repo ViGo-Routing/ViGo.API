@@ -7,7 +7,7 @@ using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -57,7 +57,7 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get Fares information along with FarePolicies
         /// </summary>
-        /// <remarks>ADMIN only</remarks>
+        /// <remarks>ADMIN only. No pagination required</remarks>
         /// <returns>
         /// List of all the fare and corresponding fare policies
         /// </returns>
@@ -68,22 +68,22 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpGet]
         [Authorize(Roles = "ADMIN")]
-        [ProducesResponseType(typeof(IPagedEnumerable<FareViewModel>), 200)]
+        [ProducesResponseType(typeof(IEnumerable<FareViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         public async Task<IActionResult> GetFares(
-            [FromQuery] PaginationParameter? pagination,
+            //[FromQuery] PaginationParameter? pagination,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
-            IPagedEnumerable<FareViewModel> models = await
-                fareServices.GetFaresAsync(pagination, HttpContext,
+            IEnumerable<FareViewModel> models = await
+                fareServices.GetFaresAsync(/*pagination, */HttpContext,
                 cancellationToken);
             return StatusCode(200, models);
         }

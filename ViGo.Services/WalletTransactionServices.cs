@@ -12,10 +12,11 @@ using ViGo.Models.Users;
 using ViGo.Models.Wallets;
 using ViGo.Models.WalletTransactions;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -27,7 +28,8 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<WalletTransactionViewModel>> GetAllWalletTransactionsAsync(
             Guid walletId,
-            PaginationParameter pagination, HttpContext context, CancellationToken cancellationToken)
+            PaginationParameter pagination, 
+            HttpContext context, CancellationToken cancellationToken)
         {
             Wallet wallet = await work.Wallets.GetAsync(walletId, cancellationToken: cancellationToken);
             if (!IdentityUtilities.IsAdmin())
@@ -42,6 +44,8 @@ namespace ViGo.Services
                 work.WalletTransactions.GetAllAsync(
                     query => query.Where(wt => wt.WalletId.Equals(walletId)),
                     cancellationToken: cancellationToken);
+
+            walletTransactions = walletTransactions.OrderBy(t => t.CreatedTime);
 
             int totalRecords = walletTransactions.Count();
             if (totalRecords == 0)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -7,7 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
+	  <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
+	  <ProjectReference Include="..\ViGo.HttpContextUtilities\ViGo.HttpContextUtilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,6 +16,11 @@
     <Folder Include="VehicleTypes\" />
     <Folder Include="Vehicles\" />
     <Folder Include="Settings\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.3.3" />
   </ItemGroup>
 
 </Project>

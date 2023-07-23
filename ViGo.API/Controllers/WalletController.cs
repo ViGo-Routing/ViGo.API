@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Models.Wallets;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -42,12 +42,13 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [HttpGet]
-        public async Task<IActionResult> GetAllWalletsAsync([FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllWalletsAsync(
+            [FromQuery] PaginationParameter pagination, CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<WalletViewModel> listWallet = await walletServices.GetAllWalletsAsync(pagination, HttpContext, cancellationToken);
             return StatusCode(200, listWallet);
