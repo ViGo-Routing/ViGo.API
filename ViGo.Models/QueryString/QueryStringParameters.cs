@@ -8,14 +8,14 @@ using ViGo.Models.QueryString.Pagination;
 
 namespace ViGo.Models.QueryString
 {
-    public abstract class QueryStringParameters
-    {
-        //public PaginationParameter Pagination { get; set; } = PaginationParameter.Default;
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 10;
+    //public abstract class QueryStringParameters
+    //{
+    //    //public PaginationParameter Pagination { get; set; } = PaginationParameter.Default;
+    //    public int PageNumber { get; set; } = 1;
+    //    public int PageSize { get; set; } = 10;
 
-        public string OrderBy { get; set; }
-    }
+    //    public string OrderBy { get; set; }
+    //}
 
     public static class QueryStringUtilities
     {

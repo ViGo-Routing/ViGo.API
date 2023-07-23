@@ -7,6 +7,8 @@ using ViGo.Domain.Enumerations;
 using ViGo.Domain;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Users;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 
 namespace ViGo.Models.Reports
 {
@@ -45,6 +47,15 @@ namespace ViGo.Models.Reports
             IsDeleted = report.IsDeleted;
             User = user;
             BookingDetail = bookingDetail;
+        }
+    }
+
+    public class ReportSortingParameters : SortingParameters
+    {
+        public ReportSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Report.CreatedTime)));
         }
     }
 }

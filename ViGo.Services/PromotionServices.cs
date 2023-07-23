@@ -24,8 +24,8 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<PromotionViewModel>> GetPromotionsAsync(
             Guid? eventId,
-            PaginationParameter pagination, HttpContext context,
-            CancellationToken cancellationToken)
+            PaginationParameter pagination, PromotionSortingParameters sorting,
+            HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<Promotion>? promotions = null;
             if (eventId is null)
@@ -39,6 +39,8 @@ namespace ViGo.Services
                     p => p.EventId.HasValue && p.EventId.Value.Equals(eventId.Value)),
                 cancellationToken: cancellationToken);
             }
+
+            promotions = promotions.Sort(sorting.OrderBy);
 
             int totalRecords = promotions.Count();
             promotions = promotions.ToPagedEnumerable(pagination.PageNumber,

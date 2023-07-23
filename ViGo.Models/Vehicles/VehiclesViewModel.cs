@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.UserLicenses;
 using ViGo.Models.Users;
 using ViGo.Models.VehicleTypes;
@@ -41,6 +43,15 @@ namespace ViGo.Models.Vehicles
             VehicleType = vehicleType;
             User = user;
             UserLicense = userLicense;
+        }
+    }
+
+    public class VehicleSortingParameters : SortingParameters
+    {
+        public VehicleSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Vehicle.VehicleTypeId)));
         }
     }
 }

@@ -71,17 +71,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         public async Task<IActionResult> GetUserNotificationsAsync(Guid userId,
-            [FromQuery] PaginationParameter? pagination,
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] NotificationSortingParameters sorting,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<NotificationViewModel> models = await notificationServices
                 .GetNotificationsAsync(userId, 
-                pagination, HttpContext,
+                pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, models);
         }

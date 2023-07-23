@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 
 namespace ViGo.Models.Events
 {
@@ -25,6 +27,15 @@ namespace ViGo.Models.Events
             Status = ev.Status;
             StartDate = ev.StartDate;
             EndDate = ev.EndDate;
+        }
+    }
+
+    public class EventSortingParameters : SortingParameters
+    {
+        public EventSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Event.StartDate)));
         }
     }
 }

@@ -13,12 +13,13 @@ using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.GoogleMaps;
 using ViGo.Models.Notifications;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.RouteRoutines;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.BackgroundTasks;
@@ -120,9 +121,9 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetDriverAssignedBookingDetailsAsync(Guid driverId,
-            PaginationParameter pagination,
-            HttpContext context,
-            CancellationToken cancellationToken)
+            PaginationParameter pagination, BookingDetailSortingParameters sorting,
+            BookingDetailFilterParameters filters,
+            HttpContext context, CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin())
             {
@@ -139,6 +140,8 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
+
+            bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
             int totalRecords = bookingDetails.Count();
 
@@ -211,13 +214,17 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetBookingDetailsAsync(Guid bookingId,
-            PaginationParameter pagination,
+            PaginationParameter pagination, BookingDetailSortingParameters sorting,
+            BookingDetailFilterParameters filters,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
+
+
+            bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
             int totalRecords = bookingDetails.Count();
 
@@ -1546,6 +1553,22 @@ namespace ViGo.Services
                 }
             }
         }
+
+        //private IEnumerable<BookingDetail> FilterBookingDetails(IEnumerable<BookingDetail> bookingDetails,
+        //    BookingDetailFilterParameters filters)
+        //{
+        //    bookingDetails = bookingDetails.Where(
+        //        d =>
+        //        {
+        //            return
+        //            (!filters.MinDate.HasValue || DateOnly.FromDateTime(d.Date) >= filters.MinDate.Value)
+        //            && (!filters.MaxDate.HasValue || DateOnly.FromDateTime(d.Date) <= filters.MaxDate.Value)
+        //            && (!filters.MinPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MinPickupTime.Value)
+        //            && (!filters.MaxPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MaxPickupTime.Value);
+        //        });
+
+
+        //}
 
         #endregion
     }

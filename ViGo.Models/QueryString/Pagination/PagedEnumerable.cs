@@ -30,8 +30,12 @@ namespace ViGo.Models.QueryString.Pagination
             int pageNumber, int pageSize, int totalRecords,
             string baseUri, string route, bool isOriginalSource = false)
         {
-            // Minimum allowed page size is 1
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            // Minimum allowed page number is 1
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            // Minimum allowed page size is 1, -1 to get all
+            pageSize = pageSize == -1 ? totalRecords :
+                pageSize < 1 ? 1 : pageSize;
 
             TotalCount = totalRecords;
             TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
@@ -63,8 +67,12 @@ namespace ViGo.Models.QueryString.Pagination
         public PagedEnumerable(IEnumerable<T> source,
             int pageNumber, int pageSize)
         {
-            // Minimum allowed page size is 1
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            // Minimum allowed page number is 1
+            pageNumber = (pageNumber < 1 || pageSize == -1) ? 1 : pageNumber;
+
+            // Minimum allowed page size is 1, -1 to get all
+            pageSize = pageSize == -1 ? source.Count() :
+                pageSize < 1 ? 1 : pageSize;
 
             TotalCount = source.Count();
             TotalPages = (int)Math.Ceiling((double)TotalCount / pageSize);

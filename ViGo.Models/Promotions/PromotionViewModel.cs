@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Events;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.VehicleTypes;
 
 namespace ViGo.Models.Promotions
@@ -71,6 +73,15 @@ namespace ViGo.Models.Promotions
             {
                 Event = new EventViewModel(promotionEvent);
             }
+        }
+    }
+
+    public class PromotionSortingParameters : SortingParameters
+    {
+        public PromotionSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Promotion.StartTime)));
         }
     }
 }

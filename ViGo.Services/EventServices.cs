@@ -24,11 +24,14 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<EventViewModel>> GetAllEvents(
-            PaginationParameter pagination,
+            PaginationParameter pagination, EventSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Event> events = await work.Events.GetAllAsync(cancellationToken: cancellationToken);
+
+            events = events.Sort(sorting.OrderBy);
+            
             int totalRecords = events.Count();
 
             events = events.ToPagedEnumerable(
@@ -42,13 +45,16 @@ namespace ViGo.Services
                 pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<IPagedEnumerable<EventViewModel>> GetAllEventsActive(
-            PaginationParameter pagination,
+        public async Task<IPagedEnumerable<EventViewModel>> GetAllActiveEvents(
+            PaginationParameter pagination, EventSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Event> events = await work.Events.GetAllAsync(
                 q => q.Where(x => x.Status.Equals(EventStatus.ACTIVE)), cancellationToken: cancellationToken);
+
+            events = events.Sort(sorting.OrderBy);
+            
             int totalRecords = events.Count();
 
             events = events.ToPagedEnumerable(

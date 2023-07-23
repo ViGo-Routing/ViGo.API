@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 
 namespace ViGo.Models.Users
 {
@@ -49,6 +51,16 @@ namespace ViGo.Models.Users
             Rating = user.Rating;
             CanceledTripRate = user.CanceledTripRate;
             WeeklyCanceledTripRate = user.WeeklyCanceledTripRate;
+        }
+    }
+
+    public class UserSortingParameters : SortingParameters
+    {
+        public UserSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(User.Role), SortingType.DESC),
+                new SortingCriteria(nameof(User.Status), SortingType.DESC));
         }
     }
 }

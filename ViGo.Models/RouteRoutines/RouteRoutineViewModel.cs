@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 
 namespace ViGo.Models.RouteRoutines
 {
@@ -63,6 +65,16 @@ namespace ViGo.Models.RouteRoutines
             return this.RoutineDate == other.RoutineDate
                 && this.PickupTime == other.PickupTime
                /* && this.EndTime == other.EndTime*/;
+        }
+    }
+
+    public class RouteRoutineSortingParameters : SortingParameters
+    {
+        public RouteRoutineSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(RouteRoutine.RoutineDate)),
+                new SortingCriteria(nameof(RouteRoutine.PickupTime)));
         }
     }
 }

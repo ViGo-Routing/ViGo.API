@@ -140,11 +140,13 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<User>> GetUsersAsync(PaginationParameter pagination,
+            UserSortingParameters sorting,
             HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<User> users
                 = await work.Users.GetAllAsync(cancellationToken: cancellationToken);
 
+            users = users.Sort(sorting.OrderBy);
             int totalRecords = users.Count();
 
             return users.ToPagedEnumerable(pagination.PageNumber, 

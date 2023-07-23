@@ -21,6 +21,12 @@ namespace ViGo.Domain
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        public DateTime CreatedTime { get; set; }
+        public Guid CreatedBy { get; set; }
+        public DateTime UpdatedTime { get; set; }
+        public Guid UpdatedBy { get; set; }
+        public bool IsDeleted { get; set; }
+
         [JsonIgnore]
         public virtual ICollection<Notification> Notifications { get; set; }
         [JsonIgnore]

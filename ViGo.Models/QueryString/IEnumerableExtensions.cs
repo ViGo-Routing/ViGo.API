@@ -24,7 +24,7 @@ namespace ViGo.Models.QueryString
                 throw new ArgumentNullException(nameof(source));
             }
 
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            //pageSize = pageSize < 1 ? 1 : pageSize;
             return new PagedEnumerable<T>(
                 source,
                 pageNumber, pageSize);
@@ -40,7 +40,7 @@ namespace ViGo.Models.QueryString
                 throw new ArgumentNullException(nameof(source));
             }
 
-            pageSize = pageSize < 1 ? 1 : pageSize;
+            //pageSize = pageSize < 1 ? 1 : pageSize;
             return new PagedEnumerable<T>(
                 source,
                 pageNumber, pageSize, totalRecords,

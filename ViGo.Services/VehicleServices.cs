@@ -25,11 +25,13 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<VehiclesViewModel>> GetAllVehiclesAsync(
-            PaginationParameter pagination,
+            PaginationParameter pagination, VehicleSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
             IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(cancellationToken: cancellationToken);
+
+            vehicles = vehicles.Sort(sorting.OrderBy);
 
             int totalRecords = vehicles.Count();
 

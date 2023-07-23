@@ -28,7 +28,8 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<WalletTransactionViewModel>> GetAllWalletTransactionsAsync(
             Guid walletId,
-            PaginationParameter pagination, HttpContext context, CancellationToken cancellationToken)
+            PaginationParameter pagination, 
+            HttpContext context, CancellationToken cancellationToken)
         {
             Wallet wallet = await work.Wallets.GetAsync(walletId, cancellationToken: cancellationToken);
             if (!IdentityUtilities.IsAdmin())
@@ -43,6 +44,8 @@ namespace ViGo.Services
                 work.WalletTransactions.GetAllAsync(
                     query => query.Where(wt => wt.WalletId.Equals(walletId)),
                     cancellationToken: cancellationToken);
+
+            walletTransactions = walletTransactions.OrderBy(t => t.CreatedTime);
 
             int totalRecords = walletTransactions.Count();
             if (totalRecords == 0)

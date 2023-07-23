@@ -338,7 +338,8 @@ namespace ViGo.Services
             return fareViewModel;
         }
 
-        public async Task<IPagedEnumerable<FareViewModel>> GetFaresAsync(PaginationParameter pagination,
+        public async Task<IEnumerable<FareViewModel>> GetFaresAsync(
+            //PaginationParameter pagination,
             HttpContext context,
             CancellationToken cancellationToken)
         {
@@ -346,28 +347,29 @@ namespace ViGo.Services
 
             int total = fares.Count();
 
-            fares = fares.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
+            //fares = fares.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
             IEnumerable<Guid> fareIds = fares.Select(f => f.Id);
             IEnumerable<Guid> vehicleTypeIds = fares.Select(f => f.VehicleTypeId).Distinct();
 
             IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(
                 query => query.Where(v => vehicleTypeIds.Contains(v.Id)), cancellationToken: cancellationToken);
-            IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
-                query => query.Where(p => fareIds.Contains(p.FareId)), cancellationToken: cancellationToken);
+            //IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
+            //    query => query.Where(p => fareIds.Contains(p.FareId)), cancellationToken: cancellationToken);
 
             IList<FareViewModel> fareModels = new List<FareViewModel>();
             foreach (Fare fare in fares)
             {
                 VehicleType vehicleType = vehicleTypes.SingleOrDefault(v => v.Id.Equals(fare.VehicleTypeId));
-                IEnumerable<FarePolicy> policies = farePolicies.Where(p => p.FareId.Equals(fare.Id));
-                IEnumerable<FarePolicyViewModel> policyViewModels = from policy in policies
-                                                                    select new FarePolicyViewModel(policy);
-                fareModels.Add(new FareViewModel(fare, new VehicleTypeViewModel(vehicleType), policyViewModels));
+                //IEnumerable<FarePolicy> policies = farePolicies.Where(p => p.FareId.Equals(fare.Id));
+                //IEnumerable<FarePolicyViewModel> policyViewModels = from policy in policies
+                //                                                    select new FarePolicyViewModel(policy);
+                fareModels.Add(new FareViewModel(fare, new VehicleTypeViewModel(vehicleType)/*, policyViewModels*/));
             }
 
-            return fareModels.ToPagedEnumerable(pagination.PageNumber,
-                pagination.PageSize, total, context);
+            //return fareModels.ToPagedEnumerable(pagination.PageNumber,
+            //    pagination.PageSize, total, context);
+            return fareModels;
         }
 
         public async Task<FareViewModel> GetFareAsync(Guid fareId, CancellationToken cancellationToken)

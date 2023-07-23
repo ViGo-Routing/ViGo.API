@@ -143,13 +143,13 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetStations([FromQuery] PaginationParameter? pagination,
+        public async Task<IActionResult> GetStations([FromQuery] PaginationParameter pagination,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<StationViewModel> models = await stationServices
                 .GetStationsAsync(pagination, HttpContext, cancellationToken);

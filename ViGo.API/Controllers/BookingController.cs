@@ -6,10 +6,10 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Routes;
 using ViGo.Repository;
 using ViGo.Repository.Core;
-using ViGo.Repository.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.BackgroundTasks;
@@ -88,19 +88,22 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize]
-        public async Task<IActionResult> GetBookings([FromQuery] PaginationParameter? pagination,
+        public async Task<IActionResult> GetBookings(
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingSortingParameters sorting,
+            [FromQuery] BookingFilterParameters filters,
             CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<BookingViewModel> dtos;
             if (IdentityUtilities.IsAdmin())
             {
                 // Get All Bookings
                 dtos = await bookingServices.GetBookingsAsync(null, 
-                    pagination, HttpContext,
+                    pagination, sorting, filters, HttpContext,
                     cancellationToken);
             }
             else
@@ -108,7 +111,7 @@ namespace ViGo.API.Controllers
                 // Get current user's bookings
                 dtos = await bookingServices.GetBookingsAsync(
                     IdentityUtilities.GetCurrentUserId(),
-                    pagination, HttpContext,
+                    pagination, sorting, filters, HttpContext,
                     cancellationToken);
             }
             return StatusCode(200, dtos);

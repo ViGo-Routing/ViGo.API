@@ -33,15 +33,18 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpGet("Admin")]
-        public async Task<IActionResult> GetAllReports([FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllReports(
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] ReportSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
 
             IPagedEnumerable<ReportViewModel> reportViews = await
-                reportServices.GetAllReports(pagination, HttpContext, cancellationToken);
+                reportServices.GetAllReports(pagination, sorting, HttpContext, cancellationToken);
             return StatusCode(200, reportViews);
         }
 
@@ -58,14 +61,17 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER, DRIVER")]
         [HttpGet("User")]
-        public async Task<IActionResult> GetAllReportsByUserID([FromQuery] PaginationParameter? pagination, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetAllReportsByUserID(
+            [FromQuery] PaginationParameter pagination,
+            [FromQuery] ReportSortingParameters sorting,
+            CancellationToken cancellationToken)
         {
-            if (pagination is null)
-            {
-                pagination = PaginationParameter.Default;
-            }
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
             IPagedEnumerable<ReportViewModel> reportViews = await
-                reportServices.GetAllReportsByUserID(pagination, HttpContext, cancellationToken);
+                reportServices.GetAllReportsByUserID(pagination, sorting, HttpContext, cancellationToken);
             return StatusCode(200, reportViews);
 
         }
@@ -148,7 +154,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
-        [HttpPut("Status&Note/{reportID}")]
+        [HttpPut("Review/{reportID}")]
         public async Task<IActionResult> AdminUpdateReport(Guid reportID, [FromBody] ReportAdminUpdateModel reportAdminUpdate)
         {
             ReportViewModel reportView = await reportServices.AdminUpdateReport(reportID, reportAdminUpdate);

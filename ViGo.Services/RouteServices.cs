@@ -241,7 +241,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<RouteViewModel>> GetRoutesAsync(Guid? userId,
-            PaginationParameter pagination,
+            PaginationParameter pagination, RouteSortingParameters sorting,
             HttpContext context,
             CancellationToken cancellationToken)
         {
@@ -273,6 +273,8 @@ namespace ViGo.Services
                     }
                     return false;
                 });
+
+            routes = routes.Sort(sorting.OrderBy);
 
             int totalRecords = routes.Count();
 

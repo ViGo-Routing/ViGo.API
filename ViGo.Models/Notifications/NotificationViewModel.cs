@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Events;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.Users;
 
 namespace ViGo.Models.Notifications
@@ -53,5 +55,15 @@ namespace ViGo.Models.Notifications
         {
             User = user;
         }
+    }
+
+    public class NotificationSortingParameters : SortingParameters
+    {
+        public NotificationSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Notification.CreatedTime)));
+        }
+
     }
 }

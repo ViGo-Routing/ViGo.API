@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
@@ -120,5 +122,22 @@ namespace ViGo.Models.Bookings
         //{
         //    BookingDetails = bookingDetails;
         //}
+    }
+
+    public class BookingSortingParameters : SortingParameters
+    {
+        public BookingSortingParameters()
+        {
+            OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Booking.StartDate)));
+        }
+    }
+
+    public class BookingFilterParameters
+    {
+        public DateOnly? MinStartDate { get; set; }
+        public DateOnly? MaxStartDate { get; set; }
+        public DateOnly? MinEndDate { get; set; }
+        public DateOnly? MaxEndDate { get; set; }
     }
 }

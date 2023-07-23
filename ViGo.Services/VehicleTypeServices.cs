@@ -22,24 +22,30 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<IPagedEnumerable<VehicleType>> GetAllVehicleTypesAsync(
-            PaginationParameter pagination,
+        public async Task<IEnumerable<VehicleTypeViewModel>> GetAllVehicleTypesAsync(
+            //PaginationParameter pagination,
             HttpContext context,
             CancellationToken cancellationToken)
         {
-            IEnumerable<VehicleType> vehicleType = await work.VehicleTypes.GetAllAsync(cancellationToken: cancellationToken);
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes.GetAllAsync(cancellationToken: cancellationToken);
 
-            int totalRecords = vehicleType.Count();
+            int totalRecords = vehicleTypes.Count();
 
-            return vehicleType.ToPagedEnumerable(
-                pagination.PageNumber, pagination.PageSize, 
-                totalRecords, context);
+            IEnumerable<VehicleTypeViewModel> models = from vehicleType in vehicleTypes
+                                                       select new VehicleTypeViewModel(vehicleType);
+
+            //return vehicleType.ToPagedEnumerable(
+            //    pagination.PageNumber, pagination.PageSize, 
+            //    totalRecords, context);
+
+            return models;
+
         }
 
-        public async Task<VehicleType> GetVehicleTypeByIdAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<VehicleTypeViewModel> GetVehicleTypeByIdAsync(Guid id, CancellationToken cancellationToken)
         {
             VehicleType vehicleType = await work.VehicleTypes.GetAsync(id, cancellationToken: cancellationToken);
-            return vehicleType;
+            return new VehicleTypeViewModel(vehicleType);
         }
 
         public async Task<VehicleType> CreateVehicleTypeAsync(VehicleTypeCreateModel newVehicleType, CancellationToken cancellationToken)
@@ -65,13 +71,15 @@ namespace ViGo.Services
         {
             var currentVehicleType = await work.VehicleTypes.GetAsync(id);
 
-            if (currentVehicleType != null)
+            if (currentVehicleType is null)
             {
+                throw new ApplicationException("Loại phương tiện không tồn tại!!");
+            }
+
                 if (vehicleTypeUpdate.Name != null) currentVehicleType.Name = vehicleTypeUpdate.Name;
                 if (vehicleTypeUpdate.Slot != null) currentVehicleType.Slot = (short)vehicleTypeUpdate.Slot;
                 if (vehicleTypeUpdate.Type != null) currentVehicleType.Type = (VehicleSubType)vehicleTypeUpdate.Type;
                 if (vehicleTypeUpdate.IsDeleted != null) currentVehicleType.IsDeleted = (bool)vehicleTypeUpdate.IsDeleted;
-            }
 
             await work.VehicleTypes.UpdateAsync(currentVehicleType);
             await work.SaveChangesAsync();
