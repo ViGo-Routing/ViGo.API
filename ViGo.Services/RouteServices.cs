@@ -984,8 +984,8 @@ namespace ViGo.Services
             station.Name.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Tên " + stationName + " không được bỏ trống!",
-                minLength: 5,
-                minLengthErrorMessage: "Tên " + stationName + " phải có từ 5 kí tự trở lên!",
+                minLength: 1,
+                minLengthErrorMessage: "Tên " + stationName + " phải có từ 1 kí tự trở lên!",
                 maxLength: 255,
                 maxLengthErrorMessage: "Tên " + stationName + " không được vượt quá 255 kí tự!"
                 );

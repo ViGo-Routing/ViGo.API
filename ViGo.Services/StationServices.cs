@@ -68,8 +68,8 @@ namespace ViGo.Services
             model.Name.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Tên điểm di chuyển không được bỏ trống!!",
-                minLength: 5,
-                minLengthErrorMessage: "Tên điểm di chuyển phải có ít nhất 5 kí tự!!",
+                minLength: 1,
+                minLengthErrorMessage: "Tên điểm di chuyển phải có ít nhất 1 kí tự!!",
                 maxLength: 255,
                 maxLengthErrorMessage: "Tên điểm di chuyển không được vượt quá 255 kí tự!!");
 
@@ -173,8 +173,8 @@ namespace ViGo.Services
                 model.Name.StringValidate(
                     allowEmpty: false,
                     emptyErrorMessage: "Tên điểm di chuyển không được bỏ trống!!",
-                    minLength: 5,
-                    minLengthErrorMessage: "Tên điểm di chuyển phải có ít nhất 5 kí tự!!",
+                    minLength: 1,
+                    minLengthErrorMessage: "Tên điểm di chuyển phải có ít nhất 1 kí tự!!",
                     maxLength: 255,
                     maxLengthErrorMessage: "Tên điểm di chuyển không được vượt quá 255 kí tự!!");
 
