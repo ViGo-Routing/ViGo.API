@@ -63,4 +63,9 @@ namespace ViGo.Models.Users
                 new SortingCriteria(nameof(User.Status), SortingType.DESC));
         }
     }
+
+    public class UserFilterParameters
+    {
+        public string? Role { get; set; }
+    }
 }
