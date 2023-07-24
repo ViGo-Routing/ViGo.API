@@ -14,6 +14,17 @@ namespace ViGo.Models.GoogleMaps
         [JsonProperty("longitude")]
         public double Longitude { get; set; }
 
+        public GoogleMapPoint()
+        {
+
+        }
+
+        public GoogleMapPoint(double latitude, double longitude)
+        {
+            Latitude = latitude;
+            Longitude = longitude;
+        }
+
         public override string ToString()
         {
             return Latitude + "%2C" + Longitude;

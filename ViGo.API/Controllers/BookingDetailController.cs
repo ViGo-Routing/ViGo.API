@@ -91,11 +91,45 @@ namespace ViGo.API.Controllers
             //    pagination = PaginationParameter.Default;
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
-                await bookingDetailServices.GetDriverAssignedBookingDetailsAsync(
-                    driverId, pagination, sorting, filters, HttpContext,
+                await bookingDetailServices.GetUserBookingDetailsAsync(
+                    driverId, UserRole.DRIVER, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
+
+        /// <summary>
+        /// Get list of Booking Details that are belong to a customer
+        /// </summary>
+        /// <returns>
+        /// List of Booking Details
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of booking details successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Customer/{customerId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
+        public async Task<IActionResult> GetCustomerBookingDetails(
+            Guid customerId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingDetailSortingParameters sorting,
+            [FromQuery] BookingDetailFilterParameters filters,
+            CancellationToken cancellationToken)
+        {
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
+            IPagedEnumerable<BookingDetailViewModel> dtos =
+                await bookingDetailServices.GetUserBookingDetailsAsync(
+                    customerId, UserRole.CUSTOMER, pagination, sorting, filters, HttpContext,
+                    cancellationToken);
+            return StatusCode(200, dtos);
+        }
+
 
         /// <summary>
         /// Get list of Booking Details that are belong to a Booking
@@ -320,7 +354,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
-                    driverId, pagination, HttpContext,
+                    driverId, pagination, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }

@@ -136,6 +136,6 @@ namespace ViGo.Models.BookingDetails
         public double? EndLocationLat { get; set; }
         public double? EndLocationLng { get; set; }
         public double? EndLocationRadius { get; set; }
-        public BookingDetailStatus? Status { get; set; }
+        public string? Status { get; set; }
     }
 }
