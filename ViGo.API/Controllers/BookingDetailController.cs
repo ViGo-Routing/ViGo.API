@@ -320,7 +320,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
-                    driverId, pagination, HttpContext,
+                    driverId, pagination, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }

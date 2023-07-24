@@ -50,6 +50,7 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetUsersAsync(
             [FromQuery] PaginationParameter pagination,
             [FromQuery] UserSortingParameters sorting,
+            [FromQuery] UserFilterParameters filters,
             CancellationToken cancellationToken)
         {
             //if (pagination is null)
@@ -58,7 +59,7 @@ namespace ViGo.API.Controllers
             //}
 
             IPagedEnumerable<Domain.User> users =
-                await userServices.GetUsersAsync(pagination, sorting, HttpContext, cancellationToken);
+                await userServices.GetUsersAsync(pagination, sorting, filters, HttpContext, cancellationToken);
             return StatusCode(200, users);
         }
 

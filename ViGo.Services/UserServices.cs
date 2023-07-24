@@ -140,11 +140,13 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<User>> GetUsersAsync(PaginationParameter pagination,
-            UserSortingParameters sorting,
+            UserSortingParameters sorting, UserFilterParameters filters,
             HttpContext context, CancellationToken cancellationToken)
         {
             IEnumerable<User> users
                 = await work.Users.GetAllAsync(cancellationToken: cancellationToken);
+
+            users = FilterUsers(users, filters);
 
             users = users.Sort(sorting.OrderBy);
             int totalRecords = users.Count();
@@ -365,6 +367,35 @@ namespace ViGo.Services
             UserViewModel userView = new UserViewModel(currentUser);
             return userView;
             
+        }
+
+        private IEnumerable<User> FilterUsers(IEnumerable<User> users,
+            UserFilterParameters filters)
+        {
+            if (filters.Role != null && !string.IsNullOrWhiteSpace(filters.Role))
+            {
+                IEnumerable<UserRole> userRoles = new List<UserRole>();
+
+                var roles = filters.Role.Split(",");
+                foreach (string role in roles)
+                {
+                    if (Enum.TryParse(typeof(UserRole), role.Trim(),
+                        true, out object? result))
+                    {
+                        if (result != null)
+                        {
+                            userRoles = userRoles.Append((UserRole)result);
+                        }
+                    }
+                }
+
+                if (userRoles.Any())
+                {
+                    users = users.Where(b => userRoles.Contains(b.Role));
+                }
+            }
+
+            return users;
         }
     }
 }

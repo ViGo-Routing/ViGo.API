@@ -141,6 +141,8 @@ namespace ViGo.Services
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
 
+            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
+
             bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
             int totalRecords = bookingDetails.Count();
@@ -223,6 +225,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
 
+            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
 
             bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
@@ -330,7 +333,7 @@ namespace ViGo.Services
 
             Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
                 cancellationToken: cancellationToken);
-            
+
             string title = "";
             string description = "";
 
@@ -438,9 +441,9 @@ namespace ViGo.Services
                 if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
                 {
                     customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
-                    
+
                     customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
-                        }
+                }
 
                 // Get SYSTEM WALLET
                 Wallet systemWallet = await work.Wallets.GetAsync(w =>
@@ -625,7 +628,8 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetDriverAvailableBookingDetailsAsync(Guid driverId,
-                PaginationParameter pagination, HttpContext context,
+                PaginationParameter pagination, BookingDetailFilterParameters filters,
+                HttpContext context,
                 CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin())
@@ -779,6 +783,10 @@ namespace ViGo.Services
 
             }
 
+            //IEnumerable<BookingDetail> availableBookingDetails 
+
+            prioritizedBookingDetails = (await FilterBookingDetailsAsync(prioritizedBookingDetails, 
+                filters, cancellationToken)).ToList();
             int totalCount = prioritizedBookingDetails.Count;
             prioritizedBookingDetails = prioritizedBookingDetails.ToPagedEnumerable(
                 pagination.PageNumber, pagination.PageSize).Data.ToList();
@@ -1149,9 +1157,9 @@ namespace ViGo.Services
             User? driver = null;
             if (bookingDetail.DriverId.HasValue)
             {
-                driver = await work.Users.GetAsync(bookingDetail.DriverId.Value, 
+                driver = await work.Users.GetAsync(bookingDetail.DriverId.Value,
                     cancellationToken: cancellationToken);
-                 
+
             }
 
             User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
@@ -1170,7 +1178,7 @@ namespace ViGo.Services
             Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
                 cancellationToken: cancellationToken);
 
-            if (driver != null 
+            if (driver != null
                 && driverFcm != null && !string.IsNullOrEmpty(driverFcm))
             {
                 NotificationCreateModel driverNotification = new NotificationCreateModel()
@@ -1246,7 +1254,7 @@ namespace ViGo.Services
             Booking booking = await work.Bookings.GetAsync(bookingID,
                 cancellationToken: cancellationToken);
 
-            if(booking.CustomerId != IdentityUtilities.GetCurrentUserId())
+            if (booking.CustomerId != IdentityUtilities.GetCurrentUserId())
             {
                 throw new AccessDeniedException("Bạn chỉ được phép đánh giá chuyến đi của mình thôi!");
             }
@@ -1310,7 +1318,7 @@ namespace ViGo.Services
 
             BookingDetailViewModel bookingDetailView = new BookingDetailViewModel(currentBookingDetail);
             return (bookingDetailView, driver.Id);
-            
+
         }
 
         #region Private
@@ -1392,7 +1400,7 @@ namespace ViGo.Services
                     // Has Next trip
                     //TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
-                    int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                    double movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
                         addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     if ((nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes > movingDuration + 10)
@@ -1414,7 +1422,7 @@ namespace ViGo.Services
                     // Only previous trip
 
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
-                    int movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                    double movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
                         previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
 
                     if ((addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes > movingDuration + 10)
@@ -1427,11 +1435,11 @@ namespace ViGo.Services
                 else
                 {
                     // Has Previous and Next trip
-                    //TimeSpan nextTripEndTime = nextTrip.EndTime;
+                    // TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
-                    int movingDurationPrevToAdded = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                    double movingDurationPrevToAdded = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
                         previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
-                    int movingDurationAddedToNext = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                    double movingDurationAddedToNext = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
                         addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     double durationPrevToAdded = (addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes;
@@ -1554,21 +1562,187 @@ namespace ViGo.Services
             }
         }
 
-        //private IEnumerable<BookingDetail> FilterBookingDetails(IEnumerable<BookingDetail> bookingDetails,
-        //    BookingDetailFilterParameters filters)
-        //{
-        //    bookingDetails = bookingDetails.Where(
-        //        d =>
-        //        {
-        //            return
-        //            (!filters.MinDate.HasValue || DateOnly.FromDateTime(d.Date) >= filters.MinDate.Value)
-        //            && (!filters.MaxDate.HasValue || DateOnly.FromDateTime(d.Date) <= filters.MaxDate.Value)
-        //            && (!filters.MinPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MinPickupTime.Value)
-        //            && (!filters.MaxPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MaxPickupTime.Value);
-        //        });
+        private async Task<IEnumerable<BookingDetail>> FilterBookingDetailsAsync(IEnumerable<BookingDetail> bookingDetails,
+            BookingDetailFilterParameters filters, CancellationToken cancellationToken)
+        {
+            bookingDetails = bookingDetails.Where(
+                d =>
+                {
+                    return
+                    (!filters.MinDate.HasValue || DateOnly.FromDateTime(d.Date) >= filters.MinDate.Value)
+                    && (!filters.MaxDate.HasValue || DateOnly.FromDateTime(d.Date) <= filters.MaxDate.Value)
+                    && (!filters.MinPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MinPickupTime.Value)
+                    && (!filters.MaxPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MaxPickupTime.Value);
+                });
 
+            // Filter for Status
+            if (filters.Status != null && !string.IsNullOrWhiteSpace(filters.Status))
+            {
+                IEnumerable<BookingDetailStatus> bookingDetailStatuses = new List<BookingDetailStatus>();
 
-        //}
+                var statuses = filters.Status.Split(",");
+                foreach (string status in statuses)
+                {
+                    if (Enum.TryParse(typeof(BookingDetailStatus), status.Trim(),
+                        true, out object? result))
+                    {
+                        if (result != null)
+                        {
+                            bookingDetailStatuses = bookingDetailStatuses.Append((BookingDetailStatus)result);
+                        }
+                    }
+                }
+
+                if (bookingDetailStatuses.Any())
+                {
+                    bookingDetails = bookingDetails.Where(b => bookingDetailStatuses.Contains(b.Status));
+                }
+            }
+
+            IEnumerable<Guid> removedBookingDetailIds = new List<Guid>();
+
+            foreach (BookingDetail bookingDetail in bookingDetails)
+            {
+                if (filters.StartLocationLat.HasValue && filters.StartLocationLng.HasValue
+                && filters.StartLocationRadius.HasValue)
+                {
+                    Station startStation = await work.Stations.GetAsync(
+                        bookingDetail.StartStationId, cancellationToken: cancellationToken);
+                    GoogleMapPoint startPoint = new GoogleMapPoint(startStation.Latitude, startStation.Longitude);
+                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.StartLocationLat.Value,
+                        filters.StartLocationLng.Value);
+
+                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        conditionPoint, startPoint, cancellationToken);
+
+                    if (distance > filters.StartLocationRadius.Value)
+                    {
+                        // Outside of radius
+                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
+                    }
+                }
+
+                if (filters.EndLocationLat.HasValue && filters.EndLocationLng.HasValue
+                    && filters.EndLocationRadius.HasValue)
+                {
+                    Station endStation = await work.Stations.GetAsync(
+                        bookingDetail.EndStationId, cancellationToken: cancellationToken);
+                    GoogleMapPoint startPoint = new GoogleMapPoint(endStation.Latitude, endStation.Longitude);
+                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.EndLocationLat.Value,
+                        filters.EndLocationLng.Value);
+
+                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        conditionPoint, startPoint, cancellationToken);
+
+                    if (distance > filters.EndLocationRadius.Value)
+                    {
+                        // Outside of radius
+                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
+                    }
+                }
+            }
+
+            removedBookingDetailIds = removedBookingDetailIds.Distinct();
+            bookingDetails = bookingDetails.Where(d => !removedBookingDetailIds.Contains(d.Id));
+
+            return bookingDetails;
+        }
+
+        private async Task<IEnumerable<DriverMappingItem>> FilterBookingDetailsAsync(IEnumerable<DriverMappingItem> bookingDetails,
+            BookingDetailFilterParameters filters, CancellationToken cancellationToken)
+        {
+            bookingDetails = bookingDetails.Where(
+                d =>
+                {
+                    return
+                    (!filters.MinDate.HasValue || DateOnly.FromDateTime(d.BookingDetail.Date) >= filters.MinDate.Value)
+                    && (!filters.MaxDate.HasValue || DateOnly.FromDateTime(d.BookingDetail.Date) <= filters.MaxDate.Value)
+                    && (!filters.MinPickupTime.HasValue || TimeOnly.FromTimeSpan(d.BookingDetail.CustomerDesiredPickupTime) >= filters.MinPickupTime.Value)
+                    && (!filters.MaxPickupTime.HasValue || TimeOnly.FromTimeSpan(d.BookingDetail.CustomerDesiredPickupTime) >= filters.MaxPickupTime.Value);
+                });
+
+            // Filter for Status
+            if (filters.Status != null && !string.IsNullOrWhiteSpace(filters.Status))
+            {
+                IEnumerable<BookingDetailStatus> bookingDetailStatuses = new List<BookingDetailStatus>();
+
+                var statuses = filters.Status.Split(",");
+                foreach (string status in statuses)
+                {
+                    if (Enum.TryParse(typeof(BookingDetailStatus), status.Trim(),
+                        true, out object? result))
+                    {
+                        if (result != null)
+                        {
+                            bookingDetailStatuses = bookingDetailStatuses.Append((BookingDetailStatus)result);
+                        }
+                    }
+                }
+
+                if (bookingDetailStatuses.Any())
+                {
+                    bookingDetails = bookingDetails.Where(b => 
+                    bookingDetailStatuses.Contains(b.BookingDetail.Status));
+                }
+            }
+
+            IEnumerable<Guid> removedBookingDetailIds = new List<Guid>();
+
+            foreach (DriverMappingItem item in bookingDetails)
+            {
+                BookingDetail bookingDetail = item.BookingDetail;
+
+                if (filters.StartLocationLat.HasValue && filters.StartLocationLng.HasValue
+                && filters.StartLocationRadius.HasValue)
+                {
+                    Station startStation = await work.Stations.GetAsync(
+                        bookingDetail.StartStationId, includeDeleted: true, cancellationToken: cancellationToken);
+                    GoogleMapPoint startPoint = new GoogleMapPoint(startStation.Latitude, startStation.Longitude);
+                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.StartLocationLat.Value,
+                        filters.StartLocationLng.Value);
+
+                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        conditionPoint, startPoint, cancellationToken);
+
+                    if (distance > filters.StartLocationRadius.Value)
+                    {
+                        // Outside of radius
+                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
+                    } else
+                    {
+                        item.PrioritizedPoint += distance;
+                    }
+                }
+
+                if (filters.EndLocationLat.HasValue && filters.EndLocationLng.HasValue
+                    && filters.EndLocationRadius.HasValue)
+                {
+                    Station endStation = await work.Stations.GetAsync(
+                        bookingDetail.EndStationId, includeDeleted: true, cancellationToken: cancellationToken);
+                    GoogleMapPoint startPoint = new GoogleMapPoint(endStation.Latitude, endStation.Longitude);
+                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.EndLocationLat.Value,
+                        filters.EndLocationLng.Value);
+
+                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
+                        conditionPoint, startPoint, cancellationToken);
+
+                    if (distance > filters.EndLocationRadius.Value)
+                    {
+                        // Outside of radius
+                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
+                    } else
+                    {
+                        item.PrioritizedPoint += distance;
+                    }
+                }
+            }
+
+            removedBookingDetailIds = removedBookingDetailIds.Distinct();
+            bookingDetails = bookingDetails.Where(d => !removedBookingDetailIds.Contains(d.BookingDetail.Id));
+            bookingDetails = bookingDetails.OrderBy(d => d.PrioritizedPoint);
+
+            return bookingDetails;
+        }
 
         #endregion
     }
