@@ -69,7 +69,7 @@ namespace ViGo.Models.Bookings
             Distance = booking.Distance;
             PromotionId = booking.PromotionId;
             VehicleTypeId = booking.VehicleTypeId;
-            VehicleName = vehicleType.Name + " - " +
+            VehicleName = vehicleType.Name.Trim() + " - " +
                 vehicleType.Slot + " chỗ";
             //Type = booking.Type;
             Status = booking.Status;
