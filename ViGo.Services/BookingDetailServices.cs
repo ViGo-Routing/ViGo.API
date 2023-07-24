@@ -120,26 +120,46 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetDriverAssignedBookingDetailsAsync(Guid driverId,
+            GetUserBookingDetailsAsync(Guid userId, UserRole role,
             PaginationParameter pagination, BookingDetailSortingParameters sorting,
             BookingDetailFilterParameters filters,
             HttpContext context, CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin())
             {
-                driverId = IdentityUtilities.GetCurrentUserId();
+                userId = IdentityUtilities.GetCurrentUserId();
             }
 
-            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
-            if (driver == null || driver.Role != UserRole.DRIVER)
+            if (role != UserRole.CUSTOMER && role != UserRole.DRIVER)
             {
-                throw new ApplicationException("Tài xế không tồn tại!!!");
+                throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
             }
 
-            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+            User user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            if (user is null || user.Role != role)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!!!");
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
+            if (role == UserRole.CUSTOMER)
+            {
+                IEnumerable<Booking> bookings = await work.Bookings
+                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
+                    cancellationToken: cancellationToken);
+                IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
+                bookingDetails = await work.BookingDetails.GetAllAsync(
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                    cancellationToken: cancellationToken);
+
+            } else if (role == UserRole.DRIVER)
+            {
+                bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
-                    bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
+                    bd.DriverId.Value.Equals(userId)), cancellationToken: cancellationToken);
+            }
 
             bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
 
@@ -1320,6 +1340,9 @@ namespace ViGo.Services
             return (bookingDetailView, driver.Id);
 
         }
+
+        //public async Task<IPagedEnumerable<BookingDetailViewModel>>
+
 
         #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
