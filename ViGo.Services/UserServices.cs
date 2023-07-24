@@ -247,6 +247,22 @@ namespace ViGo.Services
             return new UserViewModel(user);
         }
 
+        public async Task<UserViewModel?> GetUserByPhoneNumberAsync(
+            string phoneNumber, CancellationToken cancellationToken)
+        {
+            User user = await work.Users.GetAsync(
+                u => u.Phone != null && u.Phone.Equals(phoneNumber.Trim()),
+                cancellationToken: cancellationToken);
+
+            if (user is null)
+            {
+                return null;
+            }
+
+            return new UserViewModel(user);
+
+        }
+
         public async Task<User> UpdateUserAsync(Guid id, 
             UserUpdateModel userUpdate)
         {
