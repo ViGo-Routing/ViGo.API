@@ -152,6 +152,32 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get User by phone number
+        /// </summary>
+        /// <response code="401">Login failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Get successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpGet("Phone/{phone}")]
+        public async Task<IActionResult> GetUserByPhoneAsync(string phone,
+            CancellationToken cancellationToken)
+        {
+            UserViewModel? user = await userServices.GetUserByPhoneNumberAsync(phone, cancellationToken);
+            
+            if (user == null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!");
+            }
+
+            return StatusCode(200, user);
+        }
+
+        /// <summary>
         /// Update information of User
         /// </summary>
         /// <response code="401">Login failed</response>
