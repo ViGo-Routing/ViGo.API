@@ -249,5 +249,198 @@ namespace ViGo.Services
             }
 
         }
+
+        public async Task TripWasCompletedHandlerAsync(Guid bookingDetailId,
+            Guid customerId, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - TRIP WAS COMPLETED HANDLER ======");
+            _logger.LogInformation("====== BookingDetailId: {0} ======", bookingDetailId);
+            try
+            {
+                BookingDetail? bookingDetail = await work.BookingDetails.GetAsync(
+                    bookingDetailId, cancellationToken: cancellationToken);
+
+                if (bookingDetail is null)
+                {
+                    throw new ApplicationException("Booking Detail does not exist!!");
+                }
+
+                User? customer = await work.Users.GetAsync(customerId,
+                    cancellationToken: cancellationToken);
+                if (customer is null || customer.Role != UserRole.CUSTOMER)
+                {
+                    throw new ApplicationException("User does not exist!!");
+                }
+
+                if (!bookingDetail.DriverId.HasValue || bookingDetail.Status != BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                {
+                    throw new ApplicationException("Booking Detail status is not valid!!");
+                }
+
+                bool isCustomerPaymentSuccessful = false;
+                bool isDriverPaymentSuccessful = false;
+                NotificationCreateModel customerPaymentNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Type = NotificationType.SPECIFIC_USER
+                };
+                Dictionary<string, string> customerPaymentDataToSend = new Dictionary<string, string>()
+                {
+                    {"action", NotificationAction.TransactionDetail },
+                };
+
+                NotificationCreateModel driverPaymentNotification = new NotificationCreateModel()
+                {
+                    UserId = bookingDetail.DriverId.Value,
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                Dictionary<string, string> driverPaymentDataToSend = new Dictionary<string, string>()
+                {
+                    {"action", NotificationAction.TransactionDetail },
+                };
+
+                //if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                //{
+                // Calculate driver wage
+                FareServices fareServices = new FareServices(work, _logger);
+
+                if (!bookingDetail.PriceAfterDiscount.HasValue
+                    || !bookingDetail.Price.HasValue)
+                {
+                    throw new ApplicationException("Booking Detail's information is not valid!");
+                }
+
+                double driverWage = await fareServices.CalculateDriverWage(
+                    bookingDetail.Price.Value, cancellationToken);
+
+                // Get Customer Wallet
+                Wallet customerWallet = await work.Wallets.GetAsync(
+                    w => w.UserId.Equals(customer.Id), cancellationToken: cancellationToken);
+
+                WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
+                {
+                    WalletId = customerWallet.Id,
+                    Amount = bookingDetail.PriceAfterDiscount.Value,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_PAID,
+                    Status = WalletTransactionStatus.PENDING
+                };
+                if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
+                {
+                    customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
+
+                    customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
+
+                    isCustomerPaymentSuccessful = true;
+                }
+
+
+                // Get SYSTEM WALLET
+                Wallet systemWallet = await work.Wallets.GetAsync(w =>
+                    w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                if (systemWallet is null)
+                {
+                    throw new Exception("Chưa có ví dành cho hệ thống!!");
+                }
+
+                WalletTransaction systemTransaction_Add = new WalletTransaction
+                {
+                    WalletId = systemWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_PAID,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                };
+
+                Wallet driverWallet = await work.Wallets.GetAsync(w =>
+                    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+                if (driverWallet is null)
+                {
+                    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
+                }
+
+                WalletTransaction driverTransaction_Add = new WalletTransaction
+                {
+                    WalletId = driverWallet.Id,
+                    Amount = driverWage,
+                    BookingDetailId = bookingDetail.Id,
+                    Type = WalletTransactionType.TRIP_INCOME,
+                    Status = WalletTransactionStatus.SUCCESSFULL
+                };
+
+                systemWallet.Balance -= driverWage;
+                driverWallet.Balance += driverWage;
+
+                await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction_Add, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+
+                await work.Wallets.UpdateAsync(customerWallet);
+                await work.Wallets.UpdateAsync(systemWallet);
+                await work.Wallets.UpdateAsync(driverWallet);
+
+                isDriverPaymentSuccessful = true;
+                //}
+
+                await work.SaveChangesAsync(cancellationToken);
+
+                string? customerFcm = customer.FcmToken;
+
+                User? driver = await work.Users.GetAsync(bookingDetail.DriverId.Value,
+                    cancellationToken: cancellationToken);
+
+                if (driver is null || driver.Role != UserRole.DRIVER)
+                {
+                    throw new ApplicationException("Driver does not exist!!");
+                }
+
+                string? driverFcm = driver.FcmToken;
+
+                if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.SUCCESSFULL)
+                {
+                    customerPaymentNotification.Title = "Thực hiện thanh toán cho chuyến đi thành công!";
+                    customerPaymentNotification.Description = "Thanh toán " + customerTransaction_Withdrawal.Amount
+                        + "đ cho chuyến đi thành công!";
+                } else if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.PENDING)
+                {
+                    customerPaymentNotification.Title = "Không thể thực hiện thanh toán cho chuyến đi!";
+                    customerPaymentNotification.Description = "Số dư ví của bạn không đủ để thanh toán " + customerTransaction_Withdrawal.Amount
+                        + "đ cho chuyến đi! Vui lòng thực hiện nạp tiền vào ví để thanh toán cho chuyến đi!";
+                }
+
+                customerPaymentDataToSend.Add("walletTransactionId", customerTransaction_Withdrawal.Id.ToString());
+
+                if (driverTransaction_Add.Status == WalletTransactionStatus.SUCCESSFULL)
+                {
+                    driverPaymentNotification.Title = "Nhận tiền công cho chuyến đi thành công!";
+                    driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
+                        + "đ cho chuyến đi đã được chuyển vào ví của bạn thành công!";
+                }
+                else if (driverTransaction_Add.Status == WalletTransactionStatus.PENDING)
+                {
+                    driverPaymentNotification.Title = "Không thể thực hiện nhận tiền công cho chuyến đi!";
+                    driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
+                        + "đ cho chuyến đi chưa được chuyển vào ví của bạn!";
+                }
+                driverPaymentDataToSend.Add("walletTransactionId", driverTransaction_Add.Id.ToString());
+
+                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+                {
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        customerPaymentNotification, customerFcm, customerPaymentDataToSend, cancellationToken);
+                }
+                if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+                {
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        driverPaymentNotification, driverFcm, driverPaymentDataToSend, cancellationToken);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
     }
 }
