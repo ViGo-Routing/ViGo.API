@@ -399,7 +399,7 @@ namespace ViGo.Services
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync(cancellationToken);
 
-            // Send notification to Customer
+            // Send notification to Customer and Driver
             User customer = await work.Users.GetAsync(booking.CustomerId,
                 cancellationToken: cancellationToken);
 
@@ -411,6 +411,29 @@ namespace ViGo.Services
                 { "bookingDetailId", bookingDetail.Id.ToString() },
             };
 
+            User driver = await work.Users.GetAsync(
+                bookingDetail.DriverId.Value, cancellationToken: cancellationToken);
+            string? driverFcm = driver.FcmToken;
+
+            // Send to driver
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                {
+                    NotificationCreateModel driverNotification = new NotificationCreateModel()
+                    {
+                        UserId = bookingDetail.DriverId.Value,
+                        Title = title,
+                        Description = description,
+                        Type = NotificationType.SPECIFIC_USER
+                    };
+
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        driverNotification, driverFcm, dataToSend, cancellationToken);
+                }
+            }
+
+            // Send to customer
             if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
             {
 
@@ -421,6 +444,7 @@ namespace ViGo.Services
                     Description = description,
                     Type = NotificationType.SPECIFIC_USER
                 };
+
 
                 //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
                 //                           description, data: dataToSend,

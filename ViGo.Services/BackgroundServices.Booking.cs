@@ -277,8 +277,8 @@ namespace ViGo.Services
                     throw new ApplicationException("Booking Detail status is not valid!!");
                 }
 
-                bool isCustomerPaymentSuccessful = false;
-                bool isDriverPaymentSuccessful = false;
+                //bool isCustomerPaymentSuccessful = false;
+                //bool isDriverPaymentSuccessful = false;
                 NotificationCreateModel customerPaymentNotification = new NotificationCreateModel()
                 {
                     UserId = customer.Id,
@@ -332,7 +332,7 @@ namespace ViGo.Services
 
                     customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
 
-                    isCustomerPaymentSuccessful = true;
+                    //isCustomerPaymentSuccessful = true;
                 }
 
 
@@ -380,7 +380,10 @@ namespace ViGo.Services
                 await work.Wallets.UpdateAsync(systemWallet);
                 await work.Wallets.UpdateAsync(driverWallet);
 
-                isDriverPaymentSuccessful = true;
+                bookingDetail.Status = BookingDetailStatus.COMPLETED;
+                await work.BookingDetails.UpdateAsync(bookingDetail);
+
+                //isDriverPaymentSuccessful = true;
                 //}
 
                 await work.SaveChangesAsync(cancellationToken);
