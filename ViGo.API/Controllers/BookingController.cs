@@ -73,7 +73,7 @@ namespace ViGo.API.Controllers
         /// </summary>
         /// <remarks>
         /// If the current user is Admin, all the bookings will be fetched.
-        /// Otherwise, only bookings of current user (Driver or Customer) will be fetched.
+        /// Otherwise, only bookings of current user (Customer) will be fetched.
         /// </remarks>
         /// <returns>
         /// List of Bookings

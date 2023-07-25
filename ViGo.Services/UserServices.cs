@@ -18,10 +18,11 @@ using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
 using ViGo.Models.QueryString;
+using ViGo.Models.Notifications;
 
 namespace ViGo.Services
 {
-    public class UserServices : BaseServices
+    public class UserServices : UseNotificationServices
     {
         public UserServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
@@ -366,20 +367,63 @@ namespace ViGo.Services
             return user.FcmToken;
         }
 
-        public async Task<UserViewModel> ChangeUserStatus(Guid id, UserChangeStatusModel statusChange)
+        public async Task<UserViewModel> ChangeUserStatus(Guid id, 
+            UserChangeStatusModel statusChange, CancellationToken cancellationToken)
         {
-            var currentUser = await work.Users.GetAsync(id);
+            var currentUser = await work.Users.GetAsync(id, 
+                cancellationToken: cancellationToken);
             if (currentUser is null)
             {
                 throw new ApplicationException("User không tồn tại!");
             }
             else
             {
-                currentUser.Status = (UserStatus)statusChange.Status;
+                currentUser.Status = statusChange.Status;
             }
 
             await work.Users.UpdateAsync(currentUser); 
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
+
+            if (currentUser.Status == UserStatus.ACTIVE ||
+                currentUser.Status == UserStatus.REJECTED)
+            {
+                string? fcmToken = currentUser.FcmToken;
+                if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
+                {
+                    NotificationCreateModel notification = new NotificationCreateModel()
+                    {
+                        UserId = currentUser.Id,
+                        Type = NotificationType.SPECIFIC_USER,
+                    };
+
+                    switch(currentUser.Status)
+                    {
+                        case UserStatus.ACTIVE:
+                            notification.Title = "Tài khoản của bạn đã được kích hoạt!";
+                            notification.Description = currentUser.Role == UserRole.DRIVER ?
+                                "Các thông tin của bạn đã được duyệt, hãy vào ViGo để chọn chuyến đi đầu tiên nào!!"
+                                : currentUser.Role == UserRole.CUSTOMER ?
+                                "Hãy vào ViGo để đặt lịch hành trình đầu tiên của bạn nhé!"
+                                : "Các thông tin của bạn đã được duyệt!";
+                            break;
+                        case UserStatus.REJECTED:
+                            notification.Title = "Tài khoản của bạn đã bị từ chối!";
+                            notification.Description = currentUser.Role == UserRole.DRIVER ?
+                                "Các thông tin của bạn đã không được duyệt, hãy vào ViGo để cập nhật lại thông tin của bạn nhé!!"
+                                : "Các thông tin của bạn đã không được duyệt!";
+                            break;
+                    }
+
+                    Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                        {
+                            { "action", NotificationAction.Profile },
+                        };
+
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        notification, fcmToken, dataToSend, cancellationToken);
+                }
+                
+            }
             UserViewModel userView = new UserViewModel(currentUser);
             return userView;
             

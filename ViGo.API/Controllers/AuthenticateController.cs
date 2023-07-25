@@ -74,6 +74,7 @@ namespace ViGo.API.Controllers
                     new Claim(ClaimTypes.Name, user.Name ?? ""),
                     new Claim(ClaimTypes.Role, user.Role.ToString()),
                     new Claim(ClaimTypes.Email, user.Email ?? ""),
+                    new Claim("Status", user.Status.ToString() ?? ""),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 
@@ -142,6 +143,7 @@ namespace ViGo.API.Controllers
                     new Claim(ClaimTypes.Role, user.Role.ToString()),
                     new Claim(ClaimTypes.Email, user.Email ?? ""),
                     new Claim("FirebaseUid", user.FirebaseUid ?? ""),
+                    new Claim("Status", user.Status.ToString() ?? ""),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
                 };
 

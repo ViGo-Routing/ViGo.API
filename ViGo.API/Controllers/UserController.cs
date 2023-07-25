@@ -190,7 +190,8 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUserAsync(Guid userId, [FromBody] UserUpdateModel userUpdate)
+        public async Task<IActionResult> UpdateUserAsync(Guid userId, 
+            [FromBody] UserUpdateModel userUpdate)
         {
             User user = await userServices.UpdateUserAsync(userId, userUpdate);
             return StatusCode(200, user);
@@ -234,9 +235,12 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         [HttpPut("UpdateStatus/{id}")]
-        public async Task<IActionResult> ChangeUserStatus(Guid id, [FromBody] UserChangeStatusModel statusModel)
+        public async Task<IActionResult> ChangeUserStatus(Guid id, 
+            [FromBody] UserChangeStatusModel statusModel,
+            CancellationToken cancellationToken)
         {
-            UserViewModel userView = await userServices.ChangeUserStatus(id, statusModel);
+            UserViewModel userView = await userServices.ChangeUserStatus(id, 
+                statusModel, cancellationToken);
             return StatusCode(200, userView);
         }
     }

@@ -305,7 +305,7 @@ namespace ViGo.Services
                 pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<BookingDetail> UpdateBookingDetailStatusAsync(
+        public async Task<(BookingDetail, Guid)> UpdateBookingDetailStatusAsync(
             BookingDetailUpdateStatusModel updateDto, CancellationToken cancellationToken)
         {
             if (!Enum.IsDefined(updateDto.Status))
@@ -397,8 +397,9 @@ namespace ViGo.Services
             //};
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
+            await work.SaveChangesAsync(cancellationToken);
 
-            // Send notification to Customer
+            // Send notification to Customer and Driver
             User customer = await work.Users.GetAsync(booking.CustomerId,
                 cancellationToken: cancellationToken);
 
@@ -410,6 +411,29 @@ namespace ViGo.Services
                 { "bookingDetailId", bookingDetail.Id.ToString() },
             };
 
+            User driver = await work.Users.GetAsync(
+                bookingDetail.DriverId.Value, cancellationToken: cancellationToken);
+            string? driverFcm = driver.FcmToken;
+
+            // Send to driver
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                {
+                    NotificationCreateModel driverNotification = new NotificationCreateModel()
+                    {
+                        UserId = bookingDetail.DriverId.Value,
+                        Title = title,
+                        Description = description,
+                        Type = NotificationType.SPECIFIC_USER
+                    };
+
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        driverNotification, driverFcm, dataToSend, cancellationToken);
+                }
+            }
+
+            // Send to customer
             if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
             {
 
@@ -421,6 +445,7 @@ namespace ViGo.Services
                     Type = NotificationType.SPECIFIC_USER
                 };
 
+
                 //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
                 //                           description, data: dataToSend,
                 //                               cancellationToken: cancellationToken);
@@ -430,110 +455,22 @@ namespace ViGo.Services
 
                 await notificationServices.CreateFirebaseNotificationAsync(
                     customerNotification, customerFcm, dataToSend, cancellationToken);
-            }
 
-            if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
-            {
-                // Calculate driver wage
-                FareServices fareServices = new FareServices(work, _logger);
-
-                if (!bookingDetail.PriceAfterDiscount.HasValue
-                    || !bookingDetail.Price.HasValue)
+                // Notification to request rating
+                NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
                 {
-                    throw new ApplicationException("Chuyến đi thiếu thông tin dữ liệu!!");
-                }
+                    UserId = customer.Id,
+                    Type = NotificationType.SPECIFIC_USER,
+                    Title = "Chuyến đi của bạn như thế nào?",
+                    Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
 
-                double driverWage = await fareServices.CalculateDriverWage(
-                    bookingDetail.Price.Value, cancellationToken);
-
-                // Get Customer Wallet
-                Wallet customerWallet = await work.Wallets.GetAsync(
-                    w => w.UserId.Equals(customer.Id), cancellationToken: cancellationToken);
-
-                WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
-                {
-                    WalletId = customerWallet.Id,
-                    Amount = bookingDetail.PriceAfterDiscount.Value,
-                    BookingDetailId = bookingDetail.Id,
-                    Type = WalletTransactionType.TRIP_PAID,
-                    Status = WalletTransactionStatus.PENDING
-                };
-                if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
-                {
-                    customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
-
-                    customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
-                }
-
-                // Get SYSTEM WALLET
-                Wallet systemWallet = await work.Wallets.GetAsync(w =>
-                    w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
-                if (systemWallet is null)
-                {
-                    throw new Exception("Chưa có ví dành cho hệ thống!!");
-                }
-
-                WalletTransaction systemTransaction_Add = new WalletTransaction
-                {
-                    WalletId = systemWallet.Id,
-                    Amount = driverWage,
-                    BookingDetailId = bookingDetail.Id,
-                    Type = WalletTransactionType.TRIP_PAID,
-                    Status = WalletTransactionStatus.SUCCESSFULL,
                 };
 
-                Wallet driverWallet = await work.Wallets.GetAsync(w =>
-                    w.UserId.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
-                if (driverWallet is null)
-                {
-                    throw new ApplicationException("Tài xế chưa được cấu hình ví!!");
-                }
-
-                WalletTransaction driverTransaction_Add = new WalletTransaction
-                {
-                    WalletId = driverWallet.Id,
-                    Amount = driverWage,
-                    BookingDetailId = bookingDetail.Id,
-                    Type = WalletTransactionType.TRIP_INCOME,
-                    Status = WalletTransactionStatus.SUCCESSFULL
-                };
-
-                systemWallet.Balance -= driverWage;
-                driverWallet.Balance += driverWage;
-
-                await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(systemTransaction_Add, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
-
-                await work.Wallets.UpdateAsync(customerWallet);
-                await work.Wallets.UpdateAsync(systemWallet);
-                await work.Wallets.UpdateAsync(driverWallet);
+                await notificationServices.CreateFirebaseNotificationAsync(
+                   requestRatingNotification, customerFcm, dataToSend, cancellationToken);
             }
 
-            await work.SaveChangesAsync(cancellationToken);
-
-            if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
-            {
-                // Send notification to request rating
-                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
-                {
-                    NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
-                    {
-                        UserId = customer.Id,
-                        Type = NotificationType.SPECIFIC_USER,
-                        Title = "Chuyến đi của bạn như thế nào?",
-                        Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
-
-                    };
-
-                    await notificationServices.CreateFirebaseNotificationAsync(
-                       requestRatingNotification, customerFcm, dataToSend, cancellationToken);
-                }
-
-                // Trigger Background Tasks for calculating Driver Wage
-            }
-
-            return bookingDetail;
+            return (bookingDetail, customer.Id);
         }
 
         public async Task<BookingDetail> AssignDriverAsync(BookingDetailAssignDriverModel dto, CancellationToken cancellationToken)

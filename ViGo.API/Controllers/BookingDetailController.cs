@@ -195,8 +195,21 @@ namespace ViGo.API.Controllers
                 throw new ApplicationException("Request không hợp lệ!!");
             }
 
-            BookingDetail bookingDetail = await bookingDetailServices
+            (BookingDetail bookingDetail, Guid customerId) = await bookingDetailServices
                 .UpdateBookingDetailStatusAsync(dto, cancellationToken);
+
+            if (bookingDetail != null)
+            {
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.TripWasCompletedHandlerAsync(bookingDetail.Id, customerId, token);
+                    }
+                });
+            }
             return StatusCode(200, bookingDetail);
         }
 
