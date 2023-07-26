@@ -28,6 +28,7 @@ namespace ViGo.Domain
         public double? PriceAfterDiscount { get; set; }
         public double? DriverWage { get; set; }
         //public TimeSpan BeginTime { get; set; }
+        public DateTime? GoingTime { get; set; }
         public DateTime? ArriveAtPickupTime { get; set; }
         public DateTime? PickupTime { get; set; }
         public DateTime? DropoffTime { get; set; }
