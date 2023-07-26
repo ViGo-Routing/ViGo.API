@@ -361,7 +361,7 @@ namespace ViGo.Services
             switch (updateDto.Status)
             {
                 case BookingDetailStatus.GOING_TO_PICKUP:
-                    bookingDetail.GoingTime = updateDto.Time;
+                    //bookingDetail.GoingTime = updateDto.Time;
 
                     Station startStationGoing = await work.Stations.GetAsync(
                         bookingDetail.StartStationId, cancellationToken: cancellationToken);
