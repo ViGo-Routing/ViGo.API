@@ -26,8 +26,9 @@ namespace ViGo.Domain.Enumerations
     public enum BookingDetailStatus : short
     {
         ASSIGNED = 0,
+        GOING_TO_PICKUP = 5,
         ARRIVE_AT_PICKUP = 1,
-        GOING = 2,
+        GOING_TO_DROPOFF = 6,
         ARRIVE_AT_DROPOFF = 3,
         CANCELLED = -1,
         PENDING_ASSIGN = -2,
