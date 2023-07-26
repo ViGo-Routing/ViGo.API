@@ -333,6 +333,11 @@ namespace ViGo.Services
                     customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
 
                     //isCustomerPaymentSuccessful = true;
+                    bookingDetail.Status = BookingDetailStatus.COMPLETED;
+
+                } else
+                {
+                    bookingDetail.Status = BookingDetailStatus.PENDING_PAID;
                 }
 
 
@@ -380,7 +385,6 @@ namespace ViGo.Services
                 await work.Wallets.UpdateAsync(systemWallet);
                 await work.Wallets.UpdateAsync(driverWallet);
 
-                bookingDetail.Status = BookingDetailStatus.COMPLETED;
                 await work.BookingDetails.UpdateAsync(bookingDetail);
 
                 //isDriverPaymentSuccessful = true;

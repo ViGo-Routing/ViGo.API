@@ -66,6 +66,17 @@ namespace ViGo.Services
 
                             await work.Wallets.UpdateAsync(wallet);
                             await work.WalletTransactions.UpdateAsync(transaction);
+
+                            if (transaction.BookingDetailId.HasValue)
+                            {
+                                BookingDetail bookingDetail = await work.BookingDetails
+                                    .GetAsync(transaction.BookingDetailId.Value, cancellationToken: cancellationToken);
+                                if (bookingDetail.Status == BookingDetailStatus.PENDING_PAID)
+                                {
+                                    bookingDetail.Status = BookingDetailStatus.COMPLETED;
+                                    await work.BookingDetails.UpdateAsync(bookingDetail);
+                                }
+                            }
                             await work.SaveChangesAsync(cancellationToken);
 
                             if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
