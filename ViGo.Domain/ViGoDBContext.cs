@@ -101,6 +101,8 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.Id).ValueGeneratedNever();
 
+                entity.Property(e => e.GoingTime).HasColumnType("datetime");
+
                 entity.Property(e => e.ArriveAtPickupTime).HasColumnType("datetime");
 
                 entity.Property(e => e.AssignedTime).HasColumnType("datetime");

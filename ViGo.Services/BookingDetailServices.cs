@@ -326,7 +326,8 @@ namespace ViGo.Services
             }
 
             if (updateDto.Status == BookingDetailStatus.ARRIVE_AT_PICKUP
-                || updateDto.Status == BookingDetailStatus.GOING
+                || updateDto.Status == BookingDetailStatus.GOING_TO_PICKUP
+                || updateDto.Status == BookingDetailStatus.GOING_TO_DROPOFF
                 || updateDto.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
             {
                 if (!updateDto.Time.HasValue)
@@ -359,6 +360,15 @@ namespace ViGo.Services
 
             switch (updateDto.Status)
             {
+                case BookingDetailStatus.GOING_TO_PICKUP:
+                    bookingDetail.GoingTime = updateDto.Time;
+
+                    Station startStationGoing = await work.Stations.GetAsync(
+                        bookingDetail.StartStationId, cancellationToken: cancellationToken);
+
+                    title = "Tài xế đang bắt đầu đi đến điểm đón - " + startStationGoing.Name;
+                    description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
+                    break;
                 case BookingDetailStatus.ARRIVE_AT_PICKUP:
                     bookingDetail.ArriveAtPickupTime = updateDto.Time;
 
@@ -368,7 +378,7 @@ namespace ViGo.Services
                     title = "Tài xế đã đến điểm đón - " + startStation.Name;
                     description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
-                case BookingDetailStatus.GOING:
+                case BookingDetailStatus.GOING_TO_DROPOFF:
                     bookingDetail.PickupTime = updateDto.Time;
 
                     title = "Chuyến đi của bạn đã được bắt đầu!";
