@@ -102,6 +102,11 @@ namespace ViGo.Services
         {
             try
             {
+                if (loginModel.Role == UserRole.ADMIN)
+                {
+                    throw new ApplicationException("Vai trò đăng nhập không hợp lệ!!");
+                }
+
                 FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
                 .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true, 
                     cancellationToken: cancellationToken);
@@ -112,7 +117,7 @@ namespace ViGo.Services
                     u => !string.IsNullOrEmpty(u.FirebaseUid) &&
                         u.FirebaseUid.Equals(uid)
                     // Only Customer and Driver can login with Firebase
-                    && (u.Role == UserRole.CUSTOMER || u.Role == UserRole.DRIVER), 
+                    && (u.Role == loginModel.Role), 
                     cancellationToken: cancellationToken);
 
                 if (user == null)

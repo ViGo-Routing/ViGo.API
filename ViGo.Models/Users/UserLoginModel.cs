@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ViGo.Domain.Enumerations;
 
 namespace ViGo.Models.Users
 {
@@ -15,6 +16,7 @@ namespace ViGo.Models.Users
     public class MobileUserLoginModel
     {
         public string Phone { get; set; }
+        public UserRole Role { get; set; } = UserRole.CUSTOMER;
         public string FirebaseToken { get; set; }
     }
 }
