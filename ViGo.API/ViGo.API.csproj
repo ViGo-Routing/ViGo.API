@@ -37,4 +37,8 @@
 		<NoWarn>$(NoWarn);1591</NoWarn>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <Optimize>True</Optimize>
+	</PropertyGroup>
+
 </Project>
