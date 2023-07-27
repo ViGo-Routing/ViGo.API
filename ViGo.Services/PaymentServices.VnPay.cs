@@ -291,6 +291,8 @@ namespace ViGo.Services
                                     if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
                                     {
                                         _logger.LogInformation("User Notification!!");
+                                        _logger.LogInformation("Wallet Transaction Status: " + walletTransaction.Status.ToString());
+
                                         if (walletTransaction.Status == WalletTransactionStatus.SUCCESSFULL)
                                         {
                                             Dictionary<string, string> dataToSend = new Dictionary<string, string>()
@@ -381,8 +383,8 @@ namespace ViGo.Services
                 if (walletTransaction != null && fcmToken != null
                     && !string.IsNullOrEmpty(fcmToken) && user != null)
                 {
-
-                    Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                    _logger.LogInformation("Send notification when exception...");
+                   Dictionary<string, string> dataToSend = new Dictionary<string, string>()
                     {
                         {"action", NotificationAction.TransactionDetail },
                         { "walletTransactionId", walletTransaction.Id.ToString() },
