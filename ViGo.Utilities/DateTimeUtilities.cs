@@ -55,5 +55,12 @@ namespace ViGo.Utilities
             return $"{bookingDetail.CustomerDesiredPickupTime.ToString(@"hh\:mm")} " +
                 $"{bookingDetail.Date.ToString("dd/MM/yyyy")}";
         }
+
+        public static bool IsInCurrentMonth(this DateTime dateTime)
+        {
+            DateTime vnNow = GetDateTimeVnNow();
+            return vnNow.Month == dateTime.Month &&
+                vnNow.Year == dateTime.Year;
+        }
     }
 }

@@ -740,6 +740,34 @@ namespace ViGo.Services
             //}
         }
 
+        public async Task<BookingAnalysisModel> GetBookingAnalysisAsync(CancellationToken cancellationToken)
+        {
+            IEnumerable<Booking> bookings;
+            if (IdentityUtilities.IsAdmin())
+            {
+                // Admin
+                bookings = await work.Bookings.GetAllAsync(cancellationToken: cancellationToken);
+            } else
+            {
+                // Customer
+                Guid customerId = IdentityUtilities.GetCurrentUserId();
+                bookings = await work.Bookings.GetAllAsync(
+                    query => query.Where(b => b.CustomerId.Equals(customerId)),
+                    cancellationToken: cancellationToken);
+            }
+
+            BookingAnalysisModel analysisModel = new BookingAnalysisModel()
+            {
+                TotalBookings = bookings.Count(),
+                TotalConfirmedBookings = bookings.Count(b => b.Status == BookingStatus.CONFIRMED),
+                TotalCompletedBookings = bookings.Count(b => b.Status == BookingStatus.COMPLETED),
+                TotalCanceledBookings = bookings.Count(b => b.Status == BookingStatus.CANCELED_BY_BOOKER)
+            };
+
+            return analysisModel;
+        }
+
+        #region Private members
         private async Task<bool> IsEnoughWalletBalanceToBook(
             BookingCreateModel newBooking, CancellationToken cancellationToken)
         {
@@ -764,5 +792,6 @@ namespace ViGo.Services
 
             return wallet.Balance >= totalPrice;
         }
+        #endregion
     }
 }

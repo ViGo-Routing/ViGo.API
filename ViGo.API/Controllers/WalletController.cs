@@ -5,6 +5,7 @@ using ViGo.Models.Wallets;
 using ViGo.Repository.Core;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
+using ViGo.Models.Bookings;
 
 namespace ViGo.API.Controllers
 {
@@ -93,6 +94,33 @@ namespace ViGo.API.Controllers
             WalletViewModel wallet = await walletServices
                 .UpdateWalletStatusById(id, walletStatusUpdate, cancellationToken);
             return StatusCode(200, wallet);
+        }
+
+        /// <summary>
+        /// Get System Wallet analysis data.
+        /// </summary>
+        /// <remarks>Only admin 
+        /// </remarks>
+        /// <returns>
+        /// System Wallet analysis information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get System wallet analysis successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("SystemAnalysis")]
+        [ProducesResponseType(typeof(SystemWalletAnalysisModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetSystemWalletAnalysis(
+            CancellationToken cancellationToken)
+        {
+            SystemWalletAnalysisModel analysisModel = await walletServices
+                .GetSystemWalletAnalysisAsync(cancellationToken);
+
+            return StatusCode(200, analysisModel);
         }
     }
 }

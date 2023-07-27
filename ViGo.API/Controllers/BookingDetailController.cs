@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.Bookings;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Repository;
 using ViGo.Repository.Core;
@@ -466,6 +467,35 @@ namespace ViGo.API.Controllers
             }
             
             return StatusCode(200, bookingDetailView);
+        }
+
+        /// <summary>
+        /// Get Booking Details analysis data.
+        /// </summary>
+        /// <remarks>If the current user is admin, all booking details in the system will be fetched. 
+        /// <br/>
+        /// Otherwise, only the booking details of the current customer will be fetched.
+        /// </remarks>
+        /// <returns>
+        /// Booking Details analysis information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get Booking Details analysis successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Analysis")]
+        [ProducesResponseType(typeof(BookingDetailAnalysisModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> GetBookingDetailAnalysis(
+            CancellationToken cancellationToken)
+        {
+            BookingDetailAnalysisModel analysisModel = await bookingDetailServices
+                .GetBookingDetailAnalysisAsync(cancellationToken);
+
+            return StatusCode(200, analysisModel);
         }
 
     }

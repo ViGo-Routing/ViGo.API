@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -1290,6 +1291,94 @@ namespace ViGo.Services
 
         //public async Task<IPagedEnumerable<BookingDetailViewModel>>
 
+        public async Task<BookingDetailAnalysisModel> GetBookingDetailAnalysisAsync(
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> bookingDetails;
+            UserRole currentRole = IdentityUtilities.GetCurrentRole();
+
+            if (currentRole == UserRole.ADMIN)
+            {
+                // Admin
+                bookingDetails = await work.BookingDetails.GetAllAsync(cancellationToken: cancellationToken);
+            } else if (currentRole == UserRole.CUSTOMER)
+            {
+                // Customer
+                IEnumerable<Booking> bookings = await work.Bookings.GetAllAsync(query => query.Where(
+                    b => b.CustomerId.Equals(IdentityUtilities.GetCurrentUserId())), cancellationToken: cancellationToken);
+                IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+                bookingDetails = await work.BookingDetails.GetAllAsync(
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)), cancellationToken: cancellationToken);
+
+            } else /*if (IdentityUtilities.GetCurrentRole() == UserRole.DRIVER)*/
+            {
+                // Driver
+                bookingDetails = await work.BookingDetails.GetAllAsync(query => query.Where(
+                    d => d.DriverId.HasValue && d.DriverId.Value.Equals(IdentityUtilities.GetCurrentUserId())), 
+                    cancellationToken: cancellationToken);
+
+            }
+
+            BookingDetailAnalysisModel bookingDetailAnalysis = new BookingDetailAnalysisModel()
+            {
+                TotalBookingDetails = bookingDetails.Count(),
+                TotalCanceledBookingDetails = bookingDetails.Count(d => d.Status == BookingDetailStatus.CANCELLED),
+                TotalCompletedBookingDetails = bookingDetails.Count(d => d.Status == BookingDetailStatus.COMPLETED),
+            };
+
+            IEnumerable<Guid> canceledUserIds = bookingDetails.Where(
+                    d => d.Status == BookingDetailStatus.CANCELLED
+                    && d.CanceledUserId.HasValue).Select(d => d.CanceledUserId.Value)
+                    .Distinct();
+            IEnumerable<User> canceledUsers = await work.Users.GetAllAsync(query => query.Where(
+                u => canceledUserIds.Contains(u.Id)), cancellationToken: cancellationToken);
+
+            bookingDetailAnalysis.TotalCanceledByCustomerBookingDetails =
+                bookingDetails.Count(d =>
+                {
+                    if (d.Status == BookingDetailStatus.CANCELLED &&
+                    d.CanceledUserId.HasValue)
+                    {
+                        User canceledUser = canceledUsers.SingleOrDefault(
+                            u => u.Id.Equals(d.CanceledUserId.Value));
+                        return canceledUser.Role == UserRole.CUSTOMER;
+                    }
+                    return false;
+                });
+
+            bookingDetailAnalysis.TotalCanceledByDriverBookingDetails =
+                bookingDetails.Count(d =>
+                {
+                    if (d.Status == BookingDetailStatus.CANCELLED &&
+                    d.CanceledUserId.HasValue)
+                    {
+                        User canceledUser = canceledUsers.SingleOrDefault(
+                            u => u.Id.Equals(d.CanceledUserId.Value));
+                        return canceledUser.Role == UserRole.DRIVER;
+                    }
+                    return false;
+                });
+
+            if (currentRole == UserRole.ADMIN
+                || currentRole == UserRole.CUSTOMER)
+            {
+                bookingDetailAnalysis.TotalAssignedBookingDetails =
+                    bookingDetails.Count(d => d.DriverId.HasValue);
+
+                bookingDetailAnalysis.TotalUnassignedBookingDetails =
+                    bookingDetails.Count(d => !d.DriverId.HasValue);
+
+                bookingDetailAnalysis.TotalPendingPaidBookingDetails =
+                    bookingDetails.Count(d => d.Status == BookingDetailStatus.PENDING_PAID);
+
+                
+            } else
+            {
+                // Driver
+            }
+
+            return bookingDetailAnalysis;
+        }
 
         #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
