@@ -239,5 +239,34 @@ namespace ViGo.API.Controllers
             return StatusCode(200, booking);
         }
 
+        /// <summary>
+        /// Get Booking analysis data.
+        /// </summary>
+        /// <remarks>If the current user is admin, all bookings in the system will be fetched. 
+        /// <br/>
+        /// Otherwise, only the bookings of the current customer will be fetched.
+        /// </remarks>
+        /// <returns>
+        /// Booking analysis information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get Booking analysis successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Analysis")]
+        [ProducesResponseType(typeof(BookingAnalysisModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
+        public async Task<IActionResult> GetBookingAnalysis(
+            CancellationToken cancellationToken)
+        {
+            BookingAnalysisModel analysisModel = await bookingServices
+                .GetBookingAnalysisAsync(cancellationToken);
+
+            return StatusCode(200, analysisModel);
+        }
+
     }
 }

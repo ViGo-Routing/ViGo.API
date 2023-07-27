@@ -15,6 +15,7 @@ using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 using ViGo.Utilities.Extensions;
+using ViGo.Models.Bookings;
 
 namespace ViGo.API.Controllers
 {
@@ -242,6 +243,33 @@ namespace ViGo.API.Controllers
             UserViewModel userView = await userServices.ChangeUserStatus(id, 
                 statusModel, cancellationToken);
             return StatusCode(200, userView);
+        }
+
+        /// <summary>
+        /// Get User analysis data.
+        /// </summary>
+        /// <remarks>Admin only
+        /// </remarks>
+        /// <returns>
+        /// User analysis information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get User analysis successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Analysis")]
+        [ProducesResponseType(typeof(UserAnalysisModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetUserAnalysis(
+            CancellationToken cancellationToken)
+        {
+            UserAnalysisModel analysisModel = await userServices
+                .GetUserAnalysisAsync(cancellationToken);
+
+            return StatusCode(200, analysisModel);
         }
     }
 }
