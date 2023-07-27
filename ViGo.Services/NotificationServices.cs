@@ -241,7 +241,8 @@ namespace ViGo.Services
                 UpdatedBy = model.UserId.Value
             };
 
-            await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
+            await work.Notifications.InsertAsync(notification, isManuallyAssignTracking: true,
+                cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
 
             await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
