@@ -116,13 +116,27 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         public async Task<IActionResult> VnPayCallback(CancellationToken cancellationToken)
         {
-            string message = await paymentServices.VnPayPaymentCallbackAsync(Request.GetDisplayUrl(), Request.Query, cancellationToken);
+            //string message = await paymentServices.VnPayPaymentCallbackAsync(Request.GetDisplayUrl(), Request.Query, cancellationToken);
 
-            return StatusCode(200, message);
-            //(string code, string message) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
-            //    Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
+            //return StatusCode(200, message);
+            (string code, string message, Guid? userId) = await paymentServices.VnPayPaymentIpnAsync(Request.GetDisplayUrl(),
+                Request.Query, /*_backgroundQueue, _serviceScopeFactory,*/ cancellationToken);
 
-            //return StatusCode(200, new { code = code, message = message });
+            if (userId != null)
+            {
+                // Check for pending withdrawal transactions
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CheckForPendingTransactions(userId.Value, token);
+                    }
+                });
+            }
+
+            return StatusCode(200, new { RspCode = code, Message = message });
         }
 
         /// <summary>
