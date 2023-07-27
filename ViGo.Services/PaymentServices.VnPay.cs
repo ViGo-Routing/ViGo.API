@@ -150,7 +150,7 @@ namespace ViGo.Services
             //IServiceScopeFactory serviceScopeFactory,
             CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Begin VNPay IPN...");
+            _logger.LogInformation("====== Begin VNPay IPN... ======");
             (string code, string message) = (string.Empty, string.Empty);
 
             WalletTransaction? walletTransaction = null;
@@ -280,6 +280,7 @@ namespace ViGo.Services
 
                                     fcmToken = user.FcmToken;
 
+                                    _logger.LogInformation("User FCM: " + fcmToken);
                                     notification.UserId = user.Id;
 
                                     if (walletTransaction.Status == WalletTransactionStatus.SUCCESSFULL)
@@ -289,6 +290,7 @@ namespace ViGo.Services
 
                                     if (fcmToken != null && !string.IsNullOrEmpty(fcmToken))
                                     {
+                                        _logger.LogInformation("User Notification!!");
                                         if (walletTransaction.Status == WalletTransactionStatus.SUCCESSFULL)
                                         {
                                             Dictionary<string, string> dataToSend = new Dictionary<string, string>()
