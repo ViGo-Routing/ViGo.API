@@ -191,7 +191,8 @@ namespace ViGo.Services
             
             User checkUser = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.Phone) &&
-                    u.Phone.Equals(dto.Phone), 
+                    u.Phone.Equals(dto.Phone)
+                    && u.Role == dto.Role, 
                 cancellationToken: cancellationToken);
 
             if (checkUser != null)
@@ -201,7 +202,8 @@ namespace ViGo.Services
 
             User checkFirebase = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.FirebaseUid)
-                && u.FirebaseUid.Equals(dto.FirebaseUid), 
+                && u.FirebaseUid.Equals(dto.FirebaseUid)
+                && u.Role == dto.Role, 
                 cancellationToken: cancellationToken);
 
             if (checkFirebase != null)
