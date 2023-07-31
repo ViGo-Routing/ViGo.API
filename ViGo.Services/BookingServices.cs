@@ -411,8 +411,8 @@ namespace ViGo.Services
 
             // Generate BookingDetails
 
-            double priceEachTrip = booking.TotalPrice.Value / bookingDetailCount;
-            double priceAfterDiscountEachTrip = booking.PriceAfterDiscount.Value / bookingDetailCount;
+            double priceEachTrip = Math.Round(booking.TotalPrice.Value / bookingDetailCount, 0);
+            double priceAfterDiscountEachTrip = Math.Round(booking.PriceAfterDiscount.Value / bookingDetailCount, 0);
 
             FareServices fareServices = new FareServices(work, _logger);
 
