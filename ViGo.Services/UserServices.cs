@@ -421,7 +421,7 @@ namespace ViGo.Services
 
                     Dictionary<string, string> dataToSend = new Dictionary<string, string>()
                         {
-                            { "action", NotificationAction.Profile },
+                            { "action", NotificationAction.Login },
                         };
 
                     await notificationServices.CreateFirebaseNotificationAsync(
