@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,6 +28,7 @@ namespace ViGo.Domain.Enumerations
         public static readonly string BookingDetail = "bookingDetail";
         public static readonly string Booking = "booking";
         public static readonly string Profile = "profile";
+        public static readonly string Login = "login";
         public static readonly string Schedule = "schedule";
         public static readonly string AvailableBookingDetails = "availableBookingDetails";
     }
