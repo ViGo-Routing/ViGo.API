@@ -178,15 +178,17 @@ namespace ViGo.Services
                 throw new ApplicationException("Vai trò người dùng không hợp lệ!");
             }
 
-            dto.Name.StringValidate(
+            if (dto.Role == UserRole.CUSTOMER)
+            {
+                dto.Name.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Họ tên không được bỏ trống!",
                 minLength: 5,
                 minLengthErrorMessage: "Họ tên phải có ít nhất 5 kí tự!",
                 maxLength: 50,
                 maxLengthErrorMessage: "Họ tên không được vượt quá 50 kí tự!");
-
-
+            }
+            
             User checkUser = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.Phone) &&
                     u.Phone.Equals(dto.Phone), 
