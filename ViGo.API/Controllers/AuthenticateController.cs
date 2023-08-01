@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services;
@@ -57,11 +58,11 @@ namespace ViGo.API.Controllers
                 return StatusCode(401, "Đăng nhập không thành công!");
             }
 
-            if (user.Status == Domain.Enumerations.UserStatus.BANNED)
+            if (user.Status == UserStatus.BANNED)
             {
                 return StatusCode(401, "Tài khoản đã bị khóa!");
             }
-            if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+            if (user.Status == UserStatus.INACTIVE)
             {
                 return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
             }
@@ -125,11 +126,11 @@ namespace ViGo.API.Controllers
             {
                 return StatusCode(401, "Đăng nhập không thành công!");
             }
-            if (user.Status == Domain.Enumerations.UserStatus.BANNED)
+            if (user.Status == UserStatus.BANNED)
             {
                 return StatusCode(401, "Tài khoản đã bị khóa!");
             }
-            if (user.Status == Domain.Enumerations.UserStatus.INACTIVE)
+            if (user.Status == UserStatus.INACTIVE)
             {
                 return StatusCode(401, "Tài khoản đang bị ngưng hoạt động!");
             }
