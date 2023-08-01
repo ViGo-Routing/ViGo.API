@@ -321,7 +321,7 @@ namespace ViGo.Services
                 WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
                 {
                     WalletId = customerWallet.Id,
-                    Amount = bookingDetail.PriceAfterDiscount.Value,
+                    Amount = bookingDetail.Price.Value,
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_PAID,
                     Status = WalletTransactionStatus.PENDING
