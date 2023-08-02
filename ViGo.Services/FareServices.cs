@@ -137,7 +137,7 @@ namespace ViGo.Services
                 }
             }
 
-            responseModel.OriginalFare *= fareModel.TotalNumberOfTickets;
+            //responseModel.OriginalFare *= fareModel.TotalNumberOfTickets;
 
             if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
@@ -225,8 +225,8 @@ namespace ViGo.Services
                 }
             }
 
-            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare);
-            responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare;
+            //responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare);
+            //responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare;
             //responseModel.FinalFare += responseModel.AdditionalFare;
 
             // Discount on Total Number of Tickets
@@ -253,12 +253,16 @@ namespace ViGo.Services
                 responseModel.NumberTicketsDiscount = FareUtilities.RoundToThousands(
                     responseModel.OriginalFare * discountPercent);
 
-                responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
+                //responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
             }
 
             //double finalFareEachTrip = FareUtilities.RoundToThousands(responseModel.FinalFare / fareModel.TotalNumberOfTickets);
+            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare) * fareModel.TotalNumberOfTickets;
+            responseModel.NumberTicketsDiscount *= fareModel.TotalNumberOfTickets;
+            responseModel.AdditionalFare *= fareModel.TotalNumberOfTickets;
+            responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare - responseModel.NumberTicketsDiscount;
 
-            responseModel.FinalFare = FareUtilities.RoundToThousands(responseModel.FinalFare);
+            //responseModel.FinalFare = FareUtilities.RoundToThousands(responseModel.FinalFare);
 
             return responseModel;
         }
