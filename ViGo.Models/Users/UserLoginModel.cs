@@ -17,6 +17,7 @@ namespace ViGo.Models.Users
     {
         public string Phone { get; set; }
         public UserRole Role { get; set; } = UserRole.CUSTOMER;
-        public string FirebaseToken { get; set; }
+        //public string FirebaseToken { get; set; }
+        public string Password { get; set; }
     }
 }
