@@ -36,7 +36,11 @@ namespace ViGo.Domain.Enumerations
         TOPUP = 1,
         TRIP_INCOME = 2,
         TRIP_PAID = 3,
-        CANCEL_FEE = 4
+        CANCEL_FEE = 4,
+        BOOKING_PAID = 5,
+        CANCEL_REFUND = 6,
+        TRIP_PICK = 7,
+        TRIP_PICK_REFUND = 8
     }
 
     public enum WalletTransactionStatus : short

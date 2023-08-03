@@ -40,6 +40,21 @@ namespace ViGo.Services
             return FareUtilities.RoundToThousands(bookingDetailFare * percent);
         }
 
+        public async Task<double> CalculateDriverPickFee(double bookingDetailFare,
+            CancellationToken cancellationToken)
+        {
+            Setting? driverWageSetting = await work.Settings.GetAsync(
+                s => s.Key.Equals(SettingKeys.DriverWagePercent), cancellationToken: cancellationToken);
+
+            if (driverWageSetting is null)
+            {
+                throw new ApplicationException("Chiết khấu chuyến đi dành cho tài xế chưa được thiết lập!!");
+            }
+
+            double percent = double.Parse(driverWageSetting.Value);
+            return FareUtilities.RoundToThousands(bookingDetailFare * (1 - percent));
+        }
+
         public async Task<FareCalculateResponseModel> CalculateFareBasedOnDistance(
             FareCalculateRequestModel fareModel, CancellationToken cancellationToken)
         {

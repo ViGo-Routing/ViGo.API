@@ -67,7 +67,7 @@ namespace ViGo.Services
 
             IEnumerable<User> users = await work.Users
                 .GetAllAsync(query => query.Where(
-                    u => customerIds.Contains(u.Id)), 
+                    u => customerIds.Contains(u.Id)),
                     cancellationToken: cancellationToken);
             IEnumerable<UserViewModel> userDtos =
                 from user in users
@@ -120,7 +120,7 @@ namespace ViGo.Services
             //    = from booking in bookings
             //      select new BookingViewModel(booking);
 
-            return dtos.ToPagedEnumerable(pagination.PageNumber, 
+            return dtos.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context);
         }
 
@@ -186,7 +186,7 @@ namespace ViGo.Services
             //}
 
             BookingViewModel dto = new BookingViewModel(booking,
-                customerDto, route, 
+                customerDto, route,
                 new StationViewModel(startStation),
                 new StationViewModel(endStation), vehicleType);
             //BookingViewModel dto = new BookingViewModel(booking);
@@ -217,7 +217,8 @@ namespace ViGo.Services
             if (!IdentityUtilities.IsAdmin())
             {
                 model.CustomerId = IdentityUtilities.GetCurrentUserId();
-            } else
+            }
+            else
             {
                 if (model.CustomerId is null)
                 {
@@ -248,7 +249,8 @@ namespace ViGo.Services
                 {
                     throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
                             "Không thể tạo Booking cho tuyến đường này. Vui lòng tiến hành tạo Booking cho tuyến đường chính!");
-                } else
+                }
+                else
                 {
                     roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
                         cancellationToken: cancellationToken);
@@ -391,23 +393,57 @@ namespace ViGo.Services
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
                 //Type = model.Type,
-                Status = BookingStatus.DRAFT // TODO Code
+                //Status = BookingStatus.DRAFT // TODO Code
+                Status = BookingStatus.CONFIRMED
             };
-
-            //Wallet customerWallet = await work.Wallets.GetAsync(
-            //    w => w.UserId.Equals(model.CustomerId), cancellationToken: cancellationToken);
-            //// TODO Code
-            //if (customerWallet.Balance >= model.PriceAfterDiscount)
-            //{
-            //    booking.Status = BookingStatus.CONFIRMED;
-            //}
-            if ((await IsEnoughWalletBalanceToBook(model, cancellationToken)))
-            {
-                booking.Status = BookingStatus.CONFIRMED;
-            }
 
             await work.Bookings.InsertAsync(booking,
                 cancellationToken: cancellationToken);
+
+            Wallet customerWallet = await work.Wallets.GetAsync(
+                w => w.UserId.Equals(model.CustomerId), cancellationToken: cancellationToken);
+            // TODO Code
+            if (customerWallet.Balance >= model.TotalPrice)
+            {
+                //booking.Status = BookingStatus.CONFIRMED;
+                WalletTransaction customerTransaction = new WalletTransaction
+                {
+                    WalletId = customerWallet.Id,
+                    Amount = model.TotalPrice,
+                    BookingId = booking.Id,
+                    PaymentMethod = PaymentMethod.WALLET,
+                    Type = WalletTransactionType.BOOKING_PAID,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                };
+                customerWallet.Balance -= model.TotalPrice;
+
+                Wallet systemWallet = await work.Wallets.GetAsync(
+                    w => w.Type == WalletType.SYSTEM,
+                    cancellationToken: cancellationToken);
+                WalletTransaction systemTransaction = new WalletTransaction
+                {
+                    WalletId = systemWallet.Id,
+                    Amount = model.TotalPrice,
+                    BookingId = booking.Id,
+                    PaymentMethod = PaymentMethod.WALLET,
+                    Type = WalletTransactionType.BOOKING_PAID,
+                    Status = WalletTransactionStatus.SUCCESSFULL
+                };
+
+                systemWallet.Balance += model.TotalPrice;
+
+                await work.WalletTransactions.InsertAsync(customerTransaction, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+
+                await work.Wallets.UpdateAsync(customerWallet);
+                await work.Wallets.UpdateAsync(systemWallet);
+
+            }
+
+            //if ((await IsEnoughWalletBalanceToBook(model, cancellationToken)))
+            //{
+            //    booking.Status = BookingStatus.CONFIRMED;
+            //}
 
             // Generate BookingDetails
 
@@ -464,7 +500,7 @@ namespace ViGo.Services
             return booking;
         }
 
-        public async Task<(Booking, Guid?, int)> CancelBookingAsync(Guid bookingId,
+        public async Task<(Booking, Guid?, int, bool, IEnumerable<Guid>)> CancelBookingAsync(Guid bookingId,
             CancellationToken cancellationToken)
         {
             Booking? booking = await work.Bookings
@@ -478,9 +514,12 @@ namespace ViGo.Services
             User? cancelledUser = null;
             int inWeekCount = 0;
 
+            bool isDriverPaid = false;
+            IEnumerable<Guid> completedBookingDetailIds = new List<Guid>();
+
             if (booking.Status == BookingStatus.CANCELED_BY_BOOKER)
             {
-                return (booking, null, 0);
+                return (booking, null, 0, false, completedBookingDetailIds);
             }
 
             if (!IdentityUtilities.IsAdmin())
@@ -518,10 +557,107 @@ namespace ViGo.Services
             {
                 bookingDetails = bookingDetails.OrderBy(bd => bd.PickupTime);
 
-                BookingDetail firstPickup = bookingDetails.First();
+                #region Old
+                //BookingDetail firstPickup = bookingDetails.First();
 
-                DateTime pickupDateTime = DateOnly.FromDateTime(firstPickup.Date)
-                    .ToDateTime(TimeOnly.FromTimeSpan(firstPickup.CustomerDesiredPickupTime));
+                //DateTime pickupDateTime = DateOnly.FromDateTime(firstPickup.Date)
+                //    .ToDateTime(TimeOnly.FromTimeSpan(firstPickup.CustomerDesiredPickupTime));
+
+                //if (cancelledUser != null)
+                //{
+                //    int tripsInWeek = bookingDetails.Count(
+                //        d => d.Date.IsInCurrentWeek());
+
+                //    if (cancelledUser.WeeklyCanceledTripRate + tripsInWeek > 3)
+                //    {
+                //        throw new ApplicationException("Số chuyến đi được phép hủy có lịch trình trong tuần này của bạn " +
+                //                "đã đạt giới hạn (3 chuyến đi). Bạn không thể hủy thêm chuyến đi nào có lịch trình " +
+                //                "trong tuần này nữa!");
+                //    }
+
+                //    inWeekCount = tripsInWeek;
+                //}
+
+                //double chargeFee = 0;
+
+                //if (!firstPickup.DriverId.HasValue)
+                //{
+                //    // No driver
+                //    // No fee
+                //    chargeFee = 0;
+                //}
+                //else
+                //{
+                //    // Has driver
+                //    TimeSpan difference = pickupDateTime - now;
+
+                //    if (difference.TotalHours >= 6)
+                //    {
+                //        chargeFee = 0;
+                //    }
+                //    else if (difference.TotalHours >= 1)
+                //    {
+                //        // < 6 hours and >= 1 hour
+                //        //chargeFee = calculateChargeFee(bookingDetails, 0.2, 0.15);
+                //        chargeFee = 0.1;
+                //    }
+                //    else
+                //    {
+                //        //chargeFee = calculateChargeFee(bookingDetails, 0.7, 0.6);
+                //        chargeFee = 1;
+                //    }
+                //}
+
+                //double chargeFeeAmount = firstPickup.PriceAfterDiscount.Value * chargeFee;
+                //chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
+
+                //if (cancelledUser != null && chargeFeeAmount > 0)
+                //{
+                //    // User is customer
+                //    Wallet wallet = await work.Wallets.GetAsync(
+                //        w => w.UserId.Equals(cancelledUser.Id),
+                //        cancellationToken: cancellationToken);
+
+                //    WalletTransaction walletTransaction = new WalletTransaction
+                //    {
+                //        WalletId = wallet.Id,
+                //        BookingId = booking.Id,
+                //        Amount = chargeFeeAmount,
+                //        Type = WalletTransactionType.CANCEL_FEE,
+                //        Status = WalletTransactionStatus.PENDING
+                //    };
+
+                //    await work.WalletTransactions.InsertAsync(walletTransaction,
+                //        cancellationToken: cancellationToken);
+
+                //    if (wallet.Balance >= chargeFeeAmount)
+                //    {
+                //        // Able to be substracted the amount
+                //        wallet.Balance -= chargeFeeAmount;
+
+                //        walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
+
+                //        Wallet systemWallet = await work.Wallets.GetAsync(
+                //            w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+                //        WalletTransaction systemTransaction = new WalletTransaction
+                //        {
+                //            WalletId = systemWallet.Id,
+                //            BookingId = booking.Id,
+                //            Amount = chargeFeeAmount,
+                //            Type = WalletTransactionType.CANCEL_FEE,
+                //            Status = WalletTransactionStatus.SUCCESSFULL
+                //        };
+
+                //        systemWallet.Balance += chargeFeeAmount;
+
+                //        await work.WalletTransactions.InsertAsync(systemTransaction,
+                //        cancellationToken: cancellationToken);
+                //        await work.Wallets.UpdateAsync(systemWallet);
+
+                //        await work.Wallets.UpdateAsync(wallet);
+                //    }
+                //}
+                #endregion
 
                 if (cancelledUser != null)
                 {
@@ -538,85 +674,24 @@ namespace ViGo.Services
                     inWeekCount = tripsInWeek;
                 }
 
-                double chargeFee = 0;
+                Wallet systemWallet = await work.Wallets.GetAsync(
+                            w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
 
-                if (!firstPickup.DriverId.HasValue)
+                Wallet? customerWallet = null;
+                if (cancelledUser != null)
                 {
-                    // No driver
-                    // No fee
-                    chargeFee = 0;
-                }
-                else
-                {
-                    // Has driver
-                    TimeSpan difference = pickupDateTime - now;
-
-                    if (difference.TotalHours >= 6)
-                    {
-                        chargeFee = 0;
-                    }
-                    else if (difference.TotalHours >= 1)
-                    {
-                        // < 6 hours and >= 1 hour
-                        //chargeFee = calculateChargeFee(bookingDetails, 0.2, 0.15);
-                        chargeFee = 0.1;
-                    }
-                    else
-                    {
-                        //chargeFee = calculateChargeFee(bookingDetails, 0.7, 0.6);
-                        chargeFee = 1;
-                    }
-                }
-
-                double chargeFeeAmount = firstPickup.PriceAfterDiscount.Value * chargeFee;
-                chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
-
-                if (cancelledUser != null && chargeFeeAmount > 0)
-                {
-                    // User is customer
-                    Wallet wallet = await work.Wallets.GetAsync(
+                    customerWallet = await work.Wallets.GetAsync(
                         w => w.UserId.Equals(cancelledUser.Id),
                         cancellationToken: cancellationToken);
-
-                    WalletTransaction walletTransaction = new WalletTransaction
-                    {
-                        WalletId = wallet.Id,
-                        BookingId = booking.Id,
-                        Amount = chargeFeeAmount,
-                        Type = WalletTransactionType.CANCEL_FEE,
-                        Status = WalletTransactionStatus.PENDING
-                    };
-
-                    await work.WalletTransactions.InsertAsync(walletTransaction,
-                        cancellationToken: cancellationToken);
-
-                    if (wallet.Balance >= chargeFeeAmount)
-                    {
-                        // Able to be substracted the amount
-                        wallet.Balance -= chargeFeeAmount;
-
-                        walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
-
-                        Wallet systemWallet = await work.Wallets.GetAsync(
-                            w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
-                        WalletTransaction systemTransaction = new WalletTransaction
-                        {
-                            WalletId = systemWallet.Id,
-                            BookingId = booking.Id,
-                            Amount = chargeFeeAmount,
-                            Type = WalletTransactionType.CANCEL_FEE,
-                            Status = WalletTransactionStatus.SUCCESSFULL
-                        };
-
-                        systemWallet.Balance += chargeFeeAmount;
-
-                        await work.WalletTransactions.InsertAsync(systemTransaction,
-                        cancellationToken: cancellationToken);
-                        await work.Wallets.UpdateAsync(systemWallet);
-
-                        await work.Wallets.UpdateAsync(wallet);
-                    }
                 }
+
+                IEnumerable<Guid> driverIds = bookingDetails.Where(
+                    d => d.DriverId.HasValue).Select(d => d.DriverId.Value)
+                    .Distinct();
+
+                IEnumerable<Wallet> driverWallets = await work.Wallets
+                    .GetAllAsync(query => query.Where(
+                        w => driverIds.Contains(w.UserId)), cancellationToken: cancellationToken);
 
                 foreach (BookingDetail bookingDetail in bookingDetails)
                 {
@@ -624,6 +699,158 @@ namespace ViGo.Services
                     bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
 
                     await work.BookingDetails.UpdateAsync(bookingDetail);
+
+                    if (cancelledUser != null)
+                    {
+                        // Customer
+
+                        DateTime pickupDateTime = DateOnly.FromDateTime(bookingDetail.Date)
+                            .ToDateTime(TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
+                        double chargeFee = 0;
+
+                        if (!bookingDetail.DriverId.HasValue)
+                        {
+                            // BookingDetail has not been selected by a Driver
+                            // No fee
+                            chargeFee = 0;
+                        }
+                        else
+                        {
+                            TimeSpan difference = pickupDateTime - now;
+
+                            if (difference.TotalHours >= 6)
+                            {
+                                // >= 6 hours
+                                // No extra fee
+                                chargeFee = 0;
+                            }
+                            else if (difference.TotalMinutes >= 45)
+                            {
+                                // >= 1 hour but < 6h
+                                // Been selected
+                                // 10% extra fee
+                                chargeFee = 0.1;
+                            }
+                            else
+                            {
+                                // 100% fee
+                                // No fee
+                                chargeFee = 1;
+                            }
+                        }
+
+                        //double chargeFeeAmount = bookingDetail.PriceAfterDiscount.Value * chargeFee;
+                        //chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
+                        double customerRefundAmount = bookingDetail.Price.Value * (1 - chargeFee);
+                        customerRefundAmount = FareUtilities.RoundToThousands(customerRefundAmount);
+
+                        if (customerRefundAmount > 0)
+                        {
+                            WalletTransaction walletTransaction = new WalletTransaction
+                            {
+                                WalletId = customerWallet.Id,
+                                BookingDetailId = bookingDetail.Id,
+                                Amount = customerRefundAmount,
+                                Type = WalletTransactionType.CANCEL_REFUND,
+                                Status = WalletTransactionStatus.SUCCESSFULL,
+                                PaymentMethod = PaymentMethod.WALLET
+                            };
+
+                            await work.WalletTransactions.InsertAsync(walletTransaction,
+                                cancellationToken: cancellationToken);
+                            customerWallet.Balance += customerRefundAmount;
+
+                            //if (wallet.Balance >= chargeFeeAmount)
+                            //{
+                            //    // Able to be substracted the amount
+                            //    wallet.Balance -= chargeFeeAmount;
+
+                            //walletTransaction.Status = WalletTransactionStatus.SUCCESSFULL;
+
+
+                            WalletTransaction systemTransaction = new WalletTransaction
+                            {
+                                WalletId = systemWallet.Id,
+                                BookingDetailId = bookingDetail.Id,
+                                Amount = customerRefundAmount,
+                                Type = WalletTransactionType.CANCEL_REFUND,
+                                Status = WalletTransactionStatus.SUCCESSFULL,
+                                PaymentMethod = PaymentMethod.WALLET
+                            };
+
+                            //systemWallet.Balance += chargeFeeAmount;
+                            systemWallet.Balance -= customerRefundAmount;
+
+                            await work.WalletTransactions.InsertAsync(systemTransaction,
+                            cancellationToken: cancellationToken);
+                            await work.Wallets.UpdateAsync(systemWallet);
+
+                            await work.Wallets.UpdateAsync(customerWallet);
+                            //}
+
+                        }
+
+                        if (bookingDetail.DriverId.HasValue)
+                        {
+                            // Refund to Driver
+                            //Wallet driverWallet = await work.Wallets.GetAsync(
+                            //    w => w.UserId.Equals(bookingDetail.DriverId.Value),
+                            //    cancellationToken: cancellationToken);
+                            Wallet driverWallet = driverWallets.SingleOrDefault(
+                                w => w.UserId.Equals(bookingDetail.DriverId.Value));
+
+                            if (chargeFee == 1)
+                            {
+                                // Trip was considered completed, Driver gets paid for the whole trip
+                                isDriverPaid = true;
+                                //customerId = cancelledUser.Id;
+                                completedBookingDetailIds = completedBookingDetailIds.Append(bookingDetail.Id);
+                            }
+                            else
+                            {
+                                WalletTransaction driverPickDetailTransaction = await work.WalletTransactions
+                                    .GetAsync(t => t.WalletId.Equals(driverWallet.Id)
+                                    && t.BookingDetailId.Equals(bookingDetail.Id)
+                                    && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
+
+                                double pickFee = driverPickDetailTransaction.Amount;
+                                WalletTransaction driverPickRefundTransaction = new WalletTransaction()
+                                {
+                                    WalletId = driverWallet.Id,
+                                    Amount = pickFee,
+                                    Type = WalletTransactionType.CANCEL_REFUND,
+                                    BookingDetailId = bookingDetail.Id,
+                                    Status = WalletTransactionStatus.SUCCESSFULL,
+                                    PaymentMethod = PaymentMethod.WALLET
+                                };
+
+                                await work.WalletTransactions.InsertAsync(driverPickRefundTransaction,
+                                    cancellationToken: cancellationToken);
+
+                                driverWallet.Balance += pickFee;
+                                await work.Wallets.UpdateAsync(driverWallet);
+
+                                WalletTransaction systemRefundTransaction = new WalletTransaction
+                                {
+                                    WalletId = systemWallet.Id,
+                                    BookingDetailId = bookingDetail.Id,
+                                    Amount = pickFee,
+                                    Type = WalletTransactionType.TRIP_PICK_REFUND,
+                                    Status = WalletTransactionStatus.SUCCESSFULL,
+                                    PaymentMethod = PaymentMethod.WALLET
+                                };
+
+                                //systemWallet.Balance += chargeFeeAmount;
+                                systemWallet.Balance -= pickFee;
+
+                                await work.WalletTransactions.InsertAsync(systemRefundTransaction,
+                                    cancellationToken: cancellationToken);
+                                await work.Wallets.UpdateAsync(systemWallet);
+                            }
+                        }
+                        
+                    }
+
                 }
             }
 
@@ -675,7 +902,7 @@ namespace ViGo.Services
             }
 
             // Send to driver of each Booking Detail
-            if (bookingDetails.Count() > 0)
+            if (bookingDetails.Any())
             {
                 IEnumerable<BookingDetail> assignedDetails = bookingDetails.Where(
                 d => d.DriverId.HasValue);
@@ -722,8 +949,8 @@ namespace ViGo.Services
                     }
                 }
             }
-            
-            return (booking, cancelledUser?.Id, inWeekCount);
+
+            return (booking, cancelledUser?.Id, inWeekCount, isDriverPaid, completedBookingDetailIds);
 
             //double calculateChargeFee(IEnumerable<BookingDetail> bookingDetails,
             //    double chargePercent)
@@ -747,7 +974,8 @@ namespace ViGo.Services
             {
                 // Admin
                 bookings = await work.Bookings.GetAllAsync(cancellationToken: cancellationToken);
-            } else
+            }
+            else
             {
                 // Customer
                 Guid customerId = IdentityUtilities.GetCurrentUserId();
