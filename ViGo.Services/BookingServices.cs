@@ -403,8 +403,13 @@ namespace ViGo.Services
             Wallet customerWallet = await work.Wallets.GetAsync(
                 w => w.UserId.Equals(model.CustomerId), cancellationToken: cancellationToken);
             // TODO Code
-            if (customerWallet.Balance >= model.TotalPrice)
+            if (customerWallet.Balance < model.TotalPrice)
             {
+                throw new ApplicationException("Số dư ví không đủ để thực hiện tạo hành trình! Vui lòng nạp thêm tiền");
+            }
+
+            //if (customerWallet.Balance >= model.TotalPrice)
+            //{
                 //booking.Status = BookingStatus.CONFIRMED;
                 WalletTransaction customerTransaction = new WalletTransaction
                 {
@@ -438,7 +443,7 @@ namespace ViGo.Services
                 await work.Wallets.UpdateAsync(customerWallet);
                 await work.Wallets.UpdateAsync(systemWallet);
 
-            }
+            //}
 
             //if ((await IsEnoughWalletBalanceToBook(model, cancellationToken)))
             //{
