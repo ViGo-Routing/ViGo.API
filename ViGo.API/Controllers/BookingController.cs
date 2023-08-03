@@ -29,7 +29,7 @@ namespace ViGo.API.Controllers
         private IBackgroundTaskQueue _backgroundQueue;
         private IServiceScopeFactory _serviceScopeFactory;
 
-        public BookingController(IUnitOfWork work, 
+        public BookingController(IUnitOfWork work,
             ILogger<BookingController> logger,
             IServiceScopeFactory serviceScopeFactory,
             IBackgroundTaskQueue backgroundQueue)
@@ -102,7 +102,7 @@ namespace ViGo.API.Controllers
             if (IdentityUtilities.IsAdmin())
             {
                 // Get All Bookings
-                dtos = await bookingServices.GetBookingsAsync(null, 
+                dtos = await bookingServices.GetBookingsAsync(null,
                     pagination, sorting, filters, HttpContext,
                     cancellationToken);
             }
@@ -205,7 +205,8 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CancelBooking(Guid bookingId,
             CancellationToken cancellationToken)
         {
-            (Booking booking, Guid? customerId, int inWeekCount) = 
+            (Booking booking, Guid? customerId, int inWeekCount,
+                bool isDriverPaid, IEnumerable<Guid> completedBookingDetailIds) =
                 await bookingServices.CancelBookingAsync(bookingId, cancellationToken);
 
             if (booking != null && booking.Status == BookingStatus.CANCELED_BY_BOOKER
@@ -232,6 +233,22 @@ namespace ViGo.API.Controllers
                             IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                             BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
                             await backgroundServices.CalculateWeeklyTripCancelRateAsync(customerId.Value, inWeekCount, token);
+                        }
+                    });
+                }
+
+                if (isDriverPaid && completedBookingDetailIds.Any())
+                {
+                    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                    {
+                        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                        {
+                            IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                            BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                            foreach (Guid bookingDetailId in completedBookingDetailIds)
+                            {
+                                await backgroundServices.TripWasCompletedHandlerAsync(bookingDetailId, customerId.Value, true, token);
+                            }
                         }
                     });
                 }

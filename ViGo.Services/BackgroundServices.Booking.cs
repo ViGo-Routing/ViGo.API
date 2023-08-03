@@ -251,7 +251,8 @@ namespace ViGo.Services
         }
 
         public async Task TripWasCompletedHandlerAsync(Guid bookingDetailId,
-            Guid customerId, CancellationToken cancellationToken)
+            Guid customerId, bool isCanceledByBooker = false,
+            CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("====== BEGIN TASK - TRIP WAS COMPLETED HANDLER ======");
             _logger.LogInformation("====== BookingDetailId: {0} ======", bookingDetailId);
@@ -315,31 +316,43 @@ namespace ViGo.Services
                     bookingDetail.Price.Value, cancellationToken);
 
                 // Get Customer Wallet
-                Wallet customerWallet = await work.Wallets.GetAsync(
-                    w => w.UserId.Equals(customer.Id), cancellationToken: cancellationToken);
+                //Wallet customerWallet = await work.Wallets.GetAsync(
+                //    w => w.UserId.Equals(customer.Id), cancellationToken: cancellationToken);
 
-                WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
-                {
-                    WalletId = customerWallet.Id,
-                    Amount = bookingDetail.Price.Value,
-                    BookingDetailId = bookingDetail.Id,
-                    Type = WalletTransactionType.TRIP_PAID,
-                    Status = WalletTransactionStatus.PENDING
-                };
-                if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
-                {
-                    customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
+                //WalletTransaction customerTransaction_Withdrawal = new WalletTransaction
+                //{
+                //    WalletId = customerWallet.Id,
+                //    Amount = bookingDetail.Price.Value,
+                //    BookingDetailId = bookingDetail.Id,
+                //    Type = WalletTransactionType.TRIP_PAID,
+                //    Status = WalletTransactionStatus.PENDING
+                //};
+                //if (customerWallet.Balance >= bookingDetail.PriceAfterDiscount.Value)
+                //{
+                //    customerTransaction_Withdrawal.Status = WalletTransactionStatus.SUCCESSFULL;
 
-                    customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
+                //    customerWallet.Balance -= bookingDetail.PriceAfterDiscount.Value;
 
-                    //isCustomerPaymentSuccessful = true;
-                    bookingDetail.Status = BookingDetailStatus.COMPLETED;
+                //    //isCustomerPaymentSuccessful = true;
+                //    bookingDetail.Status = BookingDetailStatus.COMPLETED;
 
-                } else
-                {
-                    bookingDetail.Status = BookingDetailStatus.PENDING_PAID;
-                }
+                //} else
+                //{
+                //    bookingDetail.Status = BookingDetailStatus.PENDING_PAID;
+                //}
 
+                // Get Driver Wallet
+                //Wallet driverWallet = await work.Wallets.GetAsync(
+                //    w => w.User.Equals(bookingDetail.DriverId.Value), cancellationToken: cancellationToken);
+                //WalletTransaction driverTransaction = new WalletTransaction
+                //{
+                //    WalletId = driverWallet.Id,
+                //    Amount = bookingDetail.Price.Value,
+                //    BookingDetailId = bookingDetail.Id,
+                //    Type = WalletTransactionType.TRIP_INCOME,
+                //    Status = WalletTransactionStatus.SUCCESSFULL,
+                //    PaymentMethod = PaymentMethod.WALLET,
+                //};
 
                 // Get SYSTEM WALLET
                 Wallet systemWallet = await work.Wallets.GetAsync(w =>
@@ -349,13 +362,14 @@ namespace ViGo.Services
                     throw new Exception("Chưa có ví dành cho hệ thống!!");
                 }
 
-                WalletTransaction systemTransaction_Add = new WalletTransaction
+                WalletTransaction systemTransaction_Withdrawal = new WalletTransaction
                 {
                     WalletId = systemWallet.Id,
-                    Amount = driverWage,
+                    Amount = bookingDetail.Price.Value,
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_PAID,
                     Status = WalletTransactionStatus.SUCCESSFULL,
+                    PaymentMethod = PaymentMethod.WALLET
                 };
 
                 Wallet driverWallet = await work.Wallets.GetAsync(w =>
@@ -368,24 +382,29 @@ namespace ViGo.Services
                 WalletTransaction driverTransaction_Add = new WalletTransaction
                 {
                     WalletId = driverWallet.Id,
-                    Amount = driverWage,
+                    Amount = bookingDetail.Price.Value,
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_INCOME,
-                    Status = WalletTransactionStatus.SUCCESSFULL
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                    PaymentMethod = PaymentMethod.WALLET
                 };
 
-                systemWallet.Balance -= driverWage;
-                driverWallet.Balance += driverWage;
+                systemWallet.Balance -= bookingDetail.Price.Value;
+                driverWallet.Balance += bookingDetail.Price.Value;
 
-                await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(systemTransaction_Add, cancellationToken: cancellationToken);
+                //await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction_Withdrawal, cancellationToken: cancellationToken);
                 await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
 
-                await work.Wallets.UpdateAsync(customerWallet);
+                //await work.Wallets.UpdateAsync(customerWallet);
                 await work.Wallets.UpdateAsync(systemWallet);
                 await work.Wallets.UpdateAsync(driverWallet);
 
-                await work.BookingDetails.UpdateAsync(bookingDetail);
+                if (!isCanceledByBooker)
+                {
+                    bookingDetail.Status = BookingDetailStatus.COMPLETED;
+                    await work.BookingDetails.UpdateAsync(bookingDetail);
+                }
 
                 //isDriverPaymentSuccessful = true;
                 //}
@@ -404,45 +423,45 @@ namespace ViGo.Services
 
                 string? driverFcm = driver.FcmToken;
 
-                if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.SUCCESSFULL)
-                {
-                    customerPaymentNotification.Title = "Thực hiện thanh toán cho chuyến đi thành công!";
-                    customerPaymentNotification.Description = "Thanh toán " + customerTransaction_Withdrawal.Amount
-                        + "đ cho chuyến đi thành công!";
-                } else if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.PENDING)
-                {
-                    customerPaymentNotification.Title = "Không thể thực hiện thanh toán cho chuyến đi!";
-                    customerPaymentNotification.Description = "Số dư ví của bạn không đủ để thanh toán " + customerTransaction_Withdrawal.Amount
-                        + "đ cho chuyến đi! Vui lòng thực hiện nạp tiền vào ví để thanh toán cho chuyến đi!";
-                }
+                //if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.SUCCESSFULL)
+                //{
+                //    customerPaymentNotification.Title = "Thực hiện thanh toán cho chuyến đi thành công!";
+                //    customerPaymentNotification.Description = "Thanh toán " + customerTransaction_Withdrawal.Amount
+                //        + "đ cho chuyến đi thành công!";
+                //} else if (customerTransaction_Withdrawal.Status == WalletTransactionStatus.PENDING)
+                //{
+                //    customerPaymentNotification.Title = "Không thể thực hiện thanh toán cho chuyến đi!";
+                //    customerPaymentNotification.Description = "Số dư ví của bạn không đủ để thanh toán " + customerTransaction_Withdrawal.Amount
+                //        + "đ cho chuyến đi! Vui lòng thực hiện nạp tiền vào ví để thanh toán cho chuyến đi!";
+                //}
 
-                customerPaymentDataToSend.Add("walletTransactionId", customerTransaction_Withdrawal.Id.ToString());
+                //customerPaymentDataToSend.Add("walletTransactionId", customerTransaction_Withdrawal.Id.ToString());
 
-                if (driverTransaction_Add.Status == WalletTransactionStatus.SUCCESSFULL)
-                {
-                    driverPaymentNotification.Title = "Nhận tiền công cho chuyến đi thành công!";
-                    driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
-                        + "đ cho chuyến đi đã được chuyển vào ví của bạn thành công!";
-                }
-                else if (driverTransaction_Add.Status == WalletTransactionStatus.PENDING)
-                {
-                    driverPaymentNotification.Title = "Không thể thực hiện nhận tiền công cho chuyến đi!";
-                    driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
-                        + "đ cho chuyến đi chưa được chuyển vào ví của bạn!";
-                }
+                //if (driverTransaction_Add.Status == WalletTransactionStatus.SUCCESSFULL)
+                //{
+                driverPaymentNotification.Title = "Nhận tiền công cho chuyến đi thành công!";
+                driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
+                    + "đ cho chuyến đi đã được chuyển vào ví của bạn thành công!";
+                //}
+                //else if (driverTransaction_Add.Status == WalletTransactionStatus.PENDING)
+                //{
+                //    driverPaymentNotification.Title = "Không thể thực hiện nhận tiền công cho chuyến đi!";
+                //    driverPaymentNotification.Description = "Tiền công " + driverTransaction_Add.Amount
+                //        + "đ cho chuyến đi chưa được chuyển vào ví của bạn!";
+                //}
                 driverPaymentDataToSend.Add("walletTransactionId", driverTransaction_Add.Id.ToString());
 
-                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
-                {
-                    await notificationServices.CreateFirebaseNotificationAsync(
-                        customerPaymentNotification, customerFcm, customerPaymentDataToSend, cancellationToken);
-                }
+                //if (customerFcm != null && !string.IsNullOrEmpty(customerFcm) )
+                //{
+                //    await notificationServices.CreateFirebaseNotificationAsync(
+                //        customerPaymentNotification, customerFcm, customerPaymentDataToSend, cancellationToken);
+                //}
                 if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
                 {
                     await notificationServices.CreateFirebaseNotificationAsync(
                         driverPaymentNotification, driverFcm, driverPaymentDataToSend, cancellationToken);
                 }
-                
+
             }
             catch (Exception ex)
             {

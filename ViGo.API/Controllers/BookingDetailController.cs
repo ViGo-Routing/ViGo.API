@@ -25,7 +25,7 @@ namespace ViGo.API.Controllers
         private IBackgroundTaskQueue _backgroundQueue;
         private IServiceScopeFactory _serviceScopeFactory;
 
-        public BookingDetailController(IUnitOfWork work, 
+        public BookingDetailController(IUnitOfWork work,
             ILogger<BookingDetailController> logger,
             IBackgroundTaskQueue backgroundQueue,
             IServiceScopeFactory serviceScopeFactory)
@@ -161,7 +161,7 @@ namespace ViGo.API.Controllers
 
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetBookingDetailsAsync(
-                    bookingId, 
+                    bookingId,
                     pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
@@ -199,7 +199,7 @@ namespace ViGo.API.Controllers
             (BookingDetail bookingDetail, Guid customerId) = await bookingDetailServices
                 .UpdateBookingDetailStatusAsync(dto, cancellationToken);
 
-            if (bookingDetail != null)
+            if (bookingDetail != null && bookingDetail.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
             {
                 await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
                 {
@@ -207,7 +207,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.TripWasCompletedHandlerAsync(bookingDetail.Id, customerId, token);
+                        await backgroundServices.TripWasCompletedHandlerAsync(bookingDetail.Id, customerId, false, token);
                     }
                 });
             }
@@ -307,7 +307,7 @@ namespace ViGo.API.Controllers
                     }
                 });
             }
-            
+
             return StatusCode(200, bookingDetail);
         }
 
@@ -338,6 +338,35 @@ namespace ViGo.API.Controllers
         {
             double driverWage = await bookingDetailServices.CalculateDriverWageAsync(bookingDetailId, cancellationToken);
             return StatusCode(200, driverWage);
+        }
+
+        /// <summary>
+        /// Calculate driver fee for picking a Booking Detail
+        /// </summary>
+        /// <remarks>
+        /// Customer cannot perform this action
+        /// </remarks>
+        /// <returns>
+        /// The calculated fee
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Fee is calculated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("DriverFee/{bookingDetailId}")]
+        [ProducesResponseType(typeof(double), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,DRIVER")]
+        public async Task<IActionResult> CalculateDriverPickFee(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            double driverFee = await bookingDetailServices.CalculateDriverPickFeeAsync(bookingDetailId, cancellationToken);
+            return StatusCode(200, driverFee);
         }
 
         /// <summary>
@@ -395,10 +424,11 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> CancelBookingDetail(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {
-            (BookingDetail bookingDetail, Guid? userId, bool isInWeek) = await bookingDetailServices
+            (BookingDetail bookingDetail, Guid? userId, bool isInWeek,
+                bool isDriverPaid, Guid? customerId) = await bookingDetailServices
                 .CancelBookingDetailAsync(bookingDetailId, cancellationToken);
 
-            if (bookingDetail != null 
+            if (bookingDetail != null
                 && bookingDetail.Status == BookingDetailStatus.CANCELLED
                 && userId != null)
             {
@@ -426,6 +456,19 @@ namespace ViGo.API.Controllers
                         }
                     });
                 }
+
+                if (isDriverPaid && customerId.HasValue)
+                {
+                    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                    {
+                        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                        {
+                            IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                            BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                            await backgroundServices.TripWasCompletedHandlerAsync(bookingDetail.Id, customerId.Value, true, token);
+                        }
+                    });
+                }
             }
 
             return StatusCode(200, bookingDetail);
@@ -440,18 +483,18 @@ namespace ViGo.API.Controllers
         /// <response code="200">Feedback successfully</response>
         /// <response code="500">Server error</response>
         [HttpPut("Feedback/{bookingDetailId}")]
-        [Authorize(Roles ="CUSTOMER")]
+        [Authorize(Roles = "CUSTOMER")]
         [ProducesResponseType(typeof(BookingDetailViewModel), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId, 
-            [FromBody]BookingDetailFeedbackModel feedback, CancellationToken cancellationToken)
+        public async Task<IActionResult> UserUpdateFeedback(Guid bookingDetailId,
+            [FromBody] BookingDetailFeedbackModel feedback, CancellationToken cancellationToken)
         {
-           (BookingDetailViewModel bookingDetailView, Guid driverId) = await 
-                bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback, cancellationToken);
-            
+            (BookingDetailViewModel bookingDetailView, Guid driverId) = await
+                 bookingDetailServices.UserUpdateFeedback(bookingDetailId, feedback, cancellationToken);
+
             if (bookingDetailView != null)
             {
                 // Calculate Rating
@@ -465,7 +508,7 @@ namespace ViGo.API.Controllers
                     }
                 });
             }
-            
+
             return StatusCode(200, bookingDetailView);
         }
 
