@@ -1184,57 +1184,60 @@ namespace ViGo.Services
                     }
 
                     // Refund to Driver
-                    Wallet driverWallet = await work.Wallets.GetAsync(
+                    if (bookingDetail.DriverId.HasValue)
+                    {
+                        Wallet driverWallet = await work.Wallets.GetAsync(
                         w => w.UserId.Equals(bookingDetail.DriverId.Value),
                         cancellationToken: cancellationToken);
 
-                    if (chargeFee == 1)
-                    {
-                        // Trip was considered completed, Driver gets paid for the whole trip
-                        isDriverPaid = true;
-                        customerId = cancelledUser.Id;
-
-                    }
-                    else
-                    {
-                        WalletTransaction driverPickDetailTransaction = await work.WalletTransactions
-                            .GetAsync(t => t.WalletId.Equals(driverWallet.Id)
-                            && t.BookingDetailId.Equals(bookingDetail.Id)
-                            && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
-
-                        double pickFee = driverPickDetailTransaction.Amount;
-                        WalletTransaction driverPickRefundTransaction = new WalletTransaction()
+                        if (chargeFee == 1)
                         {
-                            WalletId = driverWallet.Id,
-                            Amount = pickFee,
-                            Type = WalletTransactionType.CANCEL_REFUND,
-                            BookingDetailId = bookingDetail.Id,
-                            Status = WalletTransactionStatus.SUCCESSFULL,
-                            PaymentMethod = PaymentMethod.WALLET
-                        };
+                            // Trip was considered completed, Driver gets paid for the whole trip
+                            isDriverPaid = true;
+                            customerId = cancelledUser.Id;
 
-                        await work.WalletTransactions.InsertAsync(driverPickRefundTransaction,
-                            cancellationToken: cancellationToken);
-
-                        driverWallet.Balance += pickFee;
-                        await work.Wallets.UpdateAsync(driverWallet);
-
-                        WalletTransaction systemRefundTransaction = new WalletTransaction
+                        }
+                        else
                         {
-                            WalletId = systemWallet.Id,
-                            BookingDetailId = bookingDetail.Id,
-                            Amount = pickFee,
-                            Type = WalletTransactionType.TRIP_PICK_REFUND,
-                            Status = WalletTransactionStatus.SUCCESSFULL,
-                            PaymentMethod = PaymentMethod.WALLET
-                        };
+                            WalletTransaction driverPickDetailTransaction = await work.WalletTransactions
+                                .GetAsync(t => t.WalletId.Equals(driverWallet.Id)
+                                && t.BookingDetailId.Equals(bookingDetail.Id)
+                                && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
 
-                        //systemWallet.Balance += chargeFeeAmount;
-                        systemWallet.Balance -= pickFee;
+                            double pickFee = driverPickDetailTransaction.Amount;
+                            WalletTransaction driverPickRefundTransaction = new WalletTransaction()
+                            {
+                                WalletId = driverWallet.Id,
+                                Amount = pickFee,
+                                Type = WalletTransactionType.CANCEL_REFUND,
+                                BookingDetailId = bookingDetail.Id,
+                                Status = WalletTransactionStatus.SUCCESSFULL,
+                                PaymentMethod = PaymentMethod.WALLET
+                            };
 
-                        await work.WalletTransactions.InsertAsync(systemRefundTransaction,
-                            cancellationToken: cancellationToken);
-                        await work.Wallets.UpdateAsync(systemWallet);
+                            await work.WalletTransactions.InsertAsync(driverPickRefundTransaction,
+                                cancellationToken: cancellationToken);
+
+                            driverWallet.Balance += pickFee;
+                            await work.Wallets.UpdateAsync(driverWallet);
+
+                            WalletTransaction systemRefundTransaction = new WalletTransaction
+                            {
+                                WalletId = systemWallet.Id,
+                                BookingDetailId = bookingDetail.Id,
+                                Amount = pickFee,
+                                Type = WalletTransactionType.TRIP_PICK_REFUND,
+                                Status = WalletTransactionStatus.SUCCESSFULL,
+                                PaymentMethod = PaymentMethod.WALLET
+                            };
+
+                            //systemWallet.Balance += chargeFeeAmount;
+                            systemWallet.Balance -= pickFee;
+
+                            await work.WalletTransactions.InsertAsync(systemRefundTransaction,
+                                cancellationToken: cancellationToken);
+                            await work.Wallets.UpdateAsync(systemWallet);
+                        }
                     }
 
                 }
