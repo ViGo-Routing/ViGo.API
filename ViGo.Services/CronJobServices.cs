@@ -1,13 +1,17 @@
 ﻿using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Quartz;
+using Quartz.Impl.Matchers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.CronJobs;
 using ViGo.Models.Notifications;
 using ViGo.Repository;
 using ViGo.Repository.Core;
@@ -291,6 +295,58 @@ namespace ViGo.Services
                 }
                 
             }
+        }
+
+        public async Task<IEnumerable<CronJobViewModel>>
+            GetCronJobsAsync(IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<string> jobGroups = await scheduler.GetJobGroupNames(cancellationToken);
+
+            IList<CronJobViewModel> results = new List<CronJobViewModel>();
+            
+            foreach (string group in jobGroups)
+            {
+                var groupMatcher = GroupMatcher<JobKey>.GroupContains(group);
+                var jobKeys = await scheduler.GetJobKeys(groupMatcher, cancellationToken);
+
+                IList<JobViewModel> jobs = new List<JobViewModel>();
+                foreach (var jobKey in jobKeys)
+                {
+                    var detail = await scheduler.GetJobDetail(jobKey, cancellationToken);
+                    var triggers = await scheduler.GetTriggersOfJob(jobKey, cancellationToken);
+
+                    IList<TriggerViewModel> triggerList = new List<TriggerViewModel>();
+                    foreach (var trigger in triggers)
+                    {
+                        var triggerState = await scheduler.GetTriggerState(trigger.Key, cancellationToken);
+                        var nextFireTime = trigger.GetNextFireTimeUtc();
+                        var previousFireTime = trigger.GetPreviousFireTimeUtc();
+
+                        triggerList.Add(new TriggerViewModel
+                        {
+                            TriggerKey = trigger.Key.Name,
+                            TriggerState = triggerState.ToString(),
+                            NextFireTimeUtc = nextFireTime,
+                            PreviousFireTimeUtc = previousFireTime
+                        });
+                    }
+
+                    jobs.Add(new JobViewModel
+                    {
+                        JobKey = jobKey.Name,
+                        JobDescription = detail.Description,
+                        Triggers = triggerList
+                    });
+                }
+
+                results.Add(new CronJobViewModel
+                {
+                    JobGroup = group,
+                    Jobs = jobs
+                });
+            }
+            return results;
         }
     }
 }
