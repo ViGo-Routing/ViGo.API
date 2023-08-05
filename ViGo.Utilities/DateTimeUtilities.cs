@@ -53,10 +53,17 @@ namespace ViGo.Utilities
             return currentDate == dateToCheck;
         }
 
-        public static string PickUpDateTime(this BookingDetail bookingDetail)
+        public static string PickUpDateTimeString(this BookingDetail bookingDetail)
         {
             return $"{bookingDetail.CustomerDesiredPickupTime.ToString(@"hh\:mm")} " +
                 $"{bookingDetail.Date.ToString("dd/MM/yyyy")}";
+        }
+
+        public static DateTime PickUpDateTime(this BookingDetail bookingDetail)
+        {
+            return ToDateTime(
+                DateOnly.FromDateTime(bookingDetail.Date),
+                TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
         }
 
         public static DateTimeOffset PickUpDateTimeOffset(this BookingDetail bookingDetail)
