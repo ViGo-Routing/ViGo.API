@@ -8,6 +8,9 @@ using ViGo.Domain.Enumerations;
 using ViGo.Domain;
 using ViGo.Models.Notifications;
 using ViGo.Utilities.Extensions;
+using Quartz;
+using ViGo.Utilities.CronJobs;
+using ViGo.Utilities;
 
 namespace ViGo.Services
 {
@@ -238,7 +241,7 @@ namespace ViGo.Services
 
                     user.Rating = avgRating;
 
-                    await work.Users.UpdateAsync(user);
+                    await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
                     await work.SaveChangesAsync(cancellationToken);
                 }
 
@@ -369,7 +372,9 @@ namespace ViGo.Services
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_PAID,
                     Status = WalletTransactionStatus.SUCCESSFULL,
-                    PaymentMethod = PaymentMethod.WALLET
+                    PaymentMethod = PaymentMethod.WALLET,
+                    CreatedBy = bookingDetail.DriverId.Value,
+                    UpdatedBy = bookingDetail.DriverId.Value
                 };
 
                 Wallet driverWallet = await work.Wallets.GetAsync(w =>
@@ -386,24 +391,28 @@ namespace ViGo.Services
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_INCOME,
                     Status = WalletTransactionStatus.SUCCESSFULL,
-                    PaymentMethod = PaymentMethod.WALLET
+                    PaymentMethod = PaymentMethod.WALLET,
+                    CreatedBy = bookingDetail.DriverId.Value,
+                    UpdatedBy = bookingDetail.DriverId.Value
                 };
 
                 systemWallet.Balance -= bookingDetail.Price.Value;
                 driverWallet.Balance += bookingDetail.Price.Value;
 
                 //await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(systemTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction_Withdrawal, isManuallyAssignTracking: true,
+                    cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(driverTransaction_Add, isManuallyAssignTracking: true,
+                    cancellationToken: cancellationToken);
 
                 //await work.Wallets.UpdateAsync(customerWallet);
-                await work.Wallets.UpdateAsync(systemWallet);
-                await work.Wallets.UpdateAsync(driverWallet);
+                await work.Wallets.UpdateAsync(systemWallet, isManuallyAssignTracking: true);
+                await work.Wallets.UpdateAsync(driverWallet, isManuallyAssignTracking: true);
 
                 if (!isCanceledByBooker)
                 {
                     bookingDetail.Status = BookingDetailStatus.COMPLETED;
-                    await work.BookingDetails.UpdateAsync(bookingDetail);
+                    await work.BookingDetails.UpdateAsync(bookingDetail, isManuallyAssignTracking: true);
                 }
 
                 //isDriverPaymentSuccessful = true;
@@ -466,6 +475,138 @@ namespace ViGo.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
+
+        public async Task ScheduleTripReminderAsync(Guid bookingId,
+            IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SCHEDULE TRIP REMINDER ======");
+            _logger.LogInformation("====== BookingId: {0} ======", bookingId);
+            try
+            {
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
+
+                if (!bookingDetails.Any())
+                {
+                    throw new Exception("No Booking Detail to schedule!! ID: " + bookingId);
+                }
+
+                JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+
+                foreach (BookingDetail bookingDetail in bookingDetails)
+                {
+                    _logger.LogInformation("Trying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(scheduleDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("Scheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: " + scheduleDatetimeOffset);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
+
+        public async Task ScheduleTripsReminderOnStartupAsync(
+            IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SCHEDULE TRIP REMINDER ON STARTUP ======");
+            try
+            {
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => (d.Status == BookingDetailStatus.PENDING_ASSIGN
+                    || d.Status == BookingDetailStatus.ASSIGNED)
+                    ), cancellationToken: cancellationToken);
+
+                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                _logger.LogInformation("VN Time: {0}", vnNow.ToString("dd/MM/yyyy HH:mm:ss"));
+
+
+                IEnumerable<BookingDetail> futureBookingDetails = bookingDetails.Where(
+                    d => (d.PickUpDateTime() - vnNow).TotalHours >= 2);
+                IEnumerable<BookingDetail> nowBookingDetails = bookingDetails.Where(
+                    d => {
+                        var difference = d.PickUpDateTime() - vnNow;
+                        return difference.TotalHours >= 0 && difference.TotalHours < 2;
+                    });
+                _logger.LogInformation("Future schedule Booking Details Count: {0}", futureBookingDetails.Count());
+                _logger.LogInformation("Booking Details need to schedule now: {0}", nowBookingDetails.Count());
+
+                JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+
+                _logger.LogInformation("Scheduling for Future Booking Details...");
+
+                foreach (BookingDetail bookingDetail in futureBookingDetails)
+                {
+                    _logger.LogInformation("\tTrying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(scheduleDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("\tScheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: " + scheduleDatetimeOffset);
+                }
+
+                _logger.LogInformation("Scheduling for Now Booking Details...");
+
+                foreach (BookingDetail bookingDetail in nowBookingDetails)
+                {
+                    _logger.LogInformation("\tTrying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        //.StartAt(scheduleDatetimeOffset)
+                        .StartNow()
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("\tScheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: Start Now");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+            finally
+            {
+                _logger.LogInformation("====== FINISH TASK - SCHEDULE TRIP REMINDER ON STARTUP ======");
             }
         }
     }

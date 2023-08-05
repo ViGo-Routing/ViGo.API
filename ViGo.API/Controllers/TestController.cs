@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Quartz;
 using ViGo.Domain;
 using ViGo.Models.Bookings;
+using ViGo.Models.CronJobs;
 using ViGo.Models.GoogleMaps;
 using ViGo.Repository.Core;
 using ViGo.Services;
@@ -18,13 +20,18 @@ namespace ViGo.API.Controllers
         private BookingServices bookingServices;
         private TripMappingServices tripMappingServices;
         private FirebaseServices firebaseServices;
+        private CronJobServices cronJobServices;
+        private ISchedulerFactory _schedulerFactory;
         private ILogger<TestController> _logger;
 
-        public TestController(IUnitOfWork work, ILogger<TestController> logger)
+        public TestController(IUnitOfWork work, ILogger<TestController> logger,
+            ISchedulerFactory schedulerFactory)
         {
             bookingServices = new BookingServices(work, logger);
             tripMappingServices = new TripMappingServices(work, logger);
             firebaseServices = new FirebaseServices(work, logger);
+            cronJobServices = new CronJobServices(work, logger);
+            _schedulerFactory = schedulerFactory;
             _logger = logger;
         }
         /// <summary>
@@ -99,6 +106,16 @@ namespace ViGo.API.Controllers
             {
                 return StatusCode(500, ex.GeneratorErrorMessage());
             }
+        }
+
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("CronJobs")]
+        public async Task<IActionResult> GetCronJobs(CancellationToken cancellationToken)
+        {
+            IScheduler scheduler = await _schedulerFactory.GetScheduler();
+            IEnumerable<CronJobViewModel> cronJobs = await cronJobServices
+                .GetCronJobsAsync(scheduler, cancellationToken);
+            return StatusCode(200, cronJobs);
         }
     }
 
