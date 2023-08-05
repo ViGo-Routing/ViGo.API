@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Quartz;
 using System.Globalization;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -29,16 +30,19 @@ namespace ViGo.API.Controllers
         private IBackgroundTaskQueue _backgroundQueue;
         private IServiceScopeFactory _serviceScopeFactory;
 
+        private ISchedulerFactory schedulerFactory;
+
         public BookingController(IUnitOfWork work,
             ILogger<BookingController> logger,
             IServiceScopeFactory serviceScopeFactory,
-            IBackgroundTaskQueue backgroundQueue)
+            IBackgroundTaskQueue backgroundQueue, ISchedulerFactory schedulerFactory)
         {
             bookingServices = new BookingServices(work, logger);
             fareServices = new FareServices(work, logger);
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _backgroundQueue = backgroundQueue;
+            this.schedulerFactory = schedulerFactory;
         }
 
         /// <summary>
@@ -177,6 +181,10 @@ namespace ViGo.API.Controllers
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
                         await backgroundServices.CalculateTripCancelRateAsync(booking.CustomerId, token);
+
+                        // Schedule trip reminder
+                        IScheduler scheduler = await schedulerFactory.GetScheduler(token);
+                        await backgroundServices.ScheduleTripReminderAsync(booking.Id, scheduler, token);
                     }
                 });
             }

@@ -12,6 +12,9 @@ namespace ViGo.Utilities
     {
         private static string vnTimeZoneString = "SE Asia Standard Time";
 
+        public static TimeZoneInfo GetVnTimeZoneInfo
+            => TimeZoneInfo.FindSystemTimeZoneById(vnTimeZoneString);
+
         public static DateTime GetDateTimeVnNow()
         {
             return TimeZoneInfo.ConvertTime(
@@ -56,11 +59,30 @@ namespace ViGo.Utilities
                 $"{bookingDetail.Date.ToString("dd/MM/yyyy")}";
         }
 
+        public static DateTimeOffset PickUpDateTimeOffset(this BookingDetail bookingDetail)
+        {
+            DateTime vnPickupTime = ToDateTime(
+                DateOnly.FromDateTime(bookingDetail.Date),
+                TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
+            DateTimeOffset pickupTimeOffset = new DateTimeOffset(vnPickupTime,
+                GetVnTimeZoneInfo.GetUtcOffset(vnPickupTime));
+
+            return pickupTimeOffset;
+        }
+
         public static bool IsInCurrentMonth(this DateTime dateTime)
         {
             DateTime vnNow = GetDateTimeVnNow();
             return vnNow.Month == dateTime.Month &&
                 vnNow.Year == dateTime.Year;
+        }
+
+        public static DateTimeOffset ToVnDateTimeOffset(this DateTime dateTime)
+        {
+            DateTimeOffset vnTimeOffset = new DateTimeOffset(dateTime,
+                GetVnTimeZoneInfo.GetUtcOffset(dateTime));
+
+            return vnTimeOffset;
         }
     }
 }

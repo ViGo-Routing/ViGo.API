@@ -8,6 +8,9 @@ using ViGo.Domain.Enumerations;
 using ViGo.Domain;
 using ViGo.Models.Notifications;
 using ViGo.Utilities.Extensions;
+using Quartz;
+using ViGo.Utilities.CronJobs;
+using ViGo.Utilities;
 
 namespace ViGo.Services
 {
@@ -238,7 +241,7 @@ namespace ViGo.Services
 
                     user.Rating = avgRating;
 
-                    await work.Users.UpdateAsync(user);
+                    await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
                     await work.SaveChangesAsync(cancellationToken);
                 }
 
@@ -369,7 +372,9 @@ namespace ViGo.Services
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_PAID,
                     Status = WalletTransactionStatus.SUCCESSFULL,
-                    PaymentMethod = PaymentMethod.WALLET
+                    PaymentMethod = PaymentMethod.WALLET,
+                    CreatedBy = bookingDetail.DriverId.Value,
+                    UpdatedBy = bookingDetail.DriverId.Value
                 };
 
                 Wallet driverWallet = await work.Wallets.GetAsync(w =>
@@ -386,24 +391,28 @@ namespace ViGo.Services
                     BookingDetailId = bookingDetail.Id,
                     Type = WalletTransactionType.TRIP_INCOME,
                     Status = WalletTransactionStatus.SUCCESSFULL,
-                    PaymentMethod = PaymentMethod.WALLET
+                    PaymentMethod = PaymentMethod.WALLET,
+                    CreatedBy = bookingDetail.DriverId.Value,
+                    UpdatedBy = bookingDetail.DriverId.Value
                 };
 
                 systemWallet.Balance -= bookingDetail.Price.Value;
                 driverWallet.Balance += bookingDetail.Price.Value;
 
                 //await work.WalletTransactions.InsertAsync(customerTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(systemTransaction_Withdrawal, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(driverTransaction_Add, cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(systemTransaction_Withdrawal, isManuallyAssignTracking: true,
+                    cancellationToken: cancellationToken);
+                await work.WalletTransactions.InsertAsync(driverTransaction_Add, isManuallyAssignTracking: true,
+                    cancellationToken: cancellationToken);
 
                 //await work.Wallets.UpdateAsync(customerWallet);
-                await work.Wallets.UpdateAsync(systemWallet);
-                await work.Wallets.UpdateAsync(driverWallet);
+                await work.Wallets.UpdateAsync(systemWallet, isManuallyAssignTracking: true);
+                await work.Wallets.UpdateAsync(driverWallet, isManuallyAssignTracking: true);
 
                 if (!isCanceledByBooker)
                 {
                     bookingDetail.Status = BookingDetailStatus.COMPLETED;
-                    await work.BookingDetails.UpdateAsync(bookingDetail);
+                    await work.BookingDetails.UpdateAsync(bookingDetail, isManuallyAssignTracking: true);
                 }
 
                 //isDriverPaymentSuccessful = true;
@@ -462,6 +471,52 @@ namespace ViGo.Services
                         driverPaymentNotification, driverFcm, driverPaymentDataToSend, cancellationToken);
                 }
 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
+
+        public async Task ScheduleTripReminderAsync(Guid bookingId,
+            IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SCHEDULE TRIP REMINDER ======");
+            _logger.LogInformation("====== BookingId: {0} ======", bookingId);
+            try
+            {
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
+
+                if (!bookingDetails.Any())
+                {
+                    throw new Exception("No Booking Detail to schedule!! ID: " + bookingId);
+                }
+
+                JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+
+                foreach (BookingDetail bookingDetail in bookingDetails)
+                {
+                    _logger.LogInformation("Trying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTime());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(scheduleDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("Scheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: " + scheduleDatetimeOffset);
+                }
             }
             catch (Exception ex)
             {

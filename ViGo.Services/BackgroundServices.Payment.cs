@@ -1,5 +1,6 @@
 ﻿using FirebaseAdmin.Messaging;
 using Microsoft.Extensions.Logging;
+using Quartz;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +9,15 @@ using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Notifications;
+using ViGo.Utilities;
+using ViGo.Utilities.CronJobs;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.Services
 {
     public partial class BackgroundServices
     {
-        public async Task CheckForPendingTransactions(Guid userId,
+        public async Task CheckForPendingTransactionsAsync(Guid userId,
             CancellationToken cancellationToken)
         {
             _logger.LogInformation("====== BEGIN TASK - CHECK PENDING TRANSACTIONS ======");
@@ -64,8 +67,8 @@ namespace ViGo.Services
                             
                             transaction.Status = WalletTransactionStatus.SUCCESSFULL;
 
-                            await work.Wallets.UpdateAsync(wallet);
-                            await work.WalletTransactions.UpdateAsync(transaction);
+                            await work.Wallets.UpdateAsync(wallet, isManuallyAssignTracking: true);
+                            await work.WalletTransactions.UpdateAsync(transaction, isManuallyAssignTracking: true);
 
                             if (transaction.BookingDetailId.HasValue)
                             {
@@ -74,7 +77,7 @@ namespace ViGo.Services
                                 if (bookingDetail.Status == BookingDetailStatus.PENDING_PAID)
                                 {
                                     bookingDetail.Status = BookingDetailStatus.COMPLETED;
-                                    await work.BookingDetails.UpdateAsync(bookingDetail);
+                                    await work.BookingDetails.UpdateAsync(bookingDetail, isManuallyAssignTracking: true);
                                 }
                             }
                             await work.SaveChangesAsync(cancellationToken);
@@ -111,6 +114,53 @@ namespace ViGo.Services
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
             }
 
+        }
+
+        public async Task ScheduleCheckTransactionStatusAsync(
+            Guid walletTransactionId, string clientIpAddress,
+            IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SCHEDULE TRANSACTION STATUS CHECKING ======");
+            _logger.LogInformation("====== TransactionId: {0} ======", walletTransactionId);
+            try
+            {
+                WalletTransaction walletTransaction = await work.WalletTransactions
+                    .GetAsync(walletTransactionId, cancellationToken: cancellationToken);
+
+                if (walletTransaction is null)
+                {
+                    throw new Exception("Wallet Transaction does not exist! ID: " + walletTransactionId);
+                }
+
+                JobKey transactionStatusCheckingJobKey = new JobKey(CronJobIdentities.CHECK_TRANSACTION_STATUS_JOBKEY);
+
+
+                _logger.LogInformation("Trying to schedule for Transaction: ID: " +
+                        walletTransaction.Id + "; Created Time: " 
+                        + walletTransaction.CreatedTime.ToString("dd/MM/yyyy - HH:mm:ss"));
+
+                DateTimeOffset scheduleDatetimeOffset = walletTransaction.CreatedTime.ToVnDateTimeOffset()
+                    .AddMinutes(5);
+
+                ITrigger trigger = TriggerBuilder.Create()
+                    .ForJob(transactionStatusCheckingJobKey)
+                    .WithIdentity(CronJobIdentities.CHECK_TRANSACTION_STATUS_TRIGGER_ID + "_" + walletTransaction.Id)
+                    .WithDescription("Check for transaction status")
+                    .UsingJobData(CronJobIdentities.TRANSACTION_ID_JOB_DATA, walletTransactionId)
+                    .UsingJobData(CronJobIdentities.CLIENT_IP_ADDRESS_JOB_DATA, clientIpAddress)
+                    .StartAt(scheduleDatetimeOffset)
+                    .Build();
+
+                await scheduler.ScheduleJob(trigger);
+
+                _logger.LogInformation("Scheduled for Transaction: ID: " +
+                    walletTransaction.Id + "; Schedule Time: " + scheduleDatetimeOffset);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
         }
     }
 }

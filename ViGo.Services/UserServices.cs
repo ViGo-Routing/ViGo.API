@@ -500,6 +500,33 @@ namespace ViGo.Services
             
         }
 
+        public async Task<UserAnalysisModel> GetUserAnalysisAsync(CancellationToken cancellationToken)
+        {
+            IEnumerable<User> users = await work.Users.GetAllAsync(
+                cancellationToken: cancellationToken);
+
+            UserAnalysisModel analysisModel = new UserAnalysisModel()
+            {
+                TotalActiveUsers = users.Count(u => u.Status == UserStatus.ACTIVE),
+                TotalInactiveUsers = users.Count(u => u.Status == UserStatus.INACTIVE),
+                TotalBannedUsers = users.Count(u => u.Status == UserStatus.BANNED),
+                TotalPendingDrivers = users.Count(u => u.Status == UserStatus.PENDING),
+                TotalRejectedDrivers = users.Count(u => u.Status == UserStatus.REJECTED),
+                TotalCustomers = users.Count(u => u.Role == UserRole.CUSTOMER),
+                TotalDrivers = users.Count(u => u.Role == UserRole.DRIVER),
+                TotalNewDriversInCurrentMonth = users.Count(
+                    u => u.Role == UserRole.DRIVER
+                    && u.CreatedTime.IsInCurrentMonth()),
+                TotalNewCustomersInCurrentMonth = users.Count(
+                    u => u.Role == UserRole.CUSTOMER
+                    && u.CreatedTime.IsInCurrentMonth())
+            };
+
+            return analysisModel;
+        }
+
+        
+        #region Private
         private IEnumerable<User> FilterUsers(IEnumerable<User> users,
             UserFilterParameters filters)
         {
@@ -528,30 +555,7 @@ namespace ViGo.Services
 
             return users;
         }
+        #endregion
 
-        public async Task<UserAnalysisModel> GetUserAnalysisAsync(CancellationToken cancellationToken)
-        {
-            IEnumerable<User> users = await work.Users.GetAllAsync(
-                cancellationToken: cancellationToken);
-
-            UserAnalysisModel analysisModel = new UserAnalysisModel()
-            {
-                TotalActiveUsers = users.Count(u => u.Status == UserStatus.ACTIVE),
-                TotalInactiveUsers = users.Count(u => u.Status == UserStatus.INACTIVE),
-                TotalBannedUsers = users.Count(u => u.Status == UserStatus.BANNED),
-                TotalPendingDrivers = users.Count(u => u.Status == UserStatus.PENDING),
-                TotalRejectedDrivers = users.Count(u => u.Status == UserStatus.REJECTED),
-                TotalCustomers = users.Count(u => u.Role == UserRole.CUSTOMER),
-                TotalDrivers = users.Count(u => u.Role == UserRole.DRIVER),
-                TotalNewDriversInCurrentMonth = users.Count(
-                    u => u.Role == UserRole.DRIVER
-                    && u.CreatedTime.IsInCurrentMonth()),
-                TotalNewCustomersInCurrentMonth = users.Count(
-                    u => u.Role == UserRole.CUSTOMER
-                    && u.CreatedTime.IsInCurrentMonth())
-            };
-
-            return analysisModel;
-        }
     }
 }

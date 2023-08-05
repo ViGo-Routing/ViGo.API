@@ -20,7 +20,7 @@ namespace ViGo.Services
     {
         #region ZaloPay
 
-        private async Task<(TopupTransactionViewModel, string)> CreateZaloTopupTransactionAsync(
+        private async Task<(TopupTransactionViewModel, string, string)> CreateZaloTopupTransactionAsync(
             TopupTransactionCreateModel model, WalletTransaction walletTransaction,
             HttpContext httpContext,
             CancellationToken cancellationToken)
@@ -50,7 +50,8 @@ namespace ViGo.Services
 
                     return (new TopupTransactionViewModel(walletTransaction,
                         model.UserId.Value, createOrderResponse.OrderUrl,
-                        createOrderResponse.ZaloPayTransactionToken), zaloCreateOrder.AppTransactionId);
+                        createOrderResponse.ZaloPayTransactionToken), 
+                        zaloCreateOrder.AppTransactionId, string.Empty);
                 }
 
                 throw new ApplicationException("Tạo đơn hàng trên hệ thống ZaloPay không thành công!" +

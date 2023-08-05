@@ -26,7 +26,7 @@ namespace ViGo.Services
 {
     public partial class PaymentServices : UseNotificationServices
     {
-        private delegate Task<(TopupTransactionViewModel, string)> internalCreateTopupTransaction
+        private delegate Task<(TopupTransactionViewModel, string, string)> internalCreateTopupTransaction
             (TopupTransactionCreateModel model, WalletTransaction walletTransaction,
             HttpContext httpContext, CancellationToken cancellationToken);
 
@@ -35,7 +35,7 @@ namespace ViGo.Services
         {
         }
 
-        public async Task<TopupTransactionViewModel?> 
+        public async Task<(TopupTransactionViewModel?, string)> 
             CreateTopUpTransactionRequest(TopupTransactionCreateModel model,
                 //PaymentMethod paymentMethod,
                 HttpContext httpContext,
@@ -96,12 +96,13 @@ namespace ViGo.Services
                     throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
             }
 
-            (TopupTransactionViewModel topupViewModel, string externalTransactionId) = await createTopupTransaction(model,
+            (TopupTransactionViewModel topupViewModel, string externalTransactionId,
+                string clientIpAddress) = await createTopupTransaction(model,
                 walletTransaction, httpContext, cancellationToken);
             walletTransaction.ExternalTransactionId = externalTransactionId;
             await work.SaveChangesAsync(cancellationToken);
 
-            return topupViewModel;
+            return (topupViewModel, clientIpAddress);
         }
 
     }
