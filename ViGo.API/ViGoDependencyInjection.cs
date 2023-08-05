@@ -1,6 +1,7 @@
 ﻿using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.EntityFrameworkCore;
+using ViGo.API.BackgroundTasks;
 using ViGo.API.SignalR;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
@@ -91,6 +92,8 @@ namespace ViGo.API
                     return new BackgroundTaskQueue(100);
                 }
             });
+
+            services.AddHostedService<ScheduleUpcomingTripReminderBackgroundTask>();
             #endregion
 
             return services;

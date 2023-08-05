@@ -500,7 +500,7 @@ namespace ViGo.Services
                 foreach (BookingDetail bookingDetail in bookingDetails)
                 {
                     _logger.LogInformation("Trying to schedule for BookingDetail: ID: " +
-                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTime());
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
 
                     DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
 
@@ -521,6 +521,92 @@ namespace ViGo.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
+
+        public async Task ScheduleTripsReminderOnStartupAsync(
+            IScheduler scheduler,
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SCHEDULE TRIP REMINDER ON STARTUP ======");
+            try
+            {
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => (d.Status == BookingDetailStatus.PENDING_ASSIGN
+                    || d.Status == BookingDetailStatus.ASSIGNED)
+                    ), cancellationToken: cancellationToken);
+
+                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                _logger.LogInformation("VN Time: {0}", vnNow.ToString("dd/MM/yyyy HH:mm:ss"));
+
+
+                IEnumerable<BookingDetail> futureBookingDetails = bookingDetails.Where(
+                    d => (d.PickUpDateTime() - vnNow).TotalHours >= 2);
+                IEnumerable<BookingDetail> nowBookingDetails = bookingDetails.Where(
+                    d => {
+                        var difference = d.PickUpDateTime() - vnNow;
+                        return difference.TotalHours >= 0 && difference.TotalHours < 2;
+                    });
+                _logger.LogInformation("Future schedule Booking Details Count: {0}", futureBookingDetails.Count());
+                _logger.LogInformation("Booking Details need to schedule now: {0}", nowBookingDetails.Count());
+
+                JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+
+                _logger.LogInformation("Scheduling for Future Booking Details...");
+
+                foreach (BookingDetail bookingDetail in futureBookingDetails)
+                {
+                    _logger.LogInformation("\tTrying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(scheduleDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("\tScheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: " + scheduleDatetimeOffset);
+                }
+
+                _logger.LogInformation("Scheduling for Now Booking Details...");
+
+                foreach (BookingDetail bookingDetail in nowBookingDetails)
+                {
+                    _logger.LogInformation("\tTrying to schedule for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
+
+                    DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+
+                    ITrigger trigger = TriggerBuilder.Create()
+                        .ForJob(tripReminderJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about upcoming trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        //.StartAt(scheduleDatetimeOffset)
+                        .StartNow()
+                        .Build();
+
+                    await scheduler.ScheduleJob(trigger);
+
+                    _logger.LogInformation("\tScheduled for BookingDetail: ID: " +
+                        bookingDetail.Id + "; Schedule Time: Start Now");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+            finally
+            {
+                _logger.LogInformation("====== FINISH TASK - SCHEDULE TRIP REMINDER ON STARTUP ======");
             }
         }
     }
