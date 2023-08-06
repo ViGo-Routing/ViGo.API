@@ -17,12 +17,12 @@ namespace ViGo.Models.WalletTransactions
         public WalletTransactionType Type { get; set; }
         public WalletTransactionStatus Status { get; set; }
         public string OrderUrl { get; set; }
-        public string? ZaloPayTransactionToken { get; set; }
+        //public string? ZaloPayTransactionToken { get; set; }
 
         public TopupTransactionViewModel(WalletTransaction walletTransaction,
             Guid userId,
-            string orderUrl,
-            string? zaloPayTransactionToken)
+            string orderUrl /*,
+             string? zaloPayTransactionToken*/)
         {
             if (walletTransaction.Type != WalletTransactionType.TOPUP)
             {
@@ -36,7 +36,7 @@ namespace ViGo.Models.WalletTransactions
             Type = walletTransaction.Type;
             Status = walletTransaction.Status;
             OrderUrl = orderUrl;
-            ZaloPayTransactionToken = zaloPayTransactionToken;
+            //ZaloPayTransactionToken = zaloPayTransactionToken;
         }
     }
 }

@@ -71,7 +71,7 @@ namespace ViGo.Services
             //walletTransaction.ExternalTransactionId = txnRef;
             //await work.SaveChangesAsync(cancellationToken);
 
-            return (new TopupTransactionViewModel(walletTransaction, model.UserId.Value, paymentUrl, null),
+            return (new TopupTransactionViewModel(walletTransaction, model.UserId.Value, paymentUrl/*, null*/),
                 txnRef, clientIpAddress);
         }
 
