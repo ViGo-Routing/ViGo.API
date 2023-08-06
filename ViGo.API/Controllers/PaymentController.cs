@@ -175,6 +175,28 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, new { RspCode = code, Message = message });
         }
+
+        /// <summary>
+        /// VnPay Query Order status
+        /// </summary>
+        /// <returns>
+        /// Param as the wallet transaction Id
+        /// </returns>
+        /// <response code="400">Some information is not valid</response>
+        /// <response code="200">Payment is queried successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Query/VnPay/{walletTransactionId}")]
+        [ProducesResponseType(typeof(VnPayQueryViGoResponse), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> VnPayQuery(
+            Guid walletTransactionId,
+            CancellationToken cancellationToken)
+        {
+            VnPayQueryViGoResponse response = await paymentServices
+                .GetVnPayTransactionStatus(walletTransactionId, HttpContext, cancellationToken);
+            return StatusCode(200, response);
+        }
         #endregion
 
         #region ZaloPay
@@ -205,72 +227,52 @@ namespace ViGo.API.Controllers
         //    return StatusCode(200, viewModel);
         //}
 
-        /// <summary>
-        /// ZaloPay Callback URL
-        /// </summary>
-        /// <returns>
-        /// 
-        /// </returns>
-        /// <response code="400">Some information is not valid</response>
-        /// <response code="200">Payment is processed successfully</response>
-        /// <response code="500">Server error</response>
-        [HttpPost("Callback/ZaloPay")]
-        [ApiExplorerSettings(IgnoreApi = true)]
-        [ProducesResponseType(typeof(ZaloPayCallbackResponse), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> ZaloPayCallback(
-            ZaloPayCallbackModel model,
-            CancellationToken cancellationToken)
-        {
-            ZaloPayCallbackResponse response = await paymentServices.ZaloPayCallback(model, cancellationToken);
-            return StatusCode(200, response);
-        }
+        ///// <summary>
+        ///// ZaloPay Callback URL
+        ///// </summary>
+        ///// <returns>
+        ///// 
+        ///// </returns>
+        ///// <response code="400">Some information is not valid</response>
+        ///// <response code="200">Payment is processed successfully</response>
+        ///// <response code="500">Server error</response>
+        //[HttpPost("Callback/ZaloPay")]
+        //[ApiExplorerSettings(IgnoreApi = true)]
+        //[ProducesResponseType(typeof(ZaloPayCallbackResponse), 200)]
+        //[ProducesResponseType(400)]
+        //[ProducesResponseType(500)]
+        //public async Task<IActionResult> ZaloPayCallback(
+        //    ZaloPayCallbackModel model,
+        //    CancellationToken cancellationToken)
+        //{
+        //    ZaloPayCallbackResponse response = await paymentServices.ZaloPayCallback(model, cancellationToken);
+        //    return StatusCode(200, response);
+        //}
 
-        /// <summary>
-        /// ZaloPay Query Order status
-        /// </summary>
-        /// <returns>
-        /// Param as the wallet transaction Id
-        /// </returns>
-        /// <response code="400">Some information is not valid</response>
-        /// <response code="200">Payment is queried successfully</response>
-        /// <response code="500">Server error</response>
-        [HttpPost("Query/ZaloPay/{walletTransactionId}")]
-        [ProducesResponseType(typeof(ZaloPayQueryViGoResponse), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> ZaloPayQuery(
-            Guid walletTransactionId,
-            CancellationToken cancellationToken)
-        {
-            ZaloPayQueryViGoResponse response = await paymentServices.ZaloPayGetOrderStatus(walletTransactionId, 
-                HttpContext,
-                cancellationToken);
-            return StatusCode(200, response);
-        }
+        ///// <summary>
+        ///// ZaloPay Query Order status
+        ///// </summary>
+        ///// <returns>
+        ///// Param as the wallet transaction Id
+        ///// </returns>
+        ///// <response code="400">Some information is not valid</response>
+        ///// <response code="200">Payment is queried successfully</response>
+        ///// <response code="500">Server error</response>
+        //[HttpPost("Query/ZaloPay/{walletTransactionId}")]
+        //[ProducesResponseType(typeof(ZaloPayQueryViGoResponse), 200)]
+        //[ProducesResponseType(400)]
+        //[ProducesResponseType(500)]
+        //public async Task<IActionResult> ZaloPayQuery(
+        //    Guid walletTransactionId,
+        //    CancellationToken cancellationToken)
+        //{
+        //    ZaloPayQueryViGoResponse response = await paymentServices.ZaloPayGetOrderStatus(walletTransactionId, 
+        //        HttpContext,
+        //        cancellationToken);
+        //    return StatusCode(200, response);
+        //}
 
-        /// <summary>
-        /// VnPay Query Order status
-        /// </summary>
-        /// <returns>
-        /// Param as the wallet transaction Id
-        /// </returns>
-        /// <response code="400">Some information is not valid</response>
-        /// <response code="200">Payment is queried successfully</response>
-        /// <response code="500">Server error</response>
-        [HttpPost("Query/VnPay/{walletTransactionId}")]
-        [ProducesResponseType(typeof(VnPayQueryViGoResponse), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> VnPayQuery(
-            Guid walletTransactionId,
-            CancellationToken cancellationToken)
-        {
-            VnPayQueryViGoResponse response = await paymentServices
-                .GetVnPayTransactionStatus(walletTransactionId, HttpContext, cancellationToken);
-            return StatusCode(200, response);
-        }
+
         #endregion
     }
 }

@@ -62,8 +62,9 @@ namespace ViGo.Services
                 throw new ApplicationException("Giá trị nạp tiền phải lớn hơn 1.000VND!");
             }
 
-            if (!Enum.IsDefined(model.PaymentMethod) || (model.PaymentMethod != PaymentMethod.VNPAY &&
-                model.PaymentMethod != PaymentMethod.ZALO))
+            if (!Enum.IsDefined(model.PaymentMethod) || 
+                (model.PaymentMethod != PaymentMethod.VNPAY 
+                /* && model.PaymentMethod != PaymentMethod.ZALO*/))
             {
                 throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");
             }
@@ -86,9 +87,9 @@ namespace ViGo.Services
 
             switch (model.PaymentMethod)
             {
-                case PaymentMethod.ZALO:
-                    createTopupTransaction = CreateZaloTopupTransactionAsync;
-                    break;
+                //case PaymentMethod.ZALO:
+                //    createTopupTransaction = CreateZaloTopupTransactionAsync;
+                //    break;
                 case PaymentMethod.VNPAY:
                     createTopupTransaction = CreateVnPayTopupTransactionAsync;
                     break;

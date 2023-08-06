@@ -24,6 +24,8 @@ namespace ViGo.Models.Users
         public double? Rating { get; set; }
         public double CanceledTripRate { get; set; }
         public double WeeklyCanceledTripRate { get; set; }
+        public string? FirebaseUid { get; set; }
+        public string? FcmToken { get; set; }
         public UserStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -51,6 +53,8 @@ namespace ViGo.Models.Users
             Rating = user.Rating;
             CanceledTripRate = user.CanceledTripRate;
             WeeklyCanceledTripRate = user.WeeklyCanceledTripRate;
+            FirebaseUid = user.FirebaseUid;
+            FcmToken = user.FcmToken;
         }
     }
 

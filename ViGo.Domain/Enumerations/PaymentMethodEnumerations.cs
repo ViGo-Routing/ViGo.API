@@ -12,6 +12,6 @@ namespace ViGo.Domain.Enumerations
         //CASH = 0,
         WALLET = 2,
         VNPAY = 3,
-        ZALO = 4
+        //ZALO = 4
     }
 }
