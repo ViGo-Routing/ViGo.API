@@ -7,6 +7,7 @@ using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
+using ViGo.API.CronJobs;
 using ViGo.API.Middlewares;
 using ViGo.API.SignalR;
 using ViGo.Utilities.Configuration;
@@ -57,6 +58,8 @@ namespace ViGo.API
 
             // Dependency Injection
             builder.Services.AddViGoDependencyInjection(builder.Environment);
+
+            builder.Services.RegisterCronJobs(builder.Environment);
 
             builder.Services.AddDateOnlyTimeOnlyStringConverters();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

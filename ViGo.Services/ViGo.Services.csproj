@@ -15,6 +15,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Quartz" Version="3.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ViGo.Domain\ViGo.Domain.csproj" />
     <ProjectReference Include="..\ViGo.Models\ViGo.Models.csproj" />
     <ProjectReference Include="..\ViGo.Repository\ViGo.Repository.csproj" />

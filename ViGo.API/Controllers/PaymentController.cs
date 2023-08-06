@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Quartz;
 using System.Data;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
@@ -30,10 +31,13 @@ namespace ViGo.API.Controllers
         private ILogger<PaymentController> _logger;
         private IBackgroundTaskQueue _backgroundQueue;
 
+        private ISchedulerFactory schedulerFactory;
+
+
         public PaymentController(IUnitOfWork work, ISignalRService signalRService,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<PaymentController> logger,
-            IBackgroundTaskQueue queue)
+            IBackgroundTaskQueue queue, ISchedulerFactory schedulerFactory)
         {
             paymentServices = new PaymentServices(work, logger);
             //this.signalRService = signalRService;
@@ -43,6 +47,7 @@ namespace ViGo.API.Controllers
             //tripMappingServices = new TripMappingServices(work);
             _logger = logger;
             _backgroundQueue = queue;
+            this.schedulerFactory = schedulerFactory;
         }
 
         /// <summary>
@@ -69,9 +74,24 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GenerateTopupTransaction(TopupTransactionCreateModel model,
             CancellationToken cancellationToken)
         {
-            TopupTransactionViewModel? viewModel = await paymentServices
+            (TopupTransactionViewModel? viewModel, string clientIpAddress) = await paymentServices
                 .CreateTopUpTransactionRequest(model, HttpContext, cancellationToken);
 
+            if (viewModel != null && !string.IsNullOrEmpty(clientIpAddress))
+            {
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+   
+                        // Schedule transaction status checking
+                        IScheduler scheduler = await schedulerFactory.GetScheduler(token);
+                        await backgroundServices.ScheduleCheckTransactionStatusAsync(viewModel.Id, clientIpAddress, scheduler, token);
+                    }
+                });
+            }
             return StatusCode(200, viewModel);
         }
 
@@ -168,7 +188,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-                        await backgroundServices.CheckForPendingTransactions(userId.Value, token);
+                        await backgroundServices.CheckForPendingTransactionsAsync(userId.Value, token);
                     }
                 });
             }

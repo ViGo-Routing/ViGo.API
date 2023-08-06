@@ -131,6 +131,10 @@ namespace ViGo.Utilities.Configuration
         #region Background Task
         public static int QueueCapacity
             => int.Parse(Configuration["BackgroundTask:QueueCapacity"]);
+
+        public static IConfigurationSection QuartzConfiguration
+            => Configuration.GetSection("Quartz");
         #endregion
+
     }
 }

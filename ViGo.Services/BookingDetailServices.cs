@@ -395,7 +395,7 @@ namespace ViGo.Services
                     Station endStation = await work.Stations.GetAsync(
                         bookingDetail.EndStationId, cancellationToken: cancellationToken);
                     title = "Chuyến đi của bạn đã hoàn thành!";
-                    description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStationDropOff.Name} đến {endStation.Name}";
                     break;
             }
@@ -538,7 +538,7 @@ namespace ViGo.Services
                 {
                     UserId = driver.Id,
                     Title = "Chọn chuyến đi thành công!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };
@@ -561,7 +561,7 @@ namespace ViGo.Services
                 {
                     UserId = customer.Id,
                     Title = "Chuyến đi của bạn đã có tài xế!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };
@@ -968,7 +968,7 @@ namespace ViGo.Services
                 {
                     UserId = driverId,
                     Title = "Chọn chuyến đi thành công!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };
@@ -991,7 +991,7 @@ namespace ViGo.Services
                 {
                     UserId = customer.Id,
                     Title = "Chuyến đi của bạn đã có tài xế!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };
@@ -1380,7 +1380,7 @@ namespace ViGo.Services
                 {
                     UserId = driver.Id,
                     Title = "Chuyến đi đã bị hủy!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };
@@ -1403,7 +1403,7 @@ namespace ViGo.Services
                 {
                     UserId = customer.Id,
                     Title = "Chuyến đi đã bị hủy!",
-                    Description = $"{bookingDetail.PickUpDateTime()}, từ " +
+                    Description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
                                 $"{startStation.Name} đến {endStation.Name}",
                     Type = NotificationType.SPECIFIC_USER
                 };

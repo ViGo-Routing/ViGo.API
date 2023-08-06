@@ -190,6 +190,23 @@ namespace ViGo.Utilities.Payments
             SecureHash = getChecksumData(ViGoConfiguration.VnPayHashSecret);
         }
 
+        public VnPayQueryRequest(string txnRef, long transactionNo,
+            DateTime transactionTime,
+            string clientIpAddress)
+        {
+            RequestId = Guid.NewGuid().ToString();
+            ApiVersion = ViGoConfiguration.VnPayApiVersion;
+            Command = "querydr";
+            TmnCode = ViGoConfiguration.VnPayTmnCode;
+            TxnRef = txnRef;
+            OrderInfo = "Tra cuu ket qua giao dich";
+            TransactionNo = transactionNo;
+            TransactionDate = transactionTime.ToString("yyyyMMddHHmmss");
+            CreateDate = DateTimeUtilities.GetDateTimeVnNow().ToString("yyyyMMddHHmmss");
+            IpAddress = clientIpAddress;
+            SecureHash = getChecksumData(ViGoConfiguration.VnPayHashSecret);
+        }
+
         private string getChecksumData(string secretKey)
         {
             string rawData = RequestId + "|" + ApiVersion + "|" + Command + "|" +

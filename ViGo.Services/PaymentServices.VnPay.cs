@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ViGo.Domain;
@@ -21,7 +22,7 @@ namespace ViGo.Services
     public partial class PaymentServices
     {
         #region VnPay
-        private async Task<(TopupTransactionViewModel, string)> CreateVnPayTopupTransactionAsync(
+        private async Task<(TopupTransactionViewModel, string, string)> CreateVnPayTopupTransactionAsync(
             TopupTransactionCreateModel model, WalletTransaction walletTransaction,
             HttpContext httpContext,
             CancellationToken cancellationToken)
@@ -54,7 +55,9 @@ namespace ViGo.Services
             vnPay.AddRequestData("vnp_CreateDate", walletTransaction.CreatedTime
                 .ToString("yyyyMMddHHmmss"));
             vnPay.AddRequestData("vnp_CurrCode", "VND");
-            vnPay.AddRequestData("vnp_IpAddr", httpContext.GetClientIpAddress());
+
+            string clientIpAddress = httpContext.GetClientIpAddress();
+            vnPay.AddRequestData("vnp_IpAddr", clientIpAddress);
             vnPay.AddRequestData("vnp_Locale", "vn");
             vnPay.AddRequestData("vnp_OrderInfo", "Topup tài khoản");
             vnPay.AddRequestData("vnp_OrderType", "other"); //default value: other
@@ -415,7 +418,7 @@ namespace ViGo.Services
             return (code, message, returnUserId);
         }
 
-        public async Task<VnPayQueryViGoResponse>
+        public async Task<VnPayQueryViGoResponse?>
             GetVnPayTransactionStatus(Guid walletTransactionId,
             HttpContext httpContext, CancellationToken cancellationToken)
         {
@@ -436,7 +439,7 @@ namespace ViGo.Services
             VnPayQueryRequest vnPayQueryRequest = new VnPayQueryRequest(
                 vnPayTransactionRef, vnPayTransactionNo, walletTransaction.CreatedTime, httpContext);
 
-            VnPayQueryResponse response = await HttpClientUtilities
+            VnPayQueryResponse? response = await HttpClientUtilities
                 .SendRequestAsync<VnPayQueryResponse, VnPayQueryRequest>(
                 ViGoConfiguration.VnPayQueryUrl, HttpMethod.Post,
                 body: vnPayQueryRequest, cancellationToken: cancellationToken);
@@ -445,7 +448,40 @@ namespace ViGo.Services
             //{
             //    throw new ApplicationException("Checksum không hợp lệ!!");
             //}
-            return new VnPayQueryViGoResponse(response);
+            return response is null ? null : new VnPayQueryViGoResponse(response);
+        }
+
+        public async Task<VnPayQueryViGoResponse?>
+            GetVnPayTransactionStatus(Guid walletTransactionId,
+            string clientIpAddress, CancellationToken cancellationToken)
+        {
+            WalletTransaction? walletTransaction = await work.WalletTransactions
+                .GetAsync(walletTransactionId, cancellationToken: cancellationToken);
+            if (walletTransaction is null ||
+                string.IsNullOrEmpty(walletTransaction.ExternalTransactionId)
+                || walletTransaction.PaymentMethod != PaymentMethod.VNPAY)
+            {
+                throw new ApplicationException("Giao dịch không tồn tại!!");
+            }
+
+            string[] external = walletTransaction.ExternalTransactionId.Split("_VnPay_");
+            string vnPayTransactionRef = external[0];
+            long vnPayTransactionNo = Convert.ToInt64(external[1]);
+
+
+            VnPayQueryRequest vnPayQueryRequest = new VnPayQueryRequest(
+                vnPayTransactionRef, vnPayTransactionNo, walletTransaction.CreatedTime, clientIpAddress);
+
+            VnPayQueryResponse? response = await HttpClientUtilities
+                .SendRequestAsync<VnPayQueryResponse, VnPayQueryRequest>(
+                ViGoConfiguration.VnPayQueryUrl, HttpMethod.Post,
+                body: vnPayQueryRequest, cancellationToken: cancellationToken);
+
+            //if (!response.IsValidResponse(ViGoConfiguration.VnPayHashSecret))
+            //{
+            //    throw new ApplicationException("Checksum không hợp lệ!!");
+            //}
+            return response is null ? null : new VnPayQueryViGoResponse(response);
         }
 
         //public async Task<string> GenerateVnPayPaymentUrlAsync(TopupTransactionCreateModel model,

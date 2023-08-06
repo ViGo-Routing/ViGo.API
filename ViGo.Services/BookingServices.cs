@@ -943,7 +943,7 @@ namespace ViGo.Services
                             {
                                 UserId = driver.Id,
                                 Title = "Chuyến đi đã bị hủy!",
-                                Description = $"{detail.PickUpDateTime()}, từ " +
+                                Description = $"{detail.PickUpDateTimeString()}, từ " +
                                     $"{startStation.Name} đến {endStation.Name}",
                                 Type = NotificationType.SPECIFIC_USER
                             };
