@@ -152,7 +152,7 @@ namespace ViGo.Services
                 StartStationId = startStation.Id,
                 EndStationId = endStation.Id,
                 Distance = dto.Distance,
-                Duration = dto.Duration,
+                Duration = Math.Round(dto.Duration, 2),
                 RoutineType = dto.RoutineType,
                 Type = dto.Type,
                 Status = RouteStatus.ACTIVE

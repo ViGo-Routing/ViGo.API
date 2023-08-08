@@ -388,7 +388,7 @@ namespace ViGo.Services
                 TotalPrice = model.TotalPrice,
                 PriceAfterDiscount = model.PriceAfterDiscount,
                 IsShared = model.IsShared,
-                Duration = model.Duration,
+                Duration = Math.Round(model.Duration, 2),
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
