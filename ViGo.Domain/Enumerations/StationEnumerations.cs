@@ -11,4 +11,10 @@ namespace ViGo.Domain.Enumerations
         OTHER = 0,
         METRO = 1
     }
+
+    public enum StationStatus : short
+    {
+        INACTIVE = -1,
+        ACTIVE = 1,
+    }
 }

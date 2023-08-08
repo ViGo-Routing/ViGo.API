@@ -38,12 +38,6 @@ namespace ViGo.Domain.Enumerations
         ACTIVE = 1,
     }
 
-    public enum StationStatus : short
-    {
-        INACTIVE = -1,
-        ACTIVE = 1,
-    }
-
     public enum RouteRoutineStatus : short
     {
         INACTIVE = -1,

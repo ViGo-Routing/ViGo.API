@@ -11,6 +11,6 @@ namespace ViGo.Models.Reports
     {
         public string? ReviewerNote { get; set; }
         public ReportStatus? Status { get; set; }
-        public bool? IsDeleted { get; set; }
+        //public bool? IsDeleted { get; set; }
     }
 }

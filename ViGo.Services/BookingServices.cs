@@ -388,7 +388,7 @@ namespace ViGo.Services
                 TotalPrice = model.TotalPrice,
                 PriceAfterDiscount = model.PriceAfterDiscount,
                 IsShared = model.IsShared,
-                Duration = model.Duration,
+                Duration = Math.Round(model.Duration, 2),
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
@@ -1001,30 +1001,30 @@ namespace ViGo.Services
         }
 
         #region Private members
-        private async Task<bool> IsEnoughWalletBalanceToBook(
-            BookingCreateModel newBooking, CancellationToken cancellationToken)
-        {
-            // Get uncompleted Booking Details
-            IEnumerable<Booking> bookings = await work.Bookings
-                .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(newBooking.CustomerId.Value)),
-                cancellationToken: cancellationToken);
+        //private async Task<bool> IsEnoughWalletBalanceToBook(
+        //    BookingCreateModel newBooking, CancellationToken cancellationToken)
+        //{
+        //    // Get uncompleted Booking Details
+        //    IEnumerable<Booking> bookings = await work.Bookings
+        //        .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(newBooking.CustomerId.Value)),
+        //        cancellationToken: cancellationToken);
 
-            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
-            IEnumerable<BookingDetail> futureBookingDetails = await work.BookingDetails
-                .GetAllAsync(query => query.Where(
-                    d => bookingIds.Contains(d.BookingId) &&
-                    d.Status != BookingDetailStatus.COMPLETED
-                    && d.Status != BookingDetailStatus.CANCELLED),
-                    cancellationToken: cancellationToken);
+        //    IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+        //    IEnumerable<BookingDetail> futureBookingDetails = await work.BookingDetails
+        //        .GetAllAsync(query => query.Where(
+        //            d => bookingIds.Contains(d.BookingId) &&
+        //            d.Status != BookingDetailStatus.COMPLETED
+        //            && d.Status != BookingDetailStatus.CANCELLED),
+        //            cancellationToken: cancellationToken);
 
-            // Get Wallet
-            Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(newBooking.CustomerId.Value),
-                cancellationToken: cancellationToken);
-            double totalPrice = newBooking.PriceAfterDiscount +
-                futureBookingDetails.Sum(d => d.PriceAfterDiscount.Value);
+        //    // Get Wallet
+        //    Wallet wallet = await work.Wallets.GetAsync(w => w.UserId.Equals(newBooking.CustomerId.Value),
+        //        cancellationToken: cancellationToken);
+        //    double totalPrice = newBooking.PriceAfterDiscount +
+        //        futureBookingDetails.Sum(d => d.PriceAfterDiscount.Value);
 
-            return wallet.Balance >= totalPrice;
-        }
+        //    return wallet.Balance >= totalPrice;
+        //}
         #endregion
     }
 }
