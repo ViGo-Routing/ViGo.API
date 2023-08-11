@@ -245,9 +245,11 @@ namespace ViGo.Services
                 cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
 
-            await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
+            _logger.LogInformation("Firebase Sending Notification...");
+            string firebaseResult = await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
                                           model.Description, data: dataToSend,
                                               cancellationToken: cancellationToken);
+            _logger.LogInformation("Firebase Sending Notification Result: " + firebaseResult);
 
             // Send data to mobile application
             //await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
