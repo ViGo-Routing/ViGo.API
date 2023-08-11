@@ -42,7 +42,7 @@ namespace ViGo.API
                 if (env.IsDevelopment())
                 {
                     options.EnableSensitiveDataLogging();
-                    options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_PhongNT"));
+                    options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_Development"));
                     //options.UseSqlServer(ViGoConfiguration.ConnectionString("ViGoDb_Azure"));
                 }
                 else
