@@ -35,10 +35,18 @@ namespace ViGo.API.SignalR
         [Authorize(Roles = "DRIVER")]
         public async Task SendLocation(Guid tripId, GoogleMapPoint googleMapPoint)
         {
-            _logger.LogInformation("Location received: Lat: {0}, Long: {1}", googleMapPoint.Latitude, googleMapPoint.Longitude);
-            await _hubContext.Clients.Group(tripId.ToString())
-                .SendAsync("locationTracking", 
-                JsonConvert.SerializeObject(googleMapPoint));
+            try
+            {
+                _logger.LogInformation("Location received: Lat: {0}, Long: {1}", googleMapPoint.Latitude, googleMapPoint.Longitude);
+                await _hubContext.Clients.Group(tripId.ToString())
+                    .SendAsync("locationTracking",
+                    JsonConvert.SerializeObject(googleMapPoint));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error on sending location. Detail: {0}", ex.GeneratorErrorMessage());
+            }
+            
         }
 
         [Authorize(Roles = "DRIVER,CUSTOMER")]
