@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
@@ -54,7 +56,23 @@ namespace ViGo.API
                     options.SerializerSettings.Converters.Add(
                         new StringEnumConverter());
                 }
-                    );
+                    )
+                .ConfigureApiBehaviorOptions(opt =>
+                    {
+                        opt.InvalidModelStateResponseFactory = (context =>
+                        {
+                            var _logger = context.HttpContext
+                            .RequestServices.GetRequiredService<ILogger<Program>>();
+                            string message = context.ModelState.Values.SelectMany(x => x.Errors).First().ErrorMessage;
+
+                            string errorMessage = JsonConvert.SerializeObject(
+                            context.ModelState.Values.SelectMany(x => x.Errors));
+                            _logger.LogError(new ArgumentException(errorMessage),
+                                 "Bad Request error: {0}", message);
+
+                            return new BadRequestObjectResult(message);
+                        });
+                    });
 
             // Dependency Injection
             builder.Services.AddViGoDependencyInjection(builder.Environment);
