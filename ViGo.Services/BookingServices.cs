@@ -598,6 +598,15 @@ namespace ViGo.Services
 
             #endregion
             #region Validation Booking
+            IEnumerable<BookingDetail> currentDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.BookingId.Equals(booking.Id)), cancellationToken: cancellationToken);
+
+            if (currentDetails.Any(d => d.DriverId.HasValue))
+            {
+                throw new ApplicationException("Hành trình đã có tài xế chọn, không thể tiến hành cập nhật!");
+            }
+
             BookingUpdateModel bookingUpdate = routeBookingUpdateModel.BookingUpdate;
             if (bookingUpdate.Distance <= 0)
             {
@@ -656,9 +665,7 @@ namespace ViGo.Services
             try
             {
                 // Delete current BookingDetails
-                IEnumerable<BookingDetail> currentDetails = await work.BookingDetails
-                    .GetAllAsync(query => query.Where(
-                        d => d.BookingId.Equals(booking.Id)), cancellationToken: cancellationToken);
+                
                 foreach (BookingDetail detail in currentDetails)
                 {
                     await work.BookingDetails.DeleteAsync(detail, false,
