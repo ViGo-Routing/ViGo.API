@@ -471,6 +471,32 @@ namespace ViGo.Services
                         driverPaymentNotification, driverFcm, driverPaymentDataToSend, cancellationToken);
                 }
 
+                // Check for Booking completed status
+                _logger.LogInformation("Checking for Booking's completed status...");
+                Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                    cancellationToken: cancellationToken);
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails.GetAllAsync(
+                    query => query.Where(
+                        d => d.BookingId.Equals(booking.Id)), cancellationToken: cancellationToken);
+
+                _logger.LogInformation("Booking Details Count: {0}", bookingDetails.Count());
+                IEnumerable<BookingDetail> notCanceledBookingDetails = bookingDetails.Where(d => d.Status != BookingDetailStatus.CANCELLED);
+                _logger.LogInformation("NOT CANCELED Booking Details Count: {0}", notCanceledBookingDetails.Count());
+
+                if (notCanceledBookingDetails
+                    .All(d => d.Status == BookingDetailStatus.COMPLETED))
+                {
+                    _logger.LogInformation("Every Booking Detail is competed!");
+                    booking.Status = BookingStatus.COMPLETED;
+                    await work.Bookings.UpdateAsync(booking, isManuallyAssignTracking: true);
+                    await work.SaveChangesAsync(cancellationToken);
+                }
+                else
+                {
+                    _logger.LogInformation("Completed Booking Detail: {0}",
+                        notCanceledBookingDetails.Count(d => d.Status == BookingDetailStatus.COMPLETED));
+                }
+
             }
             catch (Exception ex)
             {

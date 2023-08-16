@@ -352,8 +352,6 @@ namespace ViGo.Services
                 throw new AccessDeniedException("Bạn không thể thực hiện hành động này!!");
             }
 
-            bookingDetail.Status = updateDto.Status;
-
             Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
                 cancellationToken: cancellationToken);
 
@@ -364,7 +362,10 @@ namespace ViGo.Services
             {
                 case BookingDetailStatus.GOING_TO_PICKUP:
                     //bookingDetail.GoingTime = updateDto.Time;
-
+                    if (bookingDetail.Status != BookingDetailStatus.ASSIGNED)
+                    {
+                        throw new ApplicationException("Trạng thái chuyến đi không hợp lệ!!");
+                    }
                     Station startStationGoing = await work.Stations.GetAsync(
                         bookingDetail.StartStationId, cancellationToken: cancellationToken);
 
@@ -372,6 +373,10 @@ namespace ViGo.Services
                     description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
                 case BookingDetailStatus.ARRIVE_AT_PICKUP:
+                    if (bookingDetail.Status != BookingDetailStatus.GOING_TO_PICKUP)
+                    {
+                        throw new ApplicationException("Trạng thái chuyến đi không hợp lệ!!");
+                    }
                     bookingDetail.ArriveAtPickupTime = updateDto.Time;
 
                     Station startStation = await work.Stations.GetAsync(
@@ -381,12 +386,20 @@ namespace ViGo.Services
                     description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
                 case BookingDetailStatus.GOING_TO_DROPOFF:
+                    if (bookingDetail.Status != BookingDetailStatus.ARRIVE_AT_PICKUP)
+                    {
+                        throw new ApplicationException("Trạng thái chuyến đi không hợp lệ!!");
+                    }
                     bookingDetail.PickupTime = updateDto.Time;
 
                     title = "Chuyến đi của bạn đã được bắt đầu!";
                     description = "Chúc bạn có một chuyến đi an toàn và vui vẻ nhé!";
                     break;
                 case BookingDetailStatus.ARRIVE_AT_DROPOFF:
+                    if (bookingDetail.Status != BookingDetailStatus.GOING_TO_DROPOFF)
+                    {
+                        throw new ApplicationException("Trạng thái chuyến đi không hợp lệ!!");
+                    }
                     bookingDetail.DropoffTime = updateDto.Time;
 
                     Station startStationDropOff = await work.Stations.GetAsync(
@@ -399,6 +412,8 @@ namespace ViGo.Services
                                 $"{startStationDropOff.Name} đến {endStation.Name}";
                     break;
             }
+
+            bookingDetail.Status = updateDto.Status;
 
             //NotificationCreateModel notification = new NotificationCreateModel()
             //{
