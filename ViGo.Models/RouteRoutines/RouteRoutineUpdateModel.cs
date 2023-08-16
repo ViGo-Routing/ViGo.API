@@ -12,6 +12,7 @@ namespace ViGo.Models.RouteRoutines
         public Guid RouteId { get; set; }
         public IList<RouteRoutineListItemModel> RouteRoutines { get; set; }
             = new List<RouteRoutineListItemModel>();
+        //public IList<RouteRoutineListItemModel>? RoundTripRoutines { get; set; }
     }
 
     public class RouteRoutineSingleUpdateModel

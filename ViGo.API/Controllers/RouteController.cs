@@ -209,7 +209,9 @@ namespace ViGo.API.Controllers
                 throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
             }
 
-            Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto, cancellationToken);
+            Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto, 
+                isCalledFromBooking: false,
+                cancellationToken);
             return StatusCode(200, updatedRoute);
         }
 

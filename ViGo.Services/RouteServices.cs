@@ -460,13 +460,13 @@ namespace ViGo.Services
         }
 
         public async Task<Route> UpdateRouteAsync(RouteUpdateModel updateDto,
-            CancellationToken cancellationToken)
+            bool isCalledFromBooking = false,
+            CancellationToken cancellationToken = default)
         {
             //if (!updateDto.Id.HasValue)
             //{
             //    throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
             //}
-
             Route route = await work.Routes.GetAsync(updateDto.Id, cancellationToken: cancellationToken);
             if (route == null)
             {
@@ -505,9 +505,26 @@ namespace ViGo.Services
             //{
             //    throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể cập nhật thông tin tuyến đường");
             //}
-            if (await HasBooking(route.Id, cancellationToken))
+            if (await HasDriver(route.Id, cancellationToken))
             {
-                throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
+                throw new ApplicationException("Hành trình đã có tài xế chọn nên không thể cập nhật thông tin!");
+            }
+            Booking? booking = await HasBooking(route.Id, cancellationToken);
+            if (booking != null && !isCalledFromBooking)
+            {
+                //if (updateDto.RouteRoutines is null || updateDto.RouteRoutines.Count == 0)
+                //{
+                //    throw new ApplicationException("Hành trình đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+                //}
+                //if (updateDto.Type == RouteType.ROUND_TRIP)
+                //{
+                //    if (updateDto.RoundTripRoutines is null || updateDto.RoundTripRoutines.Count == 0)
+                //    {
+                //        throw new ApplicationException("Hành trình khứ hồi đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+                //    }
+                //}
+                throw new ApplicationException("Tuyến đường đã được đặt lịch! Vui lòng sử dụng " +
+                    "chức năng cập nhật Đặt lịch để cập nhật các thông tin cần thiết!");
             }
 
             if (!string.IsNullOrEmpty(updateDto.Name))
@@ -524,8 +541,7 @@ namespace ViGo.Services
                 route.Name = updateDto.Name;
             }
 
-            if (updateDto.Distance.HasValue
-                && updateDto.Distance.Value <= 0)
+            if (updateDto.Distance <= 0)
             {
                 throw new ApplicationException("Khoảng cách tuyến đường phải lớn hơn 0!");
             }
@@ -533,8 +549,7 @@ namespace ViGo.Services
             {
                 route.Distance = updateDto.Distance;
             }
-            if (updateDto.Duration.HasValue &&
-                updateDto.Duration.Value <= 0)
+            if (updateDto.Duration <= 0)
             {
                 throw new ApplicationException("Thời gian di chuyển của tuyến đường phải lớn hơn 0!");
             }
@@ -543,11 +558,11 @@ namespace ViGo.Services
                 route.Duration = updateDto.Duration;
             }
 
-            if (!Enum.IsDefined(route.RoutineType))
+            if (!Enum.IsDefined(updateDto.RoutineType))
             {
                 throw new ApplicationException("Loại lịch trình đi không hợp lệ!!");
             }
-            if (!Enum.IsDefined(route.Type))
+            if (!Enum.IsDefined(updateDto.Type))
             {
                 throw new ApplicationException("Loại tuyến đường không hợp lệ!!");
             }
@@ -663,8 +678,8 @@ namespace ViGo.Services
             //}
             //await IsValidRoutines(updateDto.RouteRoutines, true, updateDto.Id);
 
-
             // RouteType
+            Route? roundTrip = null;
             if (route.Type != updateDto.Type)
             {
                 route.Type = updateDto.Type;
@@ -674,7 +689,7 @@ namespace ViGo.Services
                     // Previous Route Type is ROUND_TRIP
                     // Delete the round trip one
                     Guid roundTripRouteId = route.RoundTripRouteId.Value;
-                    Route roundTrip = await work.Routes.GetAsync(roundTripRouteId, cancellationToken: cancellationToken);
+                    roundTrip = await work.Routes.GetAsync(roundTripRouteId, cancellationToken: cancellationToken);
 
                     IEnumerable<RouteRoutine> routines = await work.RouteRoutines.GetAllAsync(
                         query => query.Where(r => r.RouteId.Equals(roundTripRouteId)),
@@ -684,19 +699,20 @@ namespace ViGo.Services
                     {
                         foreach (var routine in routines)
                         {
-                            await work.RouteRoutines.DeleteAsync(routine, 
+                            await work.RouteRoutines.DeleteAsync(routine,
                                 isSoftDelete: false,
                                 cancellationToken);
                         }
                     }
                     await work.Routes.DeleteAsync(roundTrip,
-                        isSoftDelete: false, 
+                        isSoftDelete: false,
                         cancellationToken);
-                } else if (updateDto.Type == RouteType.ROUND_TRIP)
+                }
+                else if (updateDto.Type == RouteType.ROUND_TRIP)
                 {
                     // Previous Route Type is ONE_WAY
                     // Generate 1 more route
-                    Route roundTripRoute = new Route
+                    roundTrip = new Route
                     {
                         UserId = route.UserId,
                         Name = route.Name,
@@ -708,18 +724,19 @@ namespace ViGo.Services
                         Type = route.Type,
                         Status = RouteStatus.ACTIVE
                     };
-                    await work.Routes.InsertAsync(roundTripRoute, cancellationToken: cancellationToken);
+                    await work.Routes.InsertAsync(roundTrip, cancellationToken: cancellationToken);
 
-                    route.RoundTripRouteId = roundTripRoute.Id;
+                    route.RoundTripRouteId = roundTrip.Id;
                 }
-            } else
+            }
+            else
             {
                 // Same Route
                 if (route.Type == RouteType.ROUND_TRIP)
                 {
                     if (route.RoundTripRouteId.HasValue)
                     {
-                        Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+                        roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
 
                         roundTrip.Name = route.Name;
                         roundTrip.StartStationId = route.EndStationId;
@@ -728,13 +745,13 @@ namespace ViGo.Services
                         roundTrip.Duration = route.Duration;
                         roundTrip.RoutineType = route.RoutineType;
                         roundTrip.Status = route.Status;
-                            
+
                         await work.Routes.UpdateAsync(roundTrip);
                     }
                     else
                     {
                         throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
-                            "Không thể cập nhật trạng thái tuyến đường này. Vui lòng cập nhật trạng thái tuyến đường chính!");
+                            "Không thể cập nhật tuyến đường này. Vui lòng cập nhật tuyến đường chính!");
                     }
                 }
             }
@@ -778,14 +795,53 @@ namespace ViGo.Services
             //await work.RouteRoutines.InsertAsync(routeRoutines);
 
             await work.SaveChangesAsync(cancellationToken);
-
             //routeStations.ToList()
             //    .ForEach(rs => rs.Station = null);
             //route.RouteStations = routeStations;
             //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
             //    .ThenBy(r => r.StartTime).ToList();
-            route.EndStation = endStation;
-            route.StartStation = startStation;
+            
+            if (!isCalledFromBooking)
+            {
+                route.EndStation = endStation;
+                route.StartStation = startStation;
+            }
+
+
+            // Update for Booking and BookingDetail
+            //Booking? currentBooking = await work.Bookings
+            //    .GetAsync(b => b.CustomerRouteId.Equals(route.Id)
+            //        && b.Status == BookingStatus.CONFIRMED, 
+            //        cancellationToken: cancellationToken);
+            //if (booking != null)
+            //{
+            //    // Has Booking
+            //    // Routines must be updated as well
+
+            //    if (roundTrip != null)
+            //    {
+            //        IsValidRoundTripRoutines(updateDto.RouteRoutines,
+            //        updateDto.RoundTripRoutines);
+            //    }
+
+            //    RouteRoutineServices routeRoutineServices = new RouteRoutineServices(work, _logger);
+            //    await routeRoutineServices.UpdateRouteRoutinesAsync(new RouteRoutineUpdateModel()
+            //    {
+            //        RouteId = route.Id,
+            //        RouteRoutines = updateDto.RouteRoutines
+            //    }, false, cancellationToken);
+
+            //    if (roundTrip != null)
+            //    {
+            //        await routeRoutineServices.UpdateRouteRoutinesAsync(new RouteRoutineUpdateModel()
+            //        {
+            //            RouteId = roundTrip.Id,
+            //            RouteRoutines = updateDto.RoundTripRoutines
+            //        }, false, cancellationToken);
+            //    }
+
+
+            //}
 
             return route;
 
@@ -833,7 +889,7 @@ namespace ViGo.Services
             //{
             //    throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể thay đổi trạng thái tuyến đường");
             //}
-            if (await HasBooking(route.Id, cancellationToken))
+            if (await HasDriver(route.Id, cancellationToken))
             {
                 throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
             }
@@ -844,12 +900,14 @@ namespace ViGo.Services
                 {
                     Route roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
 
-                    if (roundTrip.Status != newStatus){
+                    if (roundTrip.Status != newStatus)
+                    {
                         roundTrip.Status = newStatus;
                     }
 
                     await work.Routes.UpdateAsync(roundTrip);
-                } else
+                }
+                else
                 {
                     throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
                         "Không thể cập nhật trạng thái tuyến đường này. Vui lòng cập nhật trạng thái tuyến đường chính!");
@@ -903,7 +961,7 @@ namespace ViGo.Services
             //{
             //    throw new ApplicationException("Tuyến đường đã được xếp lịch di chuyển cho tài xế! Không thể xóa tuyến đường");
             //}
-            if (await HasBooking(route.Id, cancellationToken))
+            if (await HasDriver(route.Id, cancellationToken))
             {
                 throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
             }
@@ -952,7 +1010,8 @@ namespace ViGo.Services
 
                     await work.Routes.DeleteAsync(roundTrip, cancellationToken: cancellationToken);
 
-                } else
+                }
+                else
                 {
                     throw new ApplicationException("Đây là tuyến đường về thuộc tuyến đường khứ hồi! " +
                         "Không thể xóa tuyến đường này. Vui lòng xóa tuyến đường chính!");
@@ -1000,7 +1059,10 @@ namespace ViGo.Services
                 );
         }
 
-        private async Task<bool> HasBooking(Guid routeId, CancellationToken cancellationToken)
+
+
+        private async Task<Booking?> HasBooking(Guid routeId,
+            CancellationToken cancellationToken)
         {
             Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
 
@@ -1009,7 +1071,7 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-            Guid? checkRouteId = routeId;
+            Guid checkRouteId = routeId;
             if (route.Type == RouteType.ROUND_TRIP
                 && !route.RoundTripRouteId.HasValue)
             {
@@ -1021,9 +1083,26 @@ namespace ViGo.Services
                 checkRouteId = mainRoute.Id;
             }
 
-            IEnumerable<Booking> bookings = await work.Bookings.GetAllAsync(query => query.Where(
-                    b => b.CustomerRouteId.Equals(checkRouteId)), cancellationToken: cancellationToken);
-            return bookings.Any();
+            Booking? booking = await work.Bookings.GetAsync(
+                    b => b.CustomerRouteId.Equals(checkRouteId)
+                    && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
+
+            return booking;
+            //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+            //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+            //    .GetAllAsync(query => query.Where(
+            //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
+
+            //return bookingDetails.Any(d => d.DriverId.HasValue);
+        }
+
+        private async Task<bool> HasDriver(Guid bookingId, CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => d.BookingId.Equals(bookingId)),
+                    cancellationToken: cancellationToken);
+            return bookingDetails.Any(d => d.DriverId.HasValue);
         }
         #endregion
     }

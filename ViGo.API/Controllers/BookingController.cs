@@ -193,6 +193,56 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Update Booking information. Route and Routines information must be updated too
+        /// </summary>
+        /// <returns>
+        /// The updated booking
+        /// </returns>
+        /// <response code="400">Booking information is not valid</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Update Booking successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPut("{bookingId}")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
+        [ProducesResponseType(typeof(Booking), 200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> UpdateBooking(Guid bookingId,
+            RouteBookingUpdateModel model,
+            CancellationToken cancellationToken)
+        {
+            if (!bookingId.Equals(model.BookingUpdate.BookingId))
+            {
+                throw new ApplicationException("Thông tin không hợp lệ! Vui lòng kiểm tra lại");
+            }
+
+            Booking booking = await bookingServices.UpdateBookingAsync(model, cancellationToken);
+
+            if (booking != null)
+            {
+                // Calculate Trip canceling rate
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRateAsync(booking.CustomerId, token);
+
+                        // Schedule trip reminder
+                        IScheduler scheduler = await schedulerFactory.GetScheduler(token);
+                        await backgroundServices.ScheduleTripReminderAsync(booking.Id, scheduler, token);
+                    }
+                });
+            }
+
+            return StatusCode(200, booking);
+        }
+
+        /// <summary>
         /// Cancel a whole Booking
         /// </summary>
         /// <returns>

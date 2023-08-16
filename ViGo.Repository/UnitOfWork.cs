@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -121,6 +122,9 @@ namespace ViGo.Repository
             return await context.SaveChangesAsync(cancellationToken);
         }
 
-
+        public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            return await context.Database.BeginTransactionAsync(cancellationToken);
+        }
     }
 }

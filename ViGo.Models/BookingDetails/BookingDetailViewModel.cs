@@ -41,6 +41,7 @@ namespace ViGo.Models.BookingDetails
         public short? Rate { get; set; }
         public string? Feedback { get; set; }
         public BookingDetailStatus Status { get; set; }
+        public BookingDetailType Type { get; set; }
         public Guid? CanceledUserId { get; set; } 
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -70,6 +71,7 @@ namespace ViGo.Models.BookingDetails
             UpdatedBy = bookingDetail.UpdatedBy;
             CanceledUserId = bookingDetail.CanceledUserId;
             //Driver = driver;
+            Type = bookingDetail.Type;
         }
 
         public BookingDetailViewModel(BookingDetail bookingDetail,

@@ -28,7 +28,8 @@ namespace ViGo.Models.Bookings
         public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         //public BookingType Type { get; set; } = BookingType.ONE_WAY;
-        public TimeOnly? CustomerRoundTripDesiredPickupTime { get; set; } = null;
+        public double? RoundTripTotalPrice { get; set; }
+        //public TimeOnly? CustomerRoundTripDesiredPickupTime { get; set; } = null;
         //public BookingStatus Status { get; set; } = BookingStatus.UNPAID;
     }
 }

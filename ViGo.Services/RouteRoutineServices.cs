@@ -122,7 +122,8 @@ namespace ViGo.Services
         }
 
         public async Task<IEnumerable<RouteRoutine>> UpdateRouteRoutinesAsync(RouteRoutineUpdateModel model,
-            CancellationToken cancellationToken)
+            bool checkForRoundTripRoutines = true,
+            CancellationToken cancellationToken = default)
         {
             Route? route = await work.Routes.GetAsync(model.RouteId, cancellationToken: cancellationToken);
             if (route == null)
@@ -150,7 +151,7 @@ namespace ViGo.Services
                 }
             }
 
-            if (await HasBooking(route.Id, cancellationToken))
+            if (await HasDriver(route.Id, cancellationToken))
             {
                 throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
             }
@@ -173,7 +174,7 @@ namespace ViGo.Services
             currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
                 .ThenBy(r => r.PickupTime);
             //IList<RouteRoutineListItemModel> newRoutines = new List<RouteRoutineListItemModel>();
-            
+
             IList<Guid> routineToDelete = new List<Guid>();
             foreach (RouteRoutine oldRoutine in currentRoutines)
             {
@@ -202,7 +203,7 @@ namespace ViGo.Services
             IEnumerable<RouteRoutineListItemModel> routinesModel = model.RouteRoutines;
             if (routinesModel.Any())
             {
-                await IsValidRoutines(routinesModel.ToList(), route, true, cancellationToken);
+                await IsValidRoutines(routinesModel.ToList(), route, true, checkForRoundTripRoutines, cancellationToken);
                 routeRoutines =
                     (from routine in routinesModel
                      select new RouteRoutine
@@ -217,7 +218,6 @@ namespace ViGo.Services
             }
 
             await work.SaveChangesAsync(cancellationToken);
-
             IEnumerable<RouteRoutine> updatedRouteRoutines = (await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(route.Id)), cancellationToken: cancellationToken))
@@ -261,9 +261,9 @@ namespace ViGo.Services
             IEnumerable<RouteRoutineListItemModel> routinesModel = from routine in currentRoutines
                                                                    select new RouteRoutineListItemModel(routine);
             routinesModel = routinesModel.Append(itemModel);
-           await IsValidRoutines(routinesModel.ToList(), route, 
-                isUpdate: true,
-                cancellationToken: cancellationToken);
+            await IsValidRoutines(routinesModel.ToList(), route,
+                 isUpdate: true,
+                 cancellationToken: cancellationToken);
 
             routeRoutine.RoutineDate = model.RoutineDate.ToDateTime(TimeOnly.MinValue);
             routeRoutine.PickupTime = model.PickupTime.ToTimeSpan();
@@ -305,7 +305,7 @@ namespace ViGo.Services
             }
 
             await work.RouteRoutines.DeleteAsync(routeRoutine, cancellationToken: cancellationToken);
-            
+
             if (route.Type == RouteType.ROUND_TRIP)
             {
                 RouteRoutine? roundTripRoutine = null;
@@ -319,8 +319,9 @@ namespace ViGo.Services
                         .GetAsync(r => r.RouteId.Equals(roundTripRoute.Id)
                             && r.RoutineDate.Date.Equals(routeRoutine.RoutineDate.Date),
                             cancellationToken: cancellationToken);
-                    
-                } else
+
+                }
+                else
                 {
                     // route is the roundtrip Route
                     Route mainRoute = await work.Routes.GetAsync(
@@ -351,26 +352,27 @@ namespace ViGo.Services
 
         private void IsValidRoutine(RouteRoutineListItemModel routine)
         {
-                DateTime startDateTime = DateTimeUtilities
-                .ToDateTime(routine.RoutineDate, routine.PickupTime);
-                //DateTime endDateTime = DateTimeUtilities.
-                //    ToDateTime(routine.RoutineDate, routine.StartTime.AddMinutes(30));
+            DateTime startDateTime = DateTimeUtilities
+            .ToDateTime(routine.RoutineDate, routine.PickupTime);
+            //DateTime endDateTime = DateTimeUtilities.
+            //    ToDateTime(routine.RoutineDate, routine.StartTime.AddMinutes(30));
 
-                DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
-                startDateTime.DateTimeValidate(
-                    minimum: vnNow,
-                    minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
-                    $"{routine.RoutineDate.ToShortDateString()}, " +
-                    $"giờ: {routine.PickupTime.ToShortTimeString()})"
-                    //maximum: endDateTime,
-                    //maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
-                    //$"{routine.RoutineDate.ToShortDateString()}, " +
-                    //$"giờ: {routine.EndTime.ToShortTimeString()})"
-                    );
+            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+            startDateTime.DateTimeValidate(
+                minimum: vnNow,
+                minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
+                $"{routine.RoutineDate.ToShortDateString()}, " +
+                $"giờ: {routine.PickupTime.ToShortTimeString()})"
+                //maximum: endDateTime,
+                //maxErrorMessage: $"Thời gian kết thúc lịch trình không hợp lệ (ngày: " +
+                //$"{routine.RoutineDate.ToShortDateString()}, " +
+                //$"giờ: {routine.EndTime.ToShortTimeString()})"
+                );
         }
 
         private async Task IsValidRoutines(IList<RouteRoutineListItemModel> routines,
-            Route route, bool isUpdate = false, CancellationToken cancellationToken = default)
+            Route route, bool checkForRoundTripRoutines = true,
+            bool isUpdate = false, CancellationToken cancellationToken = default)
         {
             if (route == null)
             {
@@ -416,14 +418,14 @@ namespace ViGo.Services
             //}
 
             // Check for RoundTrip
-            if (route.Type == RouteType.ROUND_TRIP)
+            if (checkForRoundTripRoutines && route.Type == RouteType.ROUND_TRIP)
             {
                 if (route.RoundTripRouteId.HasValue)
                 {
                     // The main route
 
                     // Get The roundtrip route
-                    Route roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value, 
+                    Route roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
                         cancellationToken: cancellationToken);
                     IEnumerable<RouteRoutine> roundTripRoutines = (await work.RouteRoutines
                         .GetAllAsync(query => query.Where(
@@ -466,7 +468,8 @@ namespace ViGo.Services
                             }
                         }
                     }
-                } else
+                }
+                else
                 {
                     // The RoundTrip route
 
@@ -544,7 +547,7 @@ namespace ViGo.Services
                 Dictionary<Guid, double> routeDurations = new Dictionary<Guid, double>();
                 //foreach (Route routeCalDuration in routes)
                 //{
-                    
+
                 //}
                 IEnumerable<DateTimeRange> currentRanges =
                 from routine in currentRouteRoutines
@@ -620,7 +623,8 @@ namespace ViGo.Services
             }
         }
 
-        private async Task<bool> HasBooking(Guid routeId, CancellationToken cancellationToken)
+        private async Task<Booking?> HasBooking(Guid routeId,
+            CancellationToken cancellationToken)
         {
             Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
 
@@ -629,7 +633,7 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-            Guid? checkRouteId = routeId;
+            Guid checkRouteId = routeId;
             if (route.Type == RouteType.ROUND_TRIP
                 && !route.RoundTripRouteId.HasValue)
             {
@@ -641,9 +645,26 @@ namespace ViGo.Services
                 checkRouteId = mainRoute.Id;
             }
 
-            IEnumerable<Booking> bookings = await work.Bookings.GetAllAsync(query => query.Where(
-                    b => b.CustomerRouteId.Equals(checkRouteId)), cancellationToken: cancellationToken);
-            return bookings.Any();
+            Booking? booking = await work.Bookings.GetAsync(
+                    b => b.CustomerRouteId.Equals(checkRouteId)
+                    && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
+
+            return booking;
+            //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+            //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+            //    .GetAllAsync(query => query.Where(
+            //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
+
+            //return bookingDetails.Any(d => d.DriverId.HasValue);
+        }
+
+        private async Task<bool> HasDriver(Guid bookingId, CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => d.BookingId.Equals(bookingId)),
+                    cancellationToken: cancellationToken);
+            return bookingDetails.Any(d => d.DriverId.HasValue);
         }
         #endregion
     }
