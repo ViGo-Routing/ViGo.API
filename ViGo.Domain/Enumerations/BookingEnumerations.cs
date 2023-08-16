@@ -43,4 +43,10 @@ namespace ViGo.Domain.Enumerations
         ONE_WAY = 0,
         ROUND_TRIP = 1
     }
+
+    public enum BookingDetailType : short
+    {
+        MAIN_ROUTE = 0,
+        ROUND_TRIP_ROUTE = 1
+    }
 }

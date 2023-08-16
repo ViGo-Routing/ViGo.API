@@ -35,6 +35,7 @@ namespace ViGo.Domain
         public short? Rate { get; set; }
         public string? Feedback { get; set; }
         public BookingDetailStatus Status { get; set; }
+        public BookingDetailType Type { get; set; } = BookingDetailType.MAIN_ROUTE;
         public Guid? CanceledUserId { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }

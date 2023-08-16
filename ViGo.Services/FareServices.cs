@@ -58,19 +58,30 @@ namespace ViGo.Services
         public async Task<FareCalculateResponseModel> CalculateFareBasedOnDistance(
             FareCalculateRequestModel fareModel, CancellationToken cancellationToken)
         {
-            if (fareModel.TripType == BookingType.ROUND_TRIP && fareModel.RoundTripBeginTime is null)
+            if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
-                throw new ApplicationException("Thời gian cho chuyến đi khứ hồi chưa được thiết lập!!!");
+                if (fareModel.RoundTripBeginTime is null)
+                {
+                    throw new ApplicationException("Thời gian cho chuyến đi khứ hồi chưa được thiết lập!!!");
+
+                }
+
+                if (fareModel.TotalNumberOfTickets % 2 != 0)
+                {
+                    throw new ApplicationException("Tổng số chuyến đi không phù hợp cho hành trình khứ hồi!!");
+                }
             }
 
-            Fare? fare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(fareModel.VehicleTypeId));
+            Fare? fare = await work.Fares.GetAsync(
+                f => f.VehicleTypeId.Equals(fareModel.VehicleTypeId),
+                cancellationToken: cancellationToken);
             if (fare is null)
             {
                 throw new ApplicationException("Loại phương tiện chưa được cấu hình chính sách tính giá!");
             }
             IEnumerable<FarePolicy> farePolicies = await work.FarePolicies
                 .GetAllAsync(query => query.Where(
-                    fp => fp.FareId.Equals(fare.Id)));
+                    fp => fp.FareId.Equals(fare.Id)), cancellationToken: cancellationToken);
 
             FareForCalculationModel fareCalculationModel = new FareForCalculationModel(fare, farePolicies.ToList());
 
@@ -80,18 +91,23 @@ namespace ViGo.Services
                 FinalFare = 0,
                 NumberTicketsDiscount = 0,
                 OriginalFare = 0,
-                RouteTypeDiscount = 0
+                RoutineTypeDiscount = 0,
+                RoundTripOriginalFare = 0,
+                RoundTripAdditionalFare = 0,
+                RoundTripFinalFare = 0
             };
 
             if (fareModel.Distance <= fareCalculationModel.MinimumBaseDistance)
             {
                 responseModel.OriginalFare = fareCalculationModel.MinimumBasePrice;
+                responseModel.RoundTripOriginalFare = fareCalculationModel.MinimumBasePrice;
                 //responseModel.FinalFare = fareCalculationModel.MinimumBasePrice;
             }
             else
             {
                 // distance > fare.MinimumBaseDistance
                 responseModel.OriginalFare = fareCalculationModel.MinimumBasePrice;
+                //responseModel.RoundTripOriginalFare = fareCalculationModel.MinimumBasePrice;
                 //responseModel.FinalFare = fareCalculationModel.MinimumBasePrice;
 
                 int policyCount = fareCalculationModel.FarePolicies.Count;
@@ -105,6 +121,7 @@ namespace ViGo.Services
                 else if (policyDistanceIndex == 0)
                 {
                     responseModel.OriginalFare += subDistance * fareCalculationModel.FarePolicies[policyDistanceIndex].PricePerKm.Value;
+                    //responseModel.RoundTripOriginalFare += subDistance * fareCalculationModel.FarePolicies[policyDistanceIndex].PricePerKm.Value;
                     //responseModel.FinalFare += subDistance * fareCalculationModel.FarePolicies[policyDistanceIndex].PricePerKm.Value;
                 }
                 //else if (policyDistanceIndex == policyCount - 1)
@@ -156,7 +173,9 @@ namespace ViGo.Services
 
             if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
-                responseModel.OriginalFare *= 2;
+                //responseModel.OriginalFare *= 2;
+                responseModel.RoundTripOriginalFare = responseModel.OriginalFare;
+                responseModel.RoundTripFinalFare = responseModel.FinalFare;
             }
 
             //responseModel.FinalFare = responseModel.OriginalFare;
@@ -166,7 +185,7 @@ namespace ViGo.Services
             if (IsNightTrip(fareModel.BeginTime, endTime))
             {
                 // Additional fare
-                VehicleType? vehicleType = await work.VehicleTypes.GetAsync(fareModel.VehicleTypeId, 
+                VehicleType? vehicleType = await work.VehicleTypes.GetAsync(fareModel.VehicleTypeId,
                     cancellationToken: cancellationToken);
                 if (vehicleType is null)
                 {
@@ -177,7 +196,7 @@ namespace ViGo.Services
                 {
                     case VehicleSubType.VI_RIDE:
                         settingNightTrip = await work.Settings.GetAsync(
-                            s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike_Key), 
+                            s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike_Key),
                             cancellationToken: cancellationToken);
                         break;
                     case VehicleSubType.VI_CAR:
@@ -194,9 +213,10 @@ namespace ViGo.Services
                     //responseModel.OriginalFare += responseModel.AdditionalFare;
                     //responseModel.FinalFare += responseModel.AdditionalFare;
                 }
-                
+
             }
 
+            // Round Trip
             if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
                 TimeSpan roundTripEndTimeSpan = DateTimeUtilities.CalculateTripEndTime(
@@ -231,7 +251,7 @@ namespace ViGo.Services
                     }
                     if (settingNightTrip != null)
                     {
-                        responseModel.AdditionalFare += double.Parse(settingNightTrip.Value);
+                        responseModel.RoundTripAdditionalFare += double.Parse(settingNightTrip.Value);
 
                         //responseModel.OriginalFare += responseModel.AdditionalFare;
                         //responseModel.FinalFare += responseModel.AdditionalFare;
@@ -251,12 +271,14 @@ namespace ViGo.Services
                 settingTotalTicket = await work.Settings.GetAsync(
                             s => s.Key.Equals(SettingKeys.TicketsDiscount_50_Key),
                             cancellationToken: cancellationToken);
-            } else if (fareModel.TotalNumberOfTickets >= 25)
+            }
+            else if (fareModel.TotalNumberOfTickets >= 25)
             {
                 settingTotalTicket = await work.Settings.GetAsync(
                             s => s.Key.Equals(SettingKeys.TicketsDiscount_25_Key),
                             cancellationToken: cancellationToken);
-            } else if (fareModel.TotalNumberOfTickets >= 10)
+            }
+            else if (fareModel.TotalNumberOfTickets >= 10)
             {
                 settingTotalTicket = await work.Settings.GetAsync(
                             s => s.Key.Equals(SettingKeys.TicketsDiscount_10_Key),
@@ -269,13 +291,38 @@ namespace ViGo.Services
                     responseModel.OriginalFare * discountPercent);
 
                 //responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
+
+                if (fareModel.TripType == BookingType.ROUND_TRIP)
+                {
+                    responseModel.RoundTripNumberTicketsDiscount = FareUtilities.RoundToThousands(
+                        responseModel.RoundTripOriginalFare * discountPercent);
+                }
             }
 
             //double finalFareEachTrip = FareUtilities.RoundToThousands(responseModel.FinalFare / fareModel.TotalNumberOfTickets);
-            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare) * fareModel.TotalNumberOfTickets;
-            responseModel.NumberTicketsDiscount *= fareModel.TotalNumberOfTickets;
-            responseModel.AdditionalFare *= fareModel.TotalNumberOfTickets;
+            int totalTickets = 0;
+            if (fareModel.TripType == BookingType.ONE_WAY)
+            {
+                totalTickets = fareModel.TotalNumberOfTickets;
+            } else
+            {
+                totalTickets = fareModel.TotalNumberOfTickets / 2;
+            }
+
+            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare) * totalTickets;
+            responseModel.NumberTicketsDiscount *= totalTickets;
+            responseModel.AdditionalFare *= totalTickets;
             responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare - responseModel.NumberTicketsDiscount;
+
+            if (fareModel.TripType == BookingType.ROUND_TRIP)
+            {
+                responseModel.RoundTripOriginalFare = FareUtilities.RoundToThousands(
+                    responseModel.RoundTripOriginalFare) * totalTickets;
+                responseModel.RoundTripNumberTicketsDiscount *= totalTickets;
+                responseModel.RoundTripAdditionalFare *= totalTickets;
+                responseModel.RoundTripFinalFare = responseModel.RoundTripOriginalFare 
+                    + responseModel.RoundTripAdditionalFare - responseModel.RoundTripNumberTicketsDiscount;
+            }
 
             //responseModel.FinalFare = FareUtilities.RoundToThousands(responseModel.FinalFare);
 
@@ -340,7 +387,7 @@ namespace ViGo.Services
                     PricePerKm = policy.PricePerKm
                 });
             }
-            IsValidPolicies(model.FarePolicies, fare, 
+            IsValidPolicies(model.FarePolicies, fare,
                 cancellationToken: cancellationToken);
 
             await work.FarePolicies.InsertAsync(farePolicies,
@@ -352,7 +399,7 @@ namespace ViGo.Services
                 from policy in farePolicies
                 select new FarePolicyViewModel(policy);
             FareViewModel fareViewModel = new FareViewModel(fare,
-                new VehicleTypeViewModel(vehicleType), 
+                new VehicleTypeViewModel(vehicleType),
                 farePolicyViewModels.ToList());
             return fareViewModel;
         }
@@ -399,7 +446,7 @@ namespace ViGo.Services
                 throw new ApplicationException("Cấu hình giá không tồn tại!");
             }
 
-            VehicleType vehicleType = await work.VehicleTypes.GetAsync(fare.VehicleTypeId, 
+            VehicleType vehicleType = await work.VehicleTypes.GetAsync(fare.VehicleTypeId,
                 cancellationToken: cancellationToken);
 
             IEnumerable<FarePolicy> farePolicies = await work.FarePolicies.GetAllAsync(
@@ -412,7 +459,7 @@ namespace ViGo.Services
 
         public async Task<FareViewModel> GetVehicleTypeFareAsync(Guid vehicleTypeId, CancellationToken cancellationToken)
         {
-            Fare? fare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(vehicleTypeId), 
+            Fare? fare = await work.Fares.GetAsync(f => f.VehicleTypeId.Equals(vehicleTypeId),
                 cancellationToken: cancellationToken);
             if (fare is null)
             {
@@ -493,7 +540,7 @@ namespace ViGo.Services
                 // Delete current policies to insert the new ones
                 foreach (FarePolicy currentPolicy in currentPolicies)
                 {
-                    await work.FarePolicies.DeleteAsync(currentPolicy, 
+                    await work.FarePolicies.DeleteAsync(currentPolicy,
                         isSoftDelete: false,
                         cancellationToken: cancellationToken);
                 }
@@ -617,7 +664,7 @@ namespace ViGo.Services
             {
                 throw new ApplicationException("Khoảng cách tối thiểu phải lớn hơn 0!");
             }
-            if (farePolicy.MaxDistance.HasValue 
+            if (farePolicy.MaxDistance.HasValue
                 && farePolicy.MaxDistance.Value <= 0)
             {
                 throw new ApplicationException("Khoảng cách tối đa phải lớn hơn 0!");
@@ -635,11 +682,11 @@ namespace ViGo.Services
                         (farePolicy.MaxDistance.Value, farePolicy.MinDistance);
                 }
             }
-            
+
         }
 
         private void IsValidPolicies(IEnumerable<FarePolicyListItemModel> farePolicies,
-            Fare fare, bool isUpdate = true, 
+            Fare fare, bool isUpdate = true,
             CancellationToken cancellationToken = default)
         {
             if (!farePolicies.Any())
@@ -686,7 +733,7 @@ namespace ViGo.Services
             {
                 FareDistanceRange current = fareDistanceRanges[i];
                 FareDistanceRange next = fareDistanceRanges[i + 1];
-                
+
                 //if (!current.MaxDistance.HasValue)
                 //{
                 //    throw new ApplicationException("Chính sách giá không phù hợp! Chỉ được có một chính sách " +
@@ -705,10 +752,10 @@ namespace ViGo.Services
                 current.IsOverlap(next,
                     $"Hai chính sách giá bị trùng lặp nhau! " +
                     $"Lịch trình 1: " +
-                        (current.MaxDistance.HasValue ? 
-                            $"từ {current.MinDistance} km đến {current.MaxDistance} km." 
-                            : $"từ {current.MinDistance} km trở lên.") + 
-                    $"\nLịch trình 2: " + 
+                        (current.MaxDistance.HasValue ?
+                            $"từ {current.MinDistance} km đến {current.MaxDistance} km."
+                            : $"từ {current.MinDistance} km trở lên.") +
+                    $"\nLịch trình 2: " +
                         (next.MaxDistance.HasValue ?
                             $"từ {next.MinDistance} km đến {next.MaxDistance} km."
                             : $"từ {next.MinDistance} km trờ lên."));

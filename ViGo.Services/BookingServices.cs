@@ -12,6 +12,8 @@ using ViGo.Models.Bookings;
 using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Models.RouteRoutines;
+using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
@@ -255,6 +257,12 @@ namespace ViGo.Services
                     roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
                         cancellationToken: cancellationToken);
                 }
+
+                if (model.RoundTripTotalPrice is null || model.RoundTripTotalPrice.Value <= 0 ||
+                    model.RoundTripTotalPrice >= model.TotalPrice)
+                {
+                    throw new ApplicationException("Tổng giá tiền hành trình khứ hồi không hợp lệ!!");
+                }
             }
 
             VehicleType vehicleType = await work.VehicleTypes
@@ -322,8 +330,10 @@ namespace ViGo.Services
 
             IEnumerable<Booking> currentBookings = await
                 work.Bookings.GetAllAsync(query => query.Where(
-                    b => b.CustomerRouteId.Equals(model.CustomerRouteId)),
+                    b => b.CustomerId.Equals(model.CustomerId)
+                    && b.Status == BookingStatus.CONFIRMED),
                     cancellationToken: cancellationToken);
+
             foreach (Booking currentBooking in currentBookings)
             {
                 DateTimeRange currentRange = new DateTimeRange(
@@ -345,9 +355,11 @@ namespace ViGo.Services
                 throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
                     "của chuyến đi đã được thiết lập!!");
             }
+
+            IEnumerable<RouteRoutine> roundTripRoutines = new List<RouteRoutine>();
             if (roundTrip != null)
             {
-                IEnumerable<RouteRoutine> roundTripRoutines = await work.RouteRoutines.GetAllAsync(
+                roundTripRoutines = await work.RouteRoutines.GetAllAsync(
                     query => query.Where(r => r.RouteId.Equals(roundTrip.Id)
                     && r.RoutineDate >= model.StartDate
                     && r.RoutineDate <= model.EndDate), cancellationToken: cancellationToken);
@@ -357,10 +369,10 @@ namespace ViGo.Services
                     throw new ApplicationException("Không có lịch trình nào của chuyến về thích hợp với thời gian " +
                     "của chuyến đi đã được thiết lập!!");
                 }
-                routeRoutines = routeRoutines.Concat(roundTripRoutines);
+                //routeRoutines = routeRoutines.Concat(roundTripRoutines);
             }
 
-            int bookingDetailCount = routeRoutines.Count();
+            int bookingDetailCount = routeRoutines.Count() + roundTripRoutines.Count();
 
             //if (model.Type == BookingType.ROUND_TRIP)
             //{
@@ -392,6 +404,9 @@ namespace ViGo.Services
                 Distance = model.Distance,
                 PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
+                Type = route.Type == RouteType.ONE_WAY
+                    ? BookingType.ONE_WAY
+                    : BookingType.ROUND_TRIP,
                 //Type = model.Type,
                 //Status = BookingStatus.DRAFT // TODO Code
                 Status = BookingStatus.CONFIRMED
@@ -410,38 +425,38 @@ namespace ViGo.Services
 
             //if (customerWallet.Balance >= model.TotalPrice)
             //{
-                //booking.Status = BookingStatus.CONFIRMED;
-                WalletTransaction customerTransaction = new WalletTransaction
-                {
-                    WalletId = customerWallet.Id,
-                    Amount = model.TotalPrice,
-                    BookingId = booking.Id,
-                    PaymentMethod = PaymentMethod.WALLET,
-                    Type = WalletTransactionType.BOOKING_PAID,
-                    Status = WalletTransactionStatus.SUCCESSFULL,
-                };
-                customerWallet.Balance -= model.TotalPrice;
+            //booking.Status = BookingStatus.CONFIRMED;
+            WalletTransaction customerTransaction = new WalletTransaction
+            {
+                WalletId = customerWallet.Id,
+                Amount = model.TotalPrice,
+                BookingId = booking.Id,
+                PaymentMethod = PaymentMethod.WALLET,
+                Type = WalletTransactionType.BOOKING_PAID,
+                Status = WalletTransactionStatus.SUCCESSFULL,
+            };
+            customerWallet.Balance -= model.TotalPrice;
 
-                Wallet systemWallet = await work.Wallets.GetAsync(
-                    w => w.Type == WalletType.SYSTEM,
-                    cancellationToken: cancellationToken);
-                WalletTransaction systemTransaction = new WalletTransaction
-                {
-                    WalletId = systemWallet.Id,
-                    Amount = model.TotalPrice,
-                    BookingId = booking.Id,
-                    PaymentMethod = PaymentMethod.WALLET,
-                    Type = WalletTransactionType.BOOKING_PAID,
-                    Status = WalletTransactionStatus.SUCCESSFULL
-                };
+            Wallet systemWallet = await work.Wallets.GetAsync(
+                w => w.Type == WalletType.SYSTEM,
+                cancellationToken: cancellationToken);
+            WalletTransaction systemTransaction = new WalletTransaction
+            {
+                WalletId = systemWallet.Id,
+                Amount = model.TotalPrice,
+                BookingId = booking.Id,
+                PaymentMethod = PaymentMethod.WALLET,
+                Type = WalletTransactionType.BOOKING_PAID,
+                Status = WalletTransactionStatus.SUCCESSFULL
+            };
 
-                systemWallet.Balance += model.TotalPrice;
+            systemWallet.Balance += model.TotalPrice;
 
-                await work.WalletTransactions.InsertAsync(customerTransaction, cancellationToken: cancellationToken);
-                await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+            await work.WalletTransactions.InsertAsync(customerTransaction, cancellationToken: cancellationToken);
+            await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
 
-                await work.Wallets.UpdateAsync(customerWallet);
-                await work.Wallets.UpdateAsync(systemWallet);
+            await work.Wallets.UpdateAsync(customerWallet);
+            await work.Wallets.UpdateAsync(systemWallet);
 
             //}
 
@@ -451,14 +466,24 @@ namespace ViGo.Services
             //}
 
             // Generate BookingDetails
+            double mainTripPrice = model.TotalPrice;
+            double roundTripPrice = 0;
+            if (booking.Type == BookingType.ROUND_TRIP)
+            {
+                roundTripPrice = model.RoundTripTotalPrice.Value;
+                mainTripPrice = model.TotalPrice - model.RoundTripTotalPrice.Value;
+            }
 
-            double priceEachTrip = Math.Round(booking.TotalPrice.Value / bookingDetailCount, 0);
-            double priceAfterDiscountEachTrip = Math.Round(booking.PriceAfterDiscount.Value / bookingDetailCount, 0);
+            double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+            double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+
+            double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0);
 
             FareServices fareServices = new FareServices(work, _logger);
 
             foreach (RouteRoutine routeRoutine in routeRoutines)
             {
+                // Main Route
                 BookingDetail bookingDetail = new BookingDetail
                 {
                     BookingId = booking.Id,
@@ -470,7 +495,8 @@ namespace ViGo.Services
                     EndStationId = route.EndStationId,
                     CustomerDesiredPickupTime = routeRoutine.PickupTime,
                     DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
-                    Status = BookingDetailStatus.PENDING_ASSIGN
+                    Status = BookingDetailStatus.PENDING_ASSIGN,
+                    Type = BookingDetailType.MAIN_ROUTE
                 };
                 await work.BookingDetails.InsertAsync(bookingDetail,
                     cancellationToken: cancellationToken);
@@ -495,6 +521,31 @@ namespace ViGo.Services
                 //}
             }
 
+            if (roundTripRoutines.Any())
+            {
+                foreach (RouteRoutine routine in roundTripRoutines)
+                {
+                    // RoundTrip Route
+                    BookingDetail bookingDetail = new BookingDetail
+                    {
+                        BookingId = booking.Id,
+                        Date = routine.RoutineDate,
+                        Price = priceEachRoundTrip,
+                        PriceAfterDiscount = priceEachRoundTrip,
+                        CustomerRouteRoutineId = routine.Id,
+                        StartStationId = route.StartStationId,
+                        EndStationId = route.EndStationId,
+                        CustomerDesiredPickupTime = routine.PickupTime,
+                        DriverWage = await fareServices.CalculateDriverWage(priceEachRoundTrip, cancellationToken),
+                        Status = BookingDetailStatus.PENDING_ASSIGN,
+                        Type = BookingDetailType.ROUND_TRIP_ROUTE
+                    };
+                    await work.BookingDetails.InsertAsync(bookingDetail,
+                        cancellationToken: cancellationToken);
+                }
+            }
+
+
             if (promotion != null)
             {
                 promotion.TotalUsage += 1;
@@ -503,6 +554,382 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
             return booking;
+        }
+
+        public async Task<Booking> UpdateBookingAsync(RouteBookingUpdateModel routeBookingUpdateModel,
+            CancellationToken cancellationToken)
+        {
+            #region Route Validation
+            Route route = await work.Routes.GetAsync(routeBookingUpdateModel.RouteId, cancellationToken: cancellationToken);
+            if (route == null)
+            {
+                throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
+            }
+
+            if (route.Type == RouteType.ROUND_TRIP
+                && !route.RoundTripRouteId.HasValue)
+            {
+                // The roundtrip route
+                throw new ApplicationException("Vui lòng cập nhật thông tin của tuyến đường chính!");
+            }
+
+            Booking? booking = await work.Bookings.GetAsync(
+                    b => b.Id.Equals(routeBookingUpdateModel.BookingUpdate.BookingId)
+                    && b.CustomerRouteId.Equals(routeBookingUpdateModel.RouteId)
+                    && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
+            if (booking is null)
+            {
+                throw new ApplicationException("Thông tin tuyến đường và đặt lịch không phù hợp! Vui lòng kiểm tra lại!");
+            }
+            if (routeBookingUpdateModel.RouteRoutines is null || routeBookingUpdateModel.RouteRoutines.Count == 0)
+            {
+                throw new ApplicationException("Hành trình đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+            }
+            if (routeBookingUpdateModel.Type == RouteType.ROUND_TRIP)
+            {
+                if (routeBookingUpdateModel.RoundTripRoutines is null || routeBookingUpdateModel.RoundTripRoutines.Count == 0)
+                {
+                    throw new ApplicationException("Hành trình khứ hồi đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+                }
+
+                IsValidRoundTripRoutines(routeBookingUpdateModel.RouteRoutines,
+                    routeBookingUpdateModel.RoundTripRoutines);
+            }
+
+            #endregion
+            #region Validation Booking
+            BookingUpdateModel bookingUpdate = routeBookingUpdateModel.BookingUpdate;
+            if (bookingUpdate.Distance <= 0)
+            {
+                throw new ApplicationException("Khoảng cách phải lớn hơn 0!");
+            }
+            if (bookingUpdate.Duration <= 0)
+            {
+                throw new ApplicationException("Thời gian di chuyển phải lớn hơn 0!");
+            }
+
+            Route? roundTrip = null;
+            if (route.Type == RouteType.ROUND_TRIP)
+            {
+                roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
+                    cancellationToken: cancellationToken);
+
+                if (bookingUpdate.RoundTripTotalPrice is null || bookingUpdate.RoundTripTotalPrice.Value <= 0 ||
+                    bookingUpdate.RoundTripTotalPrice >= bookingUpdate.TotalPrice)
+                {
+                    throw new ApplicationException("Tổng giá tiền hành trình khứ hồi không hợp lệ!!");
+                }
+            }
+
+            //VehicleType vehicleType = await work.VehicleTypes
+            //    .GetAsync(bookingUpdate.VehicleTypeId, cancellationToken: cancellationToken);
+            //if (vehicleType is null)
+            //{
+            //    throw new ApplicationException("Loại phương tiện di chuyển không hợp lệ!!");
+            //}
+
+            DateTimeRange newRange = new DateTimeRange(
+                bookingUpdate.StartDate, bookingUpdate.EndDate);
+
+            IEnumerable<Booking> currentBookings = await
+                work.Bookings.GetAllAsync(query => query.Where(
+                    b => b.CustomerId.Equals(booking.CustomerId)
+                    && b.Status == BookingStatus.CONFIRMED
+                    && !b.Id.Equals(booking.Id)), // Except for the updated booking
+                    cancellationToken: cancellationToken);
+            foreach (Booking currentBooking in currentBookings)
+            {
+                DateTimeRange currentRange = new DateTimeRange(
+                    currentBooking.StartDate, currentBooking.EndDate);
+                newRange.IsOverlap(currentRange, $"Khoảng thời gian bắt đầu và kết thúc " +
+                    $"của Booking ({newRange.StartDateTime.Date} - {newRange.EndDateTime.Date}) " +
+                    $"đã bị trùng lặp với một Booking khác cho cùng tuyến đường này " +
+                    $"({currentRange.StartDateTime.Date} - {currentRange.EndDateTime.Date}");
+            }
+
+            #endregion
+
+            // TODO Code
+            // Booking information to update is valid
+            // Update Route
+            using var transaction = await work.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                // Delete current BookingDetails
+                IEnumerable<BookingDetail> currentDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.BookingId.Equals(booking.Id)), cancellationToken: cancellationToken);
+                foreach (BookingDetail detail in currentDetails)
+                {
+                    await work.BookingDetails.DeleteAsync(detail, false,
+                         cancellationToken);
+                }
+
+                RouteServices routeServices = new RouteServices(work, _logger);
+                RouteUpdateModel routeUpdateModel = new RouteUpdateModel()
+                {
+                    Id = routeBookingUpdateModel.RouteId,
+                    UserId = routeBookingUpdateModel.UserId,
+                    Name = routeBookingUpdateModel.Name,
+                    Distance = routeBookingUpdateModel.Distance,
+                    Duration = routeBookingUpdateModel.Duration,
+                    Status = routeBookingUpdateModel.Status,
+                    RoutineType = routeBookingUpdateModel.RoutineType,
+                    Type = routeBookingUpdateModel.Type,
+                    StartStation = routeBookingUpdateModel.StartStation,
+                    EndStation = routeBookingUpdateModel.EndStation
+                };
+
+                Route updatedRoute = await routeServices.UpdateRouteAsync(
+                    routeUpdateModel,
+                    isCalledFromBooking: true,
+                    cancellationToken);
+
+                RouteRoutineServices routeRoutineServices = new RouteRoutineServices(work, _logger);
+
+                RouteRoutineUpdateModel routeRoutineUpdateModel = new RouteRoutineUpdateModel()
+                {
+                    RouteId = routeBookingUpdateModel.RouteId,
+                    RouteRoutines = routeBookingUpdateModel.RouteRoutines
+                };
+
+                IEnumerable<RouteRoutine> updatedRoutines = await routeRoutineServices
+                    .UpdateRouteRoutinesAsync(routeRoutineUpdateModel, false, cancellationToken);
+
+                RouteRoutineUpdateModel? roundTripRoutineUpdateModel = null;
+                IEnumerable<RouteRoutine>? updatedRoundTripRoutines = null;
+
+                if (roundTrip != null)
+                {
+                    roundTripRoutineUpdateModel = new RouteRoutineUpdateModel()
+                    {
+                        RouteId = roundTrip.Id,
+                        RouteRoutines = routeBookingUpdateModel.RoundTripRoutines
+                    };
+                    updatedRoundTripRoutines = await routeRoutineServices
+                        .UpdateRouteRoutinesAsync(roundTripRoutineUpdateModel, false, cancellationToken);
+                }
+
+                IEnumerable<RouteRoutine> routeRoutines = await
+                    work.RouteRoutines.GetAllAsync(query => query.Where(
+                        r => r.RouteId.Equals(route.Id)
+                        && r.RoutineDate >= bookingUpdate.StartDate
+                        && r.RoutineDate <= bookingUpdate.EndDate), cancellationToken: cancellationToken);
+
+                if (!routeRoutines.Any())
+                {
+                    throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
+                        "của chuyến đi đã được thiết lập!!");
+                }
+
+                IEnumerable<RouteRoutine> roundTripRoutines = new List<RouteRoutine>();
+                if (roundTrip != null)
+                {
+                    roundTripRoutines = await work.RouteRoutines.GetAllAsync(
+                        query => query.Where(r => r.RouteId.Equals(roundTrip.Id)
+                        && r.RoutineDate >= bookingUpdate.StartDate
+                        && r.RoutineDate <= bookingUpdate.EndDate), cancellationToken: cancellationToken);
+
+                    if (!roundTripRoutines.Any())
+                    {
+                        throw new ApplicationException("Không có lịch trình nào của chuyến về thích hợp với thời gian " +
+                        "của chuyến đi đã được thiết lập!!");
+                    }
+                    //routeRoutines = routeRoutines.Concat(roundTripRoutines);
+                }
+
+                int bookingDetailCount = routeRoutines.Count() + roundTripRoutines.Count();
+
+                //if (model.Type == BookingType.ROUND_TRIP)
+                //{
+                //    bookingDetailCount *= 2;
+                //}
+
+                if (bookingDetailCount == 0)
+                {
+                    throw new ApplicationException("Không có lịch trình nào thích hợp với thời gian " +
+                        "của chuyến đi đã được thiết lập!!");
+                }
+
+                double oldTotalPrice = booking.TotalPrice.Value;
+                double newTotalPrice = bookingUpdate.TotalPrice;
+                double difference = newTotalPrice - oldTotalPrice;
+                double differenceAmount = Math.Abs(difference);
+
+                booking.StartDate = bookingUpdate.StartDate;
+                booking.EndDate = bookingUpdate.EndDate;
+                booking.TotalPrice = bookingUpdate.TotalPrice;
+                booking.PriceAfterDiscount = bookingUpdate.PriceAfterDiscount;
+                booking.IsShared = bookingUpdate.IsShared;
+                booking.Duration = Math.Round(bookingUpdate.Duration, 2);
+                booking.Distance = bookingUpdate.Distance;
+                booking.Type = route.Type == RouteType.ONE_WAY ?
+                    BookingType.ONE_WAY : BookingType.ROUND_TRIP;
+
+                await work.Bookings.UpdateAsync(booking);
+
+                if (difference != 0)
+                {
+
+                    Wallet customerWallet = await work.Wallets.GetAsync(
+                        w => w.UserId.Equals(booking.CustomerId), cancellationToken: cancellationToken);
+
+                    if (difference > 0 && customerWallet.Balance < difference)
+                    {
+                        throw new ApplicationException("Số dư ví không đủ để thực hiện chỉnh sửa hành trình! Vui lòng nạp thêm tiền");
+                    }
+
+                    //if (customerWallet.Balance >= model.TotalPrice)
+                    //{
+                    //booking.Status = BookingStatus.CONFIRMED;
+                    WalletTransaction customerTransaction = new WalletTransaction
+                    {
+                        WalletId = customerWallet.Id,
+                        Amount = differenceAmount,
+                        BookingId = booking.Id,
+                        PaymentMethod = PaymentMethod.WALLET,
+                        Type = difference > 0 ? WalletTransactionType.BOOKING_PAID : WalletTransactionType.BOOKING_REFUND,
+                        Status = WalletTransactionStatus.SUCCESSFULL,
+                    };
+                    if (difference > 0)
+                    {
+                        customerWallet.Balance -= differenceAmount;
+
+                    }
+                    else
+                    {
+                        // Refund
+                        customerWallet.Balance += differenceAmount;
+                    }
+
+
+                    Wallet systemWallet = await work.Wallets.GetAsync(
+                        w => w.Type == WalletType.SYSTEM,
+                        cancellationToken: cancellationToken);
+                    WalletTransaction systemTransaction = new WalletTransaction
+                    {
+                        WalletId = systemWallet.Id,
+                        Amount = differenceAmount,
+                        BookingId = booking.Id,
+                        PaymentMethod = PaymentMethod.WALLET,
+                        Type = difference > 0 ? WalletTransactionType.BOOKING_PAID : WalletTransactionType.BOOKING_REFUND,
+                        Status = WalletTransactionStatus.SUCCESSFULL
+                    };
+
+                    if (difference > 0)
+                    {
+                        systemWallet.Balance += differenceAmount;
+                    }
+                    else
+                    {
+                        // Refund
+                        systemWallet.Balance -= differenceAmount;
+                    }
+
+                    await work.WalletTransactions.InsertAsync(customerTransaction, cancellationToken: cancellationToken);
+                    await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+
+                    await work.Wallets.UpdateAsync(customerWallet);
+                    await work.Wallets.UpdateAsync(systemWallet);
+                }
+
+                //}
+
+                //if ((await IsEnoughWalletBalanceToBook(model, cancellationToken)))
+                //{
+                //    booking.Status = BookingStatus.CONFIRMED;
+                //}
+
+                // Generate BookingDetails
+                double mainTripPrice = bookingUpdate.TotalPrice;
+                double roundTripPrice = 0;
+                if (booking.Type == BookingType.ROUND_TRIP)
+                {
+                    roundTripPrice = bookingUpdate.RoundTripTotalPrice.Value;
+                    mainTripPrice = bookingUpdate.TotalPrice - bookingUpdate.RoundTripTotalPrice.Value;
+                }
+
+                double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+                double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+
+                double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0);
+
+                FareServices fareServices = new FareServices(work, _logger);
+
+                foreach (RouteRoutine routeRoutine in routeRoutines)
+                {
+                    // Main Route
+                    BookingDetail bookingDetail = new BookingDetail
+                    {
+                        BookingId = booking.Id,
+                        Date = routeRoutine.RoutineDate,
+                        Price = priceEachTrip,
+                        PriceAfterDiscount = priceAfterDiscountEachTrip,
+                        CustomerRouteRoutineId = routeRoutine.Id,
+                        StartStationId = route.StartStationId,
+                        EndStationId = route.EndStationId,
+                        CustomerDesiredPickupTime = routeRoutine.PickupTime,
+                        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
+                        Status = BookingDetailStatus.PENDING_ASSIGN,
+                        Type = BookingDetailType.MAIN_ROUTE
+                    };
+                    await work.BookingDetails.InsertAsync(bookingDetail,
+                        cancellationToken: cancellationToken);
+
+                    //if (model.Type == BookingType.ROUND_TRIP)
+                    //{
+                    //    BookingDetail roundBookingDetail = new BookingDetail
+                    //    {
+                    //        BookingId = booking.Id,
+                    //        Date = routeRoutine.RoutineDate,
+                    //        Price = priceEachTrip,
+                    //        PriceAfterDiscount = priceAfterDiscountEachTrip,
+                    //        CustomerRouteRoutineId = routeRoutine.Id,
+                    //        StartStationId = route.EndStationId,
+                    //        EndStationId = route.StartStationId,
+                    //        DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
+                    //        CustomerDesiredPickupTime = model.CustomerRoundTripDesiredPickupTime.Value.ToTimeSpan(),
+                    //        Status = BookingDetailStatus.PENDING_ASSIGN
+                    //    };
+                    //    await work.BookingDetails.InsertAsync(bookingDetail,
+                    //        cancellationToken: cancellationToken);
+                    //}
+                }
+
+                if (roundTripRoutines.Any())
+                {
+                    foreach (RouteRoutine routine in roundTripRoutines)
+                    {
+                        // RoundTrip Route
+                        BookingDetail bookingDetail = new BookingDetail
+                        {
+                            BookingId = booking.Id,
+                            Date = routine.RoutineDate,
+                            Price = priceEachRoundTrip,
+                            PriceAfterDiscount = priceEachRoundTrip,
+                            CustomerRouteRoutineId = routine.Id,
+                            StartStationId = route.StartStationId,
+                            EndStationId = route.EndStationId,
+                            CustomerDesiredPickupTime = routine.PickupTime,
+                            DriverWage = await fareServices.CalculateDriverWage(priceEachRoundTrip, cancellationToken),
+                            Status = BookingDetailStatus.PENDING_ASSIGN,
+                            Type = BookingDetailType.ROUND_TRIP_ROUTE
+                        };
+                        await work.BookingDetails.InsertAsync(bookingDetail,
+                            cancellationToken: cancellationToken);
+                    }
+                }
+
+                await work.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return booking;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
         }
 
         public async Task<(Booking, Guid?, int, bool, IEnumerable<Guid>)> CancelBookingAsync(Guid bookingId,
@@ -853,7 +1280,7 @@ namespace ViGo.Services
                                 await work.Wallets.UpdateAsync(systemWallet);
                             }
                         }
-                        
+
                     }
 
                 }
@@ -1025,6 +1452,47 @@ namespace ViGo.Services
 
         //    return wallet.Balance >= totalPrice;
         //}
+        private void IsValidRoundTripRoutines(IList<RouteRoutineListItemModel> routines,
+            IList<RouteRoutineListItemModel> roundTripRoutines)
+        {
+            if (!routines.Any() || !roundTripRoutines.Any())
+            {
+                throw new ApplicationException("Dữ liệu lịch trình không hợp lệ!!");
+            }
+
+            if (roundTripRoutines.Count() != routines.Count)
+            {
+                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                    $"Tuyến đường chiều về có tổng cộng {roundTripRoutines.Count()} lịch trình, trong khi lịch trình " +
+                    $"cho tuyến đường chiều đi sắp được thiết lập có {routines.Count} lịch trình!");
+            }
+
+            foreach (RouteRoutineListItemModel roundTripRoutine in roundTripRoutines)
+            {
+                DateOnly routineDate = roundTripRoutine.RoutineDate;
+                var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
+                    ));
+
+                if (routine is null)
+                {
+                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
+                        $"lịch trình cho tuyến đường chiều đi cho ngày này!!");
+                }
+                DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
+                DateTime roundTripPickupDateTime = routineDate
+                    .ToDateTime(roundTripRoutine.PickupTime).AddMinutes(30);
+
+                if (pickupDateTime > roundTripPickupDateTime)
+                {
+                    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
+                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
+                        $"{roundTripRoutine.PickupTime} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
+                        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
+                }
+            }
+        }
         #endregion
     }
 }

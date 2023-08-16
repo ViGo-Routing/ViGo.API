@@ -23,8 +23,13 @@ namespace ViGo.Models.Fares
     {
         public double OriginalFare { get; set; }
         public double AdditionalFare { get; set; }
-        public double NumberTicketsDiscount { get; set; }
-        public double RouteTypeDiscount { get; set; }
         public double FinalFare { get; set; }
+        public double NumberTicketsDiscount { get; set; }
+
+        public double RoundTripOriginalFare { get; set; }
+        public double RoundTripAdditionalFare { get; set; }
+        public double RoundTripFinalFare { get; set; }
+        public double RoundTripNumberTicketsDiscount { get; set; }
+        public double RoutineTypeDiscount { get; set; }
     }
 }
