@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,23 +38,57 @@ namespace ViGo.Services
             HttpContext context,
             CancellationToken cancellationToken)
         {
-            IEnumerable<Booking> bookings =
-                await work.Bookings.GetAllAsync(
-                    query => query.Where(
-                        b =>
-                        (userId != null && userId.HasValue) ?
-                        b.CustomerId.Equals(userId.Value)
-                        : true), cancellationToken: cancellationToken);
+            if (!IdentityUtilities.IsAdmin())
+            {
+                userId = IdentityUtilities.GetCurrentUserId();
+            }
 
-            bookings = bookings.Where(
-                b =>
+            User? user = null;
+            if (userId.HasValue)
+            {
+                user = await work.Users.GetAsync(userId.Value, cancellationToken: cancellationToken);
+                if (user is null)
                 {
-                    return
-                    (!filters.MinStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) >= filters.MinStartDate.Value)
-                    && (!filters.MaxStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) <= filters.MaxStartDate.Value)
-                    && (!filters.MinEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MinEndDate.Value)
-                    && (!filters.MaxEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MaxEndDate.Value);
-                });
+                    throw new ApplicationException("Người dùng không tồn tại!!!");
+                }
+                if (user.Role != UserRole.CUSTOMER && user.Role != UserRole.DRIVER)
+                {
+                    throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
+                }
+            }
+
+            IEnumerable<Booking> bookings = new List<Booking>();
+
+            if (userId is null)
+            {
+                // Get All the Bookings
+                bookings = await work.Bookings.GetAllAsync(cancellationToken: cancellationToken);
+
+            } else if (user.Role == UserRole.CUSTOMER)
+            {
+                bookings = await work.Bookings.GetAllAsync(
+                    query => query.Where(b => b.CustomerId.Equals(user.Id)),
+                    cancellationToken: cancellationToken);
+
+            } else
+            {
+                // Driver
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(d => d.DriverId.HasValue &&
+                    d.DriverId.Value.Equals(user.Id)), cancellationToken: cancellationToken);
+                IEnumerable<Guid> bookingIds = bookingDetails.Select(d => d.BookingId);
+                bookings = await work.Bookings.GetAllAsync(query => query.Where(
+                    b => bookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+            }
+            //IEnumerable<Booking> bookings =
+            //    await work.Bookings.GetAllAsync(
+            //        query => query.Where(
+            //            b =>
+            //            (userId != null && userId.HasValue) ?
+            //            b.CustomerId.Equals(userId.Value)
+            //            : true), cancellationToken: cancellationToken);
+
+            bookings = FilterBookings(bookings, filters);
 
             bookings = bookings.Sort(sorting.OrderBy);
 
@@ -72,8 +107,8 @@ namespace ViGo.Services
                     u => customerIds.Contains(u.Id)),
                     cancellationToken: cancellationToken);
             IEnumerable<UserViewModel> userDtos =
-                from user in users
-                select new UserViewModel(user);
+                from userDto in users
+                select new UserViewModel(userDto);
 
             //IEnumerable<Guid> customerRouteIds = bookings.Select(b => b.CustomerRouteId).Distinct();
             //IEnumerable<Route> customerRoutes = await work.Routes.GetAllAsync(
@@ -116,6 +151,101 @@ namespace ViGo.Services
                     booking, customer, /*route,*/
                     //new StationViewModel(startStation, 1),
                     //new StationViewModel(endStation, 2),
+                    vehicleType
+                    );
+            //IEnumerable<BookingViewModel> dtos
+            //    = from booking in bookings
+            //      select new BookingViewModel(booking);
+
+            return dtos.ToPagedEnumerable(pagination.PageNumber,
+                pagination.PageSize, totalRecords, context);
+        }
+
+        public async Task<IPagedEnumerable<BookingViewModel>>
+            GetAvailableBookingsAsync(Guid driverId,
+            PaginationParameter pagination, BookingSortingParameters sorting,
+            BookingFilterParameters filters, HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                driverId = IdentityUtilities.GetCurrentUserId();
+            }
+
+            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
+            if (driver is null || driver.Role != UserRole.DRIVER)
+            {
+                throw new ApplicationException("Tài xế không tồn tại!!!");
+            }
+
+            // Get Available Booking Details
+            BookingDetailServices bookingDetailServices = new BookingDetailServices(work, _logger);
+            IPagedEnumerable<BookingDetailViewModel> availableBookingDetailModels
+                = await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(driverId,
+                new PaginationParameter(1, -1), new BookingDetailFilterParameters(),
+                context, cancellationToken);
+
+            IEnumerable<BookingDetailViewModel> availableBookingDetails = availableBookingDetailModels.Data;
+            IEnumerable<Guid> bookingIds = availableBookingDetails.Select(d => d.BookingId)
+                .Distinct();
+
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => bookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+
+            bookings = FilterBookings(bookings, filters);
+
+            bookings = bookings.Sort(sorting.OrderBy);
+
+            int totalRecords = bookings.Count();
+
+            bookings = bookings.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
+
+            IEnumerable<Guid> customerIds = bookings.Select(b => b.CustomerId).Distinct();
+
+            IEnumerable<User> users = await work.Users
+                .GetAllAsync(query => query.Where(
+                    u => customerIds.Contains(u.Id)),
+                    cancellationToken: cancellationToken);
+
+            IEnumerable<UserViewModel> userDtos =
+                from user in users
+                select new UserViewModel(user);
+
+            IEnumerable<Guid> customerRouteIds = bookings.Select(b => b.CustomerRouteId).Distinct();
+            IEnumerable<Route> customerRoutes = await work.Routes.GetAllAsync(
+                query => query.Where(
+                    r => customerRouteIds.Contains(r.Id)), cancellationToken: cancellationToken);
+
+            IEnumerable<Guid> stationIds =
+                customerRoutes.Select(rs => rs.StartStationId)
+                .Concat(customerRoutes.Select(r => r.EndStationId))
+                .Distinct();
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+
+            IEnumerable<Guid> vehicleTypeIds = bookings.Select(b => b.VehicleTypeId).Distinct();
+            IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes
+                .GetAllAsync(query => query.Where(
+                    v => vehicleTypeIds.Contains(v.Id)), cancellationToken: cancellationToken);
+
+            IEnumerable<BookingViewModel> dtos =
+                from booking in bookings
+                join customer in userDtos
+                    on booking.CustomerId equals customer.Id
+                join route in customerRoutes
+                    on booking.CustomerRouteId equals route.Id
+                join startStation in stations
+                    on route.StartStationId equals startStation.Id
+                join endStation in stations
+                    on route.EndStationId equals endStation.Id
+                join vehicleType in vehicleTypes
+                    on booking.VehicleTypeId equals vehicleType.Id
+                select new BookingViewModel(
+                    booking, customer, route,
+                    new StationViewModel(startStation),
+                    new StationViewModel(endStation),
                     vehicleType
                     );
             //IEnumerable<BookingViewModel> dtos
@@ -1499,6 +1629,22 @@ namespace ViGo.Services
                         $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
                 }
             }
+        }
+
+        private IEnumerable<Booking> FilterBookings(IEnumerable<Booking> bookings,
+            BookingFilterParameters filters)
+        {
+            bookings = bookings.Where(
+                b =>
+                {
+                    return
+                    (!filters.MinStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) >= filters.MinStartDate.Value)
+                    && (!filters.MaxStartDate.HasValue || DateOnly.FromDateTime(b.StartDate) <= filters.MaxStartDate.Value)
+                    && (!filters.MinEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MinEndDate.Value)
+                    && (!filters.MaxEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MaxEndDate.Value);
+                });
+
+            return bookings;
         }
         #endregion
     }

@@ -121,7 +121,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetUserBookingDetailsAsync(Guid userId, UserRole role,
+            GetUserBookingDetailsAsync(Guid userId,
             PaginationParameter pagination, BookingDetailSortingParameters sorting,
             BookingDetailFilterParameters filters,
             HttpContext context, CancellationToken cancellationToken)
@@ -131,19 +131,19 @@ namespace ViGo.Services
                 userId = IdentityUtilities.GetCurrentUserId();
             }
 
-            if (role != UserRole.CUSTOMER && role != UserRole.DRIVER)
-            {
-                throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
-            }
+            //if (role != UserRole.CUSTOMER && role != UserRole.DRIVER)
+            //{
+            //    throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
+            //}
 
             User user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
-            if (user is null || user.Role != role)
+            if (user is null)
             {
                 throw new ApplicationException("Người dùng không tồn tại!!!");
             }
 
             IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
-            if (role == UserRole.CUSTOMER)
+            if (user.Role == UserRole.CUSTOMER)
             {
                 IEnumerable<Booking> bookings = await work.Bookings
                     .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
@@ -155,7 +155,7 @@ namespace ViGo.Services
                     cancellationToken: cancellationToken);
 
             }
-            else if (role == UserRole.DRIVER)
+            else if (user.Role == UserRole.DRIVER)
             {
                 bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(

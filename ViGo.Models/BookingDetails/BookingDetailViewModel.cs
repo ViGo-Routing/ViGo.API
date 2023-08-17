@@ -17,7 +17,7 @@ namespace ViGo.Models.BookingDetails
     public class BookingDetailViewModel
     {
         public Guid Id { get; set; }
-        public Guid? BookingId { get; set; }
+        public Guid BookingId { get; set; }
         //public Guid? DriverId { get; set; }
         public UserViewModel? Driver { get; set; }
         //public Guid CustomerRouteId { get; set; }
@@ -25,9 +25,9 @@ namespace ViGo.Models.BookingDetails
         //public Guid? DriverRouteId { get; set; }
         //public RouteViewModel? DriverRoute { get; set; }
         public Guid CustomerRouteRoutineId { get; set; }
-        public RouteRoutineViewModel CustomerRouteRoutine { get; set; }
-        public StationViewModel StartStation { get; set; }
-        public StationViewModel EndStation { get; set; }
+        public RouteRoutineViewModel? CustomerRouteRoutine { get; set; }
+        public StationViewModel? StartStation { get; set; }
+        public StationViewModel? EndStation { get; set; }
         public TimeSpan CustomerDesiredPickupTime { get; set; }
         public DateTime? AssignedTime { get; set; }
         public DateTime Date { get; set; }

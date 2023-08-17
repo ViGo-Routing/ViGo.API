@@ -93,7 +93,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    driverId, UserRole.DRIVER, pagination, sorting, filters, HttpContext,
+                    driverId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -126,7 +126,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    customerId, UserRole.CUSTOMER, pagination, sorting, filters, HttpContext,
+                    customerId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
