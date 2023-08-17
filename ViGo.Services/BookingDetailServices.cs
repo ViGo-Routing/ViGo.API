@@ -121,7 +121,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetUserBookingDetailsAsync(Guid userId,
+            GetUserBookingDetailsAsync(Guid userId, Guid? bookingId,
             PaginationParameter pagination, BookingDetailSortingParameters sorting,
             BookingDetailFilterParameters filters,
             HttpContext context, CancellationToken cancellationToken)
@@ -145,14 +145,24 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
             if (user.Role == UserRole.CUSTOMER)
             {
-                IEnumerable<Booking> bookings = await work.Bookings
+                if (bookingId.HasValue)
+                {
+                    bookingDetails = await work.BookingDetails.GetAllAsync(
+                        query => query.Where(d => d.BookingId.Equals(bookingId.Value)),
+                        cancellationToken: cancellationToken);
+
+                } else
+                {
+                    IEnumerable<Booking> bookings = await work.Bookings
                     .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
                     cancellationToken: cancellationToken);
-                IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+                    IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
 
-                bookingDetails = await work.BookingDetails.GetAllAsync(
-                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
-                    cancellationToken: cancellationToken);
+                    bookingDetails = await work.BookingDetails.GetAllAsync(
+                        query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                        cancellationToken: cancellationToken);
+                }
+                
 
             }
             else if (user.Role == UserRole.DRIVER)
@@ -160,7 +170,8 @@ namespace ViGo.Services
                 bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
-                    bd.DriverId.Value.Equals(userId)), cancellationToken: cancellationToken);
+                    bd.DriverId.Value.Equals(userId)
+                    && (bookingId.HasValue ? bd.BookingId.Equals(bookingId.Value) : true)), cancellationToken: cancellationToken);
             }
 
             bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
@@ -627,6 +638,7 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetDriverAvailableBookingDetailsAsync(Guid driverId,
+                Guid? bookingId,
                 PaginationParameter pagination, BookingDetailFilterParameters filters,
                 HttpContext context,
                 CancellationToken cancellationToken)
@@ -644,7 +656,9 @@ namespace ViGo.Services
 
             IEnumerable<BookingDetail> unassignedBookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    bd => !bd.DriverId.HasValue
+                    bd => (bookingId.HasValue ? 
+                    bd.BookingId.Equals(bookingId.Value) : true) &&
+                    !bd.DriverId.HasValue
                     && bd.Status == BookingDetailStatus.PENDING_ASSIGN
                     // Only for future ones
                     && bd.Date >= DateTimeUtilities.GetDateTimeVnNow()),

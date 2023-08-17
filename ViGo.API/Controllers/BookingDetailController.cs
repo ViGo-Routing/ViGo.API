@@ -68,6 +68,8 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get list of Booking Details that are assigned to a driver
         /// </summary>
+        /// <remarks>If BookingId is provided, only Booking Details which are assigned to the driver 
+        /// of that Booking are fetched</remarks>
         /// <returns>
         /// List of Booking Details
         /// </returns>
@@ -76,13 +78,14 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get list of booking details successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Driver/{driverId}")]
+        [HttpGet("Driver/{driverId}/{bookingId}")]
         [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,DRIVER")]
         public async Task<IActionResult> GetDriverAssignedBookingDetails(
-            Guid driverId, [FromQuery] PaginationParameter pagination,
+            Guid driverId, Guid? bookingId, [FromQuery] PaginationParameter pagination,
             [FromQuery] BookingDetailSortingParameters sorting,
             [FromQuery] BookingDetailFilterParameters filters,
             CancellationToken cancellationToken)
@@ -93,7 +96,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    driverId, pagination, sorting, filters, HttpContext,
+                    driverId, bookingId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -126,7 +129,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    customerId, pagination, sorting, filters, HttpContext,
+                    customerId, null, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -372,7 +375,9 @@ namespace ViGo.API.Controllers
         /// <summary>
         /// Get list of available Booking Details that driver can pick to drive
         /// </summary>
-        /// <remarks>Custom Sorting is not applicable.</remarks>
+        /// <remarks>Custom Sorting is not applicable.
+        /// <br />
+        /// If BookingId is provided, only available Booking Details of that Booking are fetched!</remarks>
         /// <returns>
         /// List of available Booking Details
         /// </returns>
@@ -381,13 +386,14 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get list of booking details successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Driver/Available/{driverId}")]
+        [HttpGet("Driver/Available/{driverId}/{bookingId}")]
         [ProducesResponseType(typeof(IPagedEnumerable<BookingDetailViewModel>), 200)]
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,DRIVER")]
         public async Task<IActionResult> GetDriverAvailableBookingDetails(
-            Guid driverId, [FromQuery] PaginationParameter pagination,
+            Guid driverId, Guid? bookingId, [FromQuery] PaginationParameter pagination,
             [FromQuery] BookingDetailFilterParameters filters,
             CancellationToken cancellationToken)
         {
@@ -397,7 +403,7 @@ namespace ViGo.API.Controllers
             //}
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
-                    driverId, pagination, filters, HttpContext,
+                    driverId, bookingId, pagination, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
