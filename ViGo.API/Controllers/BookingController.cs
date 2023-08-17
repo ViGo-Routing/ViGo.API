@@ -5,6 +5,7 @@ using Quartz;
 using System.Globalization;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
 using ViGo.Models.QueryString.Pagination;
@@ -118,6 +119,65 @@ namespace ViGo.API.Controllers
                     pagination, sorting, filters, HttpContext,
                     cancellationToken);
             }
+            return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get list of available Bookings that have Booking Details which driver can pick to drive
+        /// </summary>
+        /// <remarks>Custom Sorting is ordering by StartDate by default.</remarks>
+        /// <returns>
+        /// List of available Bookings
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of bookings successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Driver/Available/{driverId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,DRIVER")]
+        public async Task<IActionResult> GetDriverAvailableBookings(
+            Guid driverId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingSortingParameters sorting,
+            [FromQuery] BookingFilterParameters filters,
+            CancellationToken cancellationToken)
+        {
+            IPagedEnumerable<BookingViewModel> dtos =
+                await bookingServices.GetAvailableBookingsAsync(
+                    driverId, pagination, sorting, filters, HttpContext,
+                    cancellationToken);
+            return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get list of Bookings that have Booking Details which are assigned to a driver
+        /// </summary>
+        /// <returns>
+        /// List of Bookings
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of bookings successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Driver/{driverId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,DRIVER")]
+        public async Task<IActionResult> GetDriverAssignedBookings(
+            Guid driverId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingSortingParameters sorting,
+            [FromQuery] BookingFilterParameters filters,
+            CancellationToken cancellationToken)
+        {
+            IPagedEnumerable<BookingViewModel> dtos =
+                await bookingServices.GetBookingsAsync(
+                    driverId, pagination, sorting, filters, HttpContext,
+                    cancellationToken);
             return StatusCode(200, dtos);
         }
 
