@@ -319,6 +319,20 @@ namespace ViGo.Services
             return new UserViewModel(user);
         }
 
+        public async Task<UserViewModel> GetBookingDetailCustomerAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails.GetAsync(
+                bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!");
+            }
+            Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId, cancellationToken: cancellationToken);
+            User user = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+            return new UserViewModel(user);
+
+        }
         public async Task<UserViewModel?> GetUserByPhoneNumberAsync(
             string phoneNumber, CancellationToken cancellationToken)
         {

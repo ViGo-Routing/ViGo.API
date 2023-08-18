@@ -153,6 +153,28 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get Customer of a Booking Detail
+        /// </summary>
+        /// <response code="401">Login failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Get successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpGet("BookingDetail/{bookingDetailId}")]
+        public async Task<IActionResult> GetBookingDetailCustomerAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            UserViewModel user = await userServices
+                .GetBookingDetailCustomerAsync(bookingDetailId, cancellationToken);
+
+            return StatusCode(200, user);
+        }
+
+        /// <summary>
         /// Get User by phone number
         /// </summary>
         /// <response code="401">Login failed</response>
