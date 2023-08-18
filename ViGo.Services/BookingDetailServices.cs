@@ -1848,7 +1848,8 @@ namespace ViGo.Services
                         }
                     };
 
-                    IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip);
+                    IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip)
+                        .OrderBy(t => t.BeginTime);
                     LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
                     LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
 
