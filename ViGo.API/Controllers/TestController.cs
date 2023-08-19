@@ -126,4 +126,10 @@ namespace ViGo.API.Controllers
         public GoogleMapPoint Origin { get; set; }
         public GoogleMapPoint Destination { get; set; }
     }
+
+    public class DurationRequest
+    {
+        public GoogleMapPoint Origin { get; set; }
+        public GoogleMapPoint Destination { get; set; }
+    }
 }
