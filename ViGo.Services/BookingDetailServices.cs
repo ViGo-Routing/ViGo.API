@@ -171,7 +171,8 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(userId)
-                    && (bookingId.HasValue ? bd.BookingId.Equals(bookingId.Value) : true)), cancellationToken: cancellationToken);
+                    && (bookingId.HasValue ? bd.BookingId.Equals(bookingId.Value) : true)
+                    && bd.Status != BookingDetailStatus.CANCELLED), cancellationToken: cancellationToken);
             }
 
             bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
