@@ -151,7 +151,8 @@ namespace ViGo.Services
                         query => query.Where(d => d.BookingId.Equals(bookingId.Value)),
                         cancellationToken: cancellationToken);
 
-                } else
+                }
+                else
                 {
                     IEnumerable<Booking> bookings = await work.Bookings
                     .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
@@ -162,7 +163,7 @@ namespace ViGo.Services
                         query => query.Where(d => bookingIds.Contains(d.BookingId)),
                         cancellationToken: cancellationToken);
                 }
-                
+
 
             }
             else if (user.Role == UserRole.DRIVER)
@@ -657,7 +658,7 @@ namespace ViGo.Services
 
             IEnumerable<BookingDetail> unassignedBookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    bd => (bookingId.HasValue ? 
+                    bd => (bookingId.HasValue ?
                     bd.BookingId.Equals(bookingId.Value) : true) &&
                     !bd.DriverId.HasValue
                     && bd.Status == BookingDetailStatus.PENDING_ASSIGN
@@ -1038,6 +1039,192 @@ namespace ViGo.Services
             }
 
             return bookingDetail;
+        }
+
+        public async Task<PickBookingDetailsResponse> DriverPicksBookingDetailsAsync(IEnumerable<Guid> bookingDetailIds,
+            CancellationToken cancellationToken)
+        {
+            if (!bookingDetailIds.Any())
+            {
+                throw new ApplicationException("Không có chuyến đi nào để chọn!");
+            }
+
+            Guid driverId = IdentityUtilities.GetCurrentUserId();
+
+            IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
+            foreach (Guid bookingDetailId in bookingDetailIds)
+            {
+                BookingDetail? bookingDetail = await work.BookingDetails.GetAsync(bookingDetailId,
+                cancellationToken: cancellationToken);
+
+                if (bookingDetail is null)
+                {
+                    throw new ApplicationException("Chuyến đi không tồn tại!!!");
+                }
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    throw new ApplicationException($"Chuyến đi vào lúc {bookingDetail.PickUpDateTimeString()} đã có tài xế chọn! Vui lòng chọn chuyến khác...");
+                }
+            }
+
+            BookingDetail firstDetail = bookingDetails.First();
+            if (!bookingDetails.All(d => d.BookingId.Equals(firstDetail.BookingId)))
+            {
+                // They are all from the same booking
+                throw new ApplicationException("Các chuyến đi phải thuộc cùng một hành trình!!");
+            }
+
+            Booking booking = await work.Bookings.GetAsync(firstDetail.BookingId,
+                cancellationToken: cancellationToken);
+            if (booking.Status != BookingStatus.CONFIRMED)
+            {
+                throw new ApplicationException("Trạng thái Booking không hợp lệ!!");
+            }
+
+            IEnumerable<BookingDetail> errorBookingDetails = await CheckDriverSchedules(driverId, bookingDetails,
+                booking, cancellationToken);
+
+            if (errorBookingDetails.Any())
+            {
+                IEnumerable<Guid> errorBookingDetailIds = errorBookingDetails.Select(d => d.Id);
+                bookingDetails = bookingDetails.Where(d => !errorBookingDetailIds.Contains(d.Id));
+            }
+
+            // Pick Fee
+            Wallet driverWallet = await work.Wallets.GetAsync(
+                w => w.UserId.Equals(driverId), cancellationToken: cancellationToken);
+
+            Wallet systemWallet = await work.Wallets.GetAsync(
+                w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
+
+            FareServices fareServices = new FareServices(work, _logger);
+            double pickingFee = await fareServices.CalculateDriverPickFee(
+                bookingDetails.Sum(d => d.Price.Value), cancellationToken);
+
+            if (driverWallet.Balance < pickingFee)
+            {
+                throw new ApplicationException("Số dư ví không đủ để thực hiện chọn chuyến đi!");
+            }
+
+            WalletTransaction pickingTransaction = new WalletTransaction
+            {
+                WalletId = driverWallet.Id,
+                Amount = pickingFee,
+                PaymentMethod = PaymentMethod.WALLET,
+                Status = WalletTransactionStatus.SUCCESSFULL,
+                Type = WalletTransactionType.TRIP_PICK,
+                //BookingDetailId = bookingDetail.Id,
+                BookingId = booking.Id,
+            };
+            WalletTransaction systemTransaction = new WalletTransaction
+            {
+                WalletId = systemWallet.Id,
+                Amount = pickingFee,
+                PaymentMethod = PaymentMethod.WALLET,
+                Status = WalletTransactionStatus.SUCCESSFULL,
+                Type = WalletTransactionType.TRIP_PICK,
+                //BookingDetailId = bookingDetail.Id
+                BookingId = booking.Id,
+            };
+
+            driverWallet.Balance -= pickingFee;
+            systemWallet.Balance += pickingFee;
+
+            await work.WalletTransactions.InsertAsync(pickingTransaction, cancellationToken: cancellationToken);
+            await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+            await work.Wallets.UpdateAsync(driverWallet);
+            await work.Wallets.UpdateAsync(systemWallet);
+
+            foreach (BookingDetail bookingDetail in bookingDetails)
+            {
+                bookingDetail.DriverId = driverId;
+                bookingDetail.AssignedTime = DateTimeUtilities.GetDateTimeVnNow();
+                bookingDetail.Status = BookingDetailStatus.ASSIGNED;
+
+                await work.BookingDetails.UpdateAsync(bookingDetail);
+            }
+            
+            await work.SaveChangesAsync(cancellationToken);
+
+            // Send notification to Driver and Customer
+            User driver = await work.Users.GetAsync(driverId, cancellationToken: cancellationToken);
+            User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
+
+            string? driverFcm = driver.FcmToken;
+            string? customerFcm = customer.FcmToken;
+
+            Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.Booking },
+                { "bookingId", booking.Id.ToString() },
+            };
+
+            Station startStation = await work.Stations.GetAsync(firstDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(firstDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
+            if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+            {
+                NotificationCreateModel driverNotification = new NotificationCreateModel()
+                {
+                    UserId = driverId,
+                    Title = "Chọn các chuyến đi thành công!",
+                    Description = $"Từ " +
+                                $"{startStation.Name} đến {endStation.Name} với {bookingDetails.Count()} chuyến đi",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(driverFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    driverNotification, driverFcm, dataToSend, cancellationToken);
+            }
+
+            if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+            {
+
+                NotificationCreateModel customerNotification = new NotificationCreateModel()
+                {
+                    UserId = customer.Id,
+                    Title = "Các chuyến đi của bạn đã có tài xế!",
+                    Description = $"Từ " +
+                                $"{startStation.Name} đến {endStation.Name} với {bookingDetails.Count()} chuyến đi",
+                    Type = NotificationType.SPECIFIC_USER
+                };
+
+                //await FirebaseUtilities.SendNotificationToDeviceAsync(customerFcm, title,
+                //                           description, data: dataToSend,
+                //                               cancellationToken: cancellationToken);
+
+                //// Send data to mobile application
+                //await FirebaseUtilities.SendDataToDeviceAsync(driverFcm, dataToSend, cancellationToken);
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    customerNotification, customerFcm, dataToSend, cancellationToken);
+            }
+
+            PickBookingDetailsResponse response = new PickBookingDetailsResponse()
+            {
+                SuccessBookingDetailIds = bookingDetails.Select(d => d.Id),
+                ErrorMessage = string.Empty,
+                DriverId = driverId
+            };
+            if (errorBookingDetails.Any())
+            {
+                response.ErrorMessage = "Các chuyến đi không thể chọn do bị trùng lịch trình: ";
+                foreach (BookingDetail bookingDetail in errorBookingDetails)
+                {
+                    response.ErrorMessage += $"{bookingDetail.PickUpDateTimeString()}, ";
+                }
+                response.ErrorMessage.Substring(0, response.ErrorMessage.Length - 2);
+            }
+            return response;
         }
 
         public async Task<(BookingDetail, Guid?, bool, bool, Guid?)> CancelBookingDetailAsync(Guid bookingDetailId,
@@ -1880,6 +2067,98 @@ namespace ViGo.Services
                     }
                 }
             }
+        }
+
+        private async Task<IEnumerable<BookingDetail>> CheckDriverSchedules(Guid driverId,
+            IEnumerable<BookingDetail> bookingDetails,
+            Booking booking,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> errorBookingDetails = new List<BookingDetail>();
+
+            IList<DriverTripsOfDate> driverTrips = await GetDriverSchedulesAsync(driverId, cancellationToken);
+            if (driverTrips.Count == 0)
+            {
+                // Has no trips
+            }
+            else
+            {
+                // Has trips
+                foreach (BookingDetail bookingDetail in bookingDetails)
+                {
+                    DriverTripsOfDate? tripsOfDate = driverTrips.SingleOrDefault(
+                        t => t.Date == DateOnly.FromDateTime(bookingDetail.Date));
+                    if (tripsOfDate is null || tripsOfDate.Trips.Count == 0)
+                    {
+                        // No trips in day
+                    }
+                    else
+                    {
+                        // Has trips in day
+                        TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
+                            bookingDetail.CustomerDesiredPickupTime, booking.Duration);
+
+                        Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                            cancellationToken: cancellationToken);
+                        Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                            cancellationToken: cancellationToken);
+
+                        DriverTrip addedTrip = new DriverTrip
+                        {
+                            Id = bookingDetail.Id,
+                            BeginTime = bookingDetail.CustomerDesiredPickupTime,
+                            EndTime = bookingDetailEndTime,
+                            StartLocation = new GoogleMapPoint
+                            {
+                                Latitude = startStation.Latitude,
+                                Longitude = startStation.Longitude
+                            },
+                            EndLocation = new GoogleMapPoint
+                            {
+                                Latitude = endStation.Latitude,
+                                Longitude = endStation.Longitude
+                            }
+                        };
+
+                        IEnumerable<DriverTrip> addedTrips = tripsOfDate.Trips.Append(addedTrip)
+                            .OrderBy(t => t.BeginTime);
+                        LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
+                        LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
+
+                        DriverTrip? previousTrip = addedTripAsNode.Previous?.Value;
+                        DriverTrip? nextTrip = addedTripAsNode.Next?.Value;
+
+                        if (previousTrip != null)
+                        {
+                            if (addedTripAsNode.Value.BeginTime <= previousTrip.EndTime)
+                            {
+                                // Invalid
+                                //throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                //    $"Bạn đang chọn chuyến đi có thời gian bắt đầu ({addedTripAsNode.Value.BeginTime}) " +
+                                //    $"sớm hơn so với thời gian dự kiến bạn sẽ kết thúc một chuyến đi bạn đã chọn trước đó ({previousTrip.EndTime})");
+                                errorBookingDetails = errorBookingDetails.Append(bookingDetail);
+                                tripsOfDate.Trips.Remove(addedTrip);
+                            }
+                        }
+
+                        if (nextTrip != null)
+                        {
+                            // Has Next Trip
+                            if (addedTripAsNode.Value.EndTime >= nextTrip.BeginTime)
+                            {
+                                //throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                //    $"Bạn đang chọn chuyến đi có thời gian kết thúc dự kiến ({addedTripAsNode.Value.EndTime}) " +
+                                //    $"trễ hơn so với thời gian bạn phải bắt đầu một chuyến đi bạn đã chọn trước đó ({nextTrip.BeginTime})");
+                                errorBookingDetails = errorBookingDetails.Append(bookingDetail);
+                                tripsOfDate.Trips.Remove(addedTrip);
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            return errorBookingDetails;
         }
 
         private async Task<IEnumerable<BookingDetail>> FilterBookingDetailsAsync(IEnumerable<BookingDetail> bookingDetails,
