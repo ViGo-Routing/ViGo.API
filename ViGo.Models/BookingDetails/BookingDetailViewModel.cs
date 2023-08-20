@@ -123,6 +123,22 @@ namespace ViGo.Models.BookingDetails
         public Guid DriverId { get; set; }
     }
 
+    public class DriverSchedulesForPickingResponse
+    {
+        public BookingDetailViewModel? PreviousTrip { get; set; }
+        public BookingDetailViewModel CurrentTrip { get; set; }
+        public BookingDetailViewModel? NextTrip { get; set; }
+
+        public DriverSchedulesForPickingResponse(BookingDetailViewModel? previousTrip, 
+            BookingDetailViewModel currentTrip, 
+            BookingDetailViewModel? nextTrip)
+        {
+            PreviousTrip = previousTrip;
+            CurrentTrip = currentTrip;
+            NextTrip = nextTrip;
+        }
+    }
+
     public class BookingDetailSortingParameters : SortingParameters
     {
         public BookingDetailSortingParameters()

@@ -1827,6 +1827,145 @@ namespace ViGo.Services
             return bookingDetailAnalysis;
         }
 
+        public async Task<DriverSchedulesForPickingResponse>
+            GetDriverSchedulesForPickingAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            Guid driverId = IdentityUtilities.GetCurrentUserId();
+
+            BookingDetail current = await work.BookingDetails.GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (current is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!");
+            }
+
+            //RouteRoutine currentRoutine = await work.RouteRoutines
+            //    .GetAsync(current.CustomerRouteRoutineId, 
+            //    cancellationToken: cancellationToken);
+            Station currentStartStation = await work.Stations.GetAsync(current.StartStationId, cancellationToken: cancellationToken);
+            Station currentEndStation = await work.Stations.GetAsync(current.EndStationId, cancellationToken: cancellationToken);
+            BookingDetailViewModel currentViewModel = new BookingDetailViewModel(current, null,
+                new StationViewModel(currentStartStation), new StationViewModel(currentEndStation), null);
+
+            DriverSchedulesForPickingResponse schedules = new DriverSchedulesForPickingResponse(null,
+                currentViewModel, null);
+
+            IEnumerable<BookingDetailViewModel> driverTrips = new List<BookingDetailViewModel>();
+
+            DateOnly date = DateOnly.FromDateTime(current.Date);
+            IEnumerable<BookingDetail> driverBookingDetails = await
+                work.BookingDetails.GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                        bd.DriverId.Value.Equals(driverId)), 
+                        cancellationToken: cancellationToken);
+            driverBookingDetails = driverBookingDetails.Where(bd =>
+                DateOnly.FromDateTime(bd.Date).Equals(date))
+                .OrderBy(d => d.CustomerDesiredPickupTime);
+
+            //if (driverBookingDetails.Any())
+            //{
+            //    //IEnumerable<Guid> driverBookingIds = driverBookingDetails.Select(d => d.BookingId).Distinct();
+            //    //IEnumerable<Booking> driverBookings = await work.Bookings.GetAllAsync(
+            //    //    query => query.Where(b => driverBookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+
+            //    IEnumerable<Guid> driverStationIds = driverBookingDetails.Select(
+            //        b => b.StartStationId).Concat(driverBookingDetails.Select(b => b.EndStationId))
+            //        .Distinct();
+            //    IEnumerable<Station> driverStations = await work.Stations.GetAllAsync(
+            //        query => query.Where(s => driverStationIds.Contains(s.Id)), includeDeleted: true,
+            //        cancellationToken: cancellationToken);
+            //    //IEnumerable<DateOnly> tripDates = driverBookingDetails.Select(
+            //    //    d => DateOnly.FromDateTime(d.Date)).Distinct();
+
+            //    //IEnumerable<BookingDetail> tripsInDate = driverBookingDetails.Where(
+            //    //    bd => DateOnly.FromDateTime(bd.Date) == date);
+            //    driverTrips = from detail in driverBookingDetails
+            //                      //join booking in driverBookings
+            //                      //    on detail.BookingId equals booking.Id
+            //                  join startStation in driverStations
+            //                      on detail.StartStationId equals startStation.Id
+            //                  join endStation in driverStations
+            //                      on detail.EndStationId equals endStation.Id
+            //                  select new BookingDetailViewModel(detail, null, new StationViewModel(startStation), new StationViewModel(endStation), null);
+
+            //    driverTrips = driverTrips.OrderBy(t => t.CustomerDesiredPickupTime);
+
+            //        //driverTrips.Add(new DriverTripsOfDate
+            //        //{
+            //        //    Date = tripDate,
+            //        //    Trips = trips.ToList()
+            //        //});
+            //    }
+
+            if (driverBookingDetails.Count() == 0)
+            {
+                // Has no trips
+                return schedules;
+            }
+            else
+            {
+                    IEnumerable<BookingDetail> addedTrips = driverBookingDetails.Append(current)
+                        .OrderBy(t => t.CustomerDesiredPickupTime);
+                    LinkedList<BookingDetail> addedTripsAsLinkedList = new LinkedList<BookingDetail>(addedTrips);
+                    LinkedListNode<BookingDetail> addedTripAsNode = addedTripsAsLinkedList.Find(current);
+
+                BookingDetail? previousTrip = addedTripAsNode.Previous?.Value;
+                BookingDetail? nextTrip = addedTripAsNode.Next?.Value;
+
+                IEnumerable<Guid> driverStationIds = new List<Guid>()
+                {
+                    current.StartStationId, current.EndStationId,
+
+                };
+                if (previousTrip != null)
+                {
+                    driverStationIds = driverStationIds.Concat(new List<Guid>{
+                        previousTrip.StartStationId, previousTrip.EndStationId
+                    });
+
+                }
+                if (nextTrip != null)
+                {
+                    driverStationIds = driverStationIds.Concat(new List<Guid>{
+                        nextTrip.StartStationId, nextTrip.EndStationId
+                    });
+                }
+                driverStationIds = driverStationIds.Distinct();
+
+                IEnumerable<Station> driverStations = await work.Stations.GetAllAsync(
+                    query => query.Where(s => driverStationIds.Contains(s.Id)), includeDeleted: true,
+                    cancellationToken: cancellationToken);
+
+                BookingDetailViewModel? previous = null;
+                BookingDetailViewModel? next = null;
+                if (previousTrip != null)
+                {
+                    Station previousStartStation = driverStations.Single(
+                        s => s.Id.Equals(previousTrip.StartStationId));
+                    Station previousEndStation = driverStations.Single(
+                        s => s.Id.Equals(previousTrip.EndStationId));
+                    previous = new BookingDetailViewModel(previousTrip, null,
+                        new StationViewModel(previousStartStation), new StationViewModel(previousEndStation),
+                        null);
+                }
+                if (nextTrip != null)
+                {
+                    Station nextStartStation = driverStations.Single(
+                        s => s.Id.Equals(nextTrip.StartStationId));
+                    Station nextEndStation = driverStations.Single(
+                        s => s.Id.Equals(nextTrip.EndStationId));
+                    next = new BookingDetailViewModel(nextTrip, null,
+                        new StationViewModel(nextStartStation), new StationViewModel(nextEndStation),
+                        null);
+                }
+                schedules.PreviousTrip = previous;
+                schedules.NextTrip = next;
+
+            }
+
+            return schedules;
+        }
+
         #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
             CancellationToken cancellationToken)
