@@ -116,6 +116,13 @@ namespace ViGo.Models.BookingDetails
         //}
     }
 
+    public class PickBookingDetailsResponse
+    {
+        public IEnumerable<Guid> SuccessBookingDetailIds { get; set; }
+        public string ErrorMessage { get; set; }
+        public Guid DriverId { get; set; }
+    }
+
     public class BookingDetailSortingParameters : SortingParameters
     {
         public BookingDetailSortingParameters()

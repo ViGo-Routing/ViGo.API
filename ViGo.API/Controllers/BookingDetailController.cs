@@ -315,6 +315,52 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Driver picks a list of Booking Details
+        /// </summary>
+        /// <remarks>
+        /// Only DRIVER can perform this task
+        /// </remarks>
+        /// <returns>
+        /// The list of picked booking detail ids and error message for the un-picked booking details
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Driver picks successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Driver/Pick")]
+        [ProducesResponseType(typeof(PickBookingDetailsResponse), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "DRIVER")]
+        public async Task<IActionResult> DriverPicksBookingDetails(
+            [FromBody] IEnumerable<Guid> bookingDetailIds,
+            CancellationToken cancellationToken)
+        {
+
+            PickBookingDetailsResponse response = await bookingDetailServices
+                .DriverPicksBookingDetailsAsync(bookingDetailIds, cancellationToken);
+
+            if (response.SuccessBookingDetailIds != null &&
+                response.SuccessBookingDetailIds.Any())
+            {
+                await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                {
+                    await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                    {
+                        IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                        BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                        await backgroundServices.CalculateTripCancelRateAsync(response.DriverId, token);
+                    }
+                });
+            }
+
+            return StatusCode(200, response);
+        }
+
+        /// <summary>
         /// Calculate driver wage for a Booking Detail
         /// </summary>
         /// <remarks>
