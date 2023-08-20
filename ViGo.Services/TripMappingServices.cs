@@ -440,7 +440,7 @@ namespace ViGo.Services
     {
         public Guid Id { get; set; }
         public TimeSpan BeginTime { get; set; }
-        public TimeSpan EndTime { get; set; }
+        public TimeSpan EndTime { get; set; } = default;
         public GoogleMapPoint StartLocation { get; set; }
         public GoogleMapPoint EndLocation { get; set; }
 

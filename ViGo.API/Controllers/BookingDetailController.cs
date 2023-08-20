@@ -102,6 +102,36 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get driver's schedule for picking a booking detail
+        /// </summary>
+        /// <remarks>The picking Booking Detail will be the current trip, if the driver has a previous or a next trip, they will be fetched</remarks>
+        /// <returns>
+        /// Previous and Next trip (if available) for the picking trip
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get schedules successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Driver/PickSchedules/{bookingDetailId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<DriverSchedulesForPickingResponse>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "DRIVER")]
+        public async Task<IActionResult> GetDriverScheduleForPickingBookingDetail(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
+            DriverSchedulesForPickingResponse schedules = await bookingDetailServices
+                .GetDriverSchedulesForPickingAsync(bookingDetailId, cancellationToken);
+            return StatusCode(200, schedules);
+        }
+
+        /// <summary>
         /// Get list of Booking Details that are belong to a customer
         /// </summary>
         /// <returns>
