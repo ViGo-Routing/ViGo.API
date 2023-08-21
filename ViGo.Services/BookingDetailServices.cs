@@ -811,6 +811,10 @@ namespace ViGo.Services
             IEnumerable<RouteRoutine> customerRoutines = await work.RouteRoutines.GetAllAsync(
                 query => query.Where(r => customerRoutineIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
+            prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(d => d.BookingDetail.Date)
+                .ThenBy(d => d.BookingDetail.CustomerDesiredPickupTime)
+                .ThenBy(d => d.PrioritizedPoint).ToList();
+
             IEnumerable<BookingDetailViewModel> availables = from bookingDetail in prioritizedBookingDetails
                                                              join customerRoutine in customerRoutines
                                                                 on bookingDetail.BookingDetail.CustomerRouteRoutineId equals customerRoutine.Id
@@ -1143,7 +1147,7 @@ namespace ViGo.Services
 
                 await work.BookingDetails.UpdateAsync(bookingDetail);
             }
-            
+
             await work.SaveChangesAsync(cancellationToken);
 
             // Send notification to Driver and Customer
@@ -1856,7 +1860,7 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> driverBookingDetails = await
                 work.BookingDetails.GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
-                        bd.DriverId.Value.Equals(driverId)), 
+                        bd.DriverId.Value.Equals(driverId)),
                         cancellationToken: cancellationToken);
             driverBookingDetails = driverBookingDetails.Where(bd =>
                 DateOnly.FromDateTime(bd.Date).Equals(date))
@@ -1904,10 +1908,10 @@ namespace ViGo.Services
             }
             else
             {
-                    IEnumerable<BookingDetail> addedTrips = driverBookingDetails.Append(current)
-                        .OrderBy(t => t.CustomerDesiredPickupTime);
-                    LinkedList<BookingDetail> addedTripsAsLinkedList = new LinkedList<BookingDetail>(addedTrips);
-                    LinkedListNode<BookingDetail> addedTripAsNode = addedTripsAsLinkedList.Find(current);
+                IEnumerable<BookingDetail> addedTrips = driverBookingDetails.Append(current)
+                    .OrderBy(t => t.CustomerDesiredPickupTime);
+                LinkedList<BookingDetail> addedTripsAsLinkedList = new LinkedList<BookingDetail>(addedTrips);
+                LinkedListNode<BookingDetail> addedTripAsNode = addedTripsAsLinkedList.Find(current);
 
                 BookingDetail? previousTrip = addedTripAsNode.Previous?.Value;
                 BookingDetail? nextTrip = addedTripAsNode.Next?.Value;
