@@ -802,6 +802,12 @@ namespace ViGo.Services
 
             prioritizedBookingDetails = (await FilterBookingDetailsAsync(prioritizedBookingDetails,
                 filters, cancellationToken)).ToList();
+
+            prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(
+                p => p.BookingDetail.Date)
+                .ThenBy(p => p.BookingDetail.CustomerDesiredPickupTime)
+                .ThenBy(p => p.PrioritizedPoint).ToList();
+
             int totalCount = prioritizedBookingDetails.Count;
             prioritizedBookingDetails = prioritizedBookingDetails.ToPagedEnumerable(
                 pagination.PageNumber, pagination.PageSize).Data.ToList();
@@ -811,9 +817,7 @@ namespace ViGo.Services
             IEnumerable<RouteRoutine> customerRoutines = await work.RouteRoutines.GetAllAsync(
                 query => query.Where(r => customerRoutineIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
-            prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(d => d.BookingDetail.Date)
-                .ThenBy(d => d.BookingDetail.CustomerDesiredPickupTime)
-                .ThenBy(d => d.PrioritizedPoint).ToList();
+            //prioritizedBookingDetails = prioritizedBookingDetails
 
             IEnumerable<BookingDetailViewModel> availables = from bookingDetail in prioritizedBookingDetails
                                                              join customerRoutine in customerRoutines
