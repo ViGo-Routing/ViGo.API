@@ -352,6 +352,20 @@ namespace ViGo.Services
 
                 // TODO Code
                 // Time validation
+                if (updateDto.Status == BookingDetailStatus.GOING_TO_PICKUP)
+                {
+                    DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                    if ((bookingDetail.PickUpDateTime() - vnNow)
+                        .TotalMinutes <= -2)
+                    {
+                        throw new ApplicationException("Chuyến đi trong quá khứ, không thể cập nhật trạng thái!");
+                    }
+
+                    //if ((updateDto.Time.Value - bookingDetail.PickUpDateTime()).TotalHours > 1.5)
+                    //{
+                    //    throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
+                    //}
+                }
             }
 
             if (!bookingDetail.DriverId.HasValue)
