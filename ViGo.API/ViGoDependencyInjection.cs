@@ -87,7 +87,8 @@ namespace ViGo.API
                 try
                 {
                     return new BackgroundTaskQueue(ViGoConfiguration.QueueCapacity);
-                } catch (Exception)
+                }
+                catch (Exception)
                 {
                     return new BackgroundTaskQueue(100);
                 }

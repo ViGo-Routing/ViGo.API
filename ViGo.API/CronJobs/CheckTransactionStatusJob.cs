@@ -1,10 +1,10 @@
 ﻿using Quartz;
-using ViGo.Repository.Core;
 using ViGo.Repository;
+using ViGo.Repository.Core;
 using ViGo.Services;
+using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.CronJobs;
 using ViGo.Utilities.Extensions;
-using ViGo.Utilities.BackgroundTasks;
 
 namespace ViGo.API.CronJobs
 {
@@ -14,7 +14,7 @@ namespace ViGo.API.CronJobs
         private IBackgroundTaskQueue _backgroundQueue;
         private ILogger<ResetWeeklyCancelRateJob> _logger;
 
-        public CheckTransactionStatusJob(IServiceScopeFactory serviceScopeFactory, 
+        public CheckTransactionStatusJob(IServiceScopeFactory serviceScopeFactory,
             IBackgroundTaskQueue backgroundTaskQueue,
             ILogger<ResetWeeklyCancelRateJob> logger)
         {
@@ -39,7 +39,7 @@ namespace ViGo.API.CronJobs
                     IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                     CronJobServices cronJobServices = new CronJobServices(unitOfWork, _logger);
 
-                    await cronJobServices.CheckForTopupTransactionStatus(transactionId, 
+                    await cronJobServices.CheckForTopupTransactionStatus(transactionId,
                         clientIpAddress, _backgroundQueue, _serviceScopeFactory, context.CancellationToken);
                 }
 

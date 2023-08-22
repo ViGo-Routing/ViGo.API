@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
-using ViGo.Domain.Enumerations;
-
-namespace ViGo.Models.RouteRoutines
+﻿namespace ViGo.Models.RouteRoutines
 {
     public class RouteRoutineCreateModel
     {
@@ -15,5 +7,5 @@ namespace ViGo.Models.RouteRoutines
             = new List<RouteRoutineListItemModel>();
     }
 
-    
+
 }

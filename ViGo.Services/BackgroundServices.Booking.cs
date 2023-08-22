@@ -1,16 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain.Enumerations;
-using ViGo.Domain;
-using ViGo.Models.Notifications;
-using ViGo.Utilities.Extensions;
 using Quartz;
-using ViGo.Utilities.CronJobs;
+using ViGo.Domain;
+using ViGo.Domain.Enumerations;
+using ViGo.Models.Notifications;
 using ViGo.Utilities;
+using ViGo.Utilities.CronJobs;
+using ViGo.Utilities.Extensions;
 
 namespace ViGo.Services
 {
@@ -570,7 +565,8 @@ namespace ViGo.Services
                 IEnumerable<BookingDetail> futureBookingDetails = bookingDetails.Where(
                     d => (d.PickUpDateTime() - vnNow).TotalHours >= 2);
                 IEnumerable<BookingDetail> nowBookingDetails = bookingDetails.Where(
-                    d => {
+                    d =>
+                    {
                         var difference = d.PickUpDateTime() - vnNow;
                         return difference.TotalHours >= 0 && difference.TotalHours < 2;
                     });

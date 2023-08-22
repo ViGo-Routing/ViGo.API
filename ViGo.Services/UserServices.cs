@@ -1,24 +1,18 @@
 ﻿using FirebaseAdmin.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
+using ViGo.Models.Notifications;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
-using ViGo.Models.QueryString;
-using ViGo.Models.Notifications;
 
 namespace ViGo.Services
 {
@@ -35,21 +29,22 @@ namespace ViGo.Services
                 !string.IsNullOrEmpty(u.Email) &&
                 u.Email.ToLower().Trim()
                 .Equals(loginModel.Email.ToLower().Trim())
-                && (u.Role == UserRole.ADMIN || u.Role == UserRole.STAFF), 
+                && (u.Role == UserRole.ADMIN || u.Role == UserRole.STAFF),
                 cancellationToken: cancellationToken);
 
             if (user == null)
             {
                 return null;
             }
-            
+
             if (user.IsLockedOut &&
                 DateTimeUtilities.GetDateTimeVnNow() <= user.LockedOutEnd)
             {
                 throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!\n" +
                     "Vui lòng thử đăng nhập lại sau " + (user.LockedOutEnd - DateTimeUtilities.GetDateTimeVnNow()).Value.Minutes
                     + " phút nữa");
-            } else if (DateTimeUtilities.GetDateTimeVnNow() > user.LockedOutEnd)
+            }
+            else if (DateTimeUtilities.GetDateTimeVnNow() > user.LockedOutEnd)
             {
                 user.IsLockedOut = false;
             }
@@ -70,7 +65,8 @@ namespace ViGo.Services
                     await work.SaveChangesAsync(cancellationToken);
 
                     throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!");
-                } else
+                }
+                else
                 {
                     user.FailedLoginCount++;
                     await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
@@ -78,7 +74,8 @@ namespace ViGo.Services
                 }
 
                 return null;
-            } else
+            }
+            else
             {
                 // Correct password
                 if (user.FailedLoginCount > 0)
@@ -189,17 +186,19 @@ namespace ViGo.Services
                     return user;
                 }
 
-            } catch (FirebaseAuthException ex)
+            }
+            catch (FirebaseAuthException ex)
             {
                 if (ex.AuthErrorCode == AuthErrorCode.RevokedIdToken)
                 {
                     throw new ApplicationException("Token đã hết hiệu lực! Vui lòng đăng nhập lại");
-                } else
+                }
+                else
                 {
                     throw ex;
                 }
             }
-            
+
         }
 
         public async Task<IPagedEnumerable<User>> GetUsersAsync(PaginationParameter pagination,
@@ -214,7 +213,7 @@ namespace ViGo.Services
             users = users.Sort(sorting.OrderBy);
             int totalRecords = users.Count();
 
-            return users.ToPagedEnumerable(pagination.PageNumber, 
+            return users.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context, isOriginalSource: true);
         }
 
@@ -231,7 +230,8 @@ namespace ViGo.Services
                 maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
             if (!Enum.IsDefined(dto.Role)
                 || (dto.Role != UserRole.CUSTOMER &&
-                dto.Role != UserRole.DRIVER)) {
+                dto.Role != UserRole.DRIVER))
+            {
                 throw new ApplicationException("Vai trò người dùng không hợp lệ!");
             }
 
@@ -250,11 +250,11 @@ namespace ViGo.Services
                 maxLength: 50,
                 maxLengthErrorMessage: "Họ tên không được vượt quá 50 kí tự!");
             }
-            
+
             User checkUser = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.Phone) &&
                     u.Phone.Equals(dto.Phone)
-                    && u.Role == dto.Role, 
+                    && u.Role == dto.Role,
                 cancellationToken: cancellationToken);
 
             if (checkUser != null)
@@ -280,12 +280,12 @@ namespace ViGo.Services
                 Password = dto.Password.Encrypt(),
                 Role = dto.Role,
                 //FirebaseUid = dto.FirebaseUid,
-                Status = dto.Role == UserRole.DRIVER 
-                    ? UserStatus.PENDING 
+                Status = dto.Role == UserRole.DRIVER
+                    ? UserStatus.PENDING
                     : UserStatus.ACTIVE
             };
 
-            await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true, 
+            await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true,
                 cancellationToken: cancellationToken);
 
             Wallet wallet = new Wallet
@@ -298,7 +298,7 @@ namespace ViGo.Services
                 UpdatedBy = newUser.Id,
             };
 
-            await work.Wallets.InsertAsync(wallet, isManuallyAssignTracking: true, 
+            await work.Wallets.InsertAsync(wallet, isManuallyAssignTracking: true,
                 cancellationToken: cancellationToken);
 
             await work.SaveChangesAsync(cancellationToken);
@@ -349,7 +349,7 @@ namespace ViGo.Services
 
         }
 
-        public async Task<User> UpdateUserAsync(Guid id, 
+        public async Task<User> UpdateUserAsync(Guid id,
             UserUpdateModel userUpdate)
         {
             if (!IdentityUtilities.IsAdmin())
@@ -452,10 +452,10 @@ namespace ViGo.Services
             return user.FcmToken;
         }
 
-        public async Task<UserViewModel> ChangeUserStatus(Guid id, 
+        public async Task<UserViewModel> ChangeUserStatus(Guid id,
             UserChangeStatusModel statusChange, CancellationToken cancellationToken)
         {
-            var currentUser = await work.Users.GetAsync(id, 
+            var currentUser = await work.Users.GetAsync(id,
                 cancellationToken: cancellationToken);
             if (currentUser is null)
             {
@@ -466,7 +466,7 @@ namespace ViGo.Services
                 currentUser.Status = statusChange.Status;
             }
 
-            await work.Users.UpdateAsync(currentUser); 
+            await work.Users.UpdateAsync(currentUser);
             await work.SaveChangesAsync(cancellationToken);
 
             if (currentUser.Status == UserStatus.ACTIVE ||
@@ -481,7 +481,7 @@ namespace ViGo.Services
                         Type = NotificationType.SPECIFIC_USER,
                     };
 
-                    switch(currentUser.Status)
+                    switch (currentUser.Status)
                     {
                         case UserStatus.ACTIVE:
                             notification.Title = "Tài khoản của bạn đã được kích hoạt!";
@@ -507,11 +507,11 @@ namespace ViGo.Services
                     await notificationServices.CreateFirebaseNotificationAsync(
                         notification, fcmToken, dataToSend, cancellationToken);
                 }
-                
+
             }
             UserViewModel userView = new UserViewModel(currentUser);
             return userView;
-            
+
         }
 
         public async Task<UserAnalysisModel> GetUserAnalysisAsync(CancellationToken cancellationToken)
@@ -539,7 +539,7 @@ namespace ViGo.Services
             return analysisModel;
         }
 
-        
+
         #region Private
         private IEnumerable<User> FilterUsers(IEnumerable<User> users,
             UserFilterParameters filters)

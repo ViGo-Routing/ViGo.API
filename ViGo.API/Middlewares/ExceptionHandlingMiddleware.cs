@@ -26,28 +26,28 @@ namespace ViGo.API.Middlewares
             catch (AccessDeniedException ex)
             {
                 _logger.LogError(ex, $"AccessDenied Exception: {ex.GeneratorErrorMessage()}");
-                await HandleExceptionAsync(HttpStatusCode.Forbidden, 
+                await HandleExceptionAsync(HttpStatusCode.Forbidden,
                     httpContext, ex.GeneratorErrorMessage(), cancellationToken);
                 //return StatusCode(403, ex.GeneratorErrorMessage());
             }
             catch (ApplicationException appEx)
             {
                 _logger.LogError(appEx, $"Application Exception: {appEx.GeneratorErrorMessage()}");
-                await HandleExceptionAsync(HttpStatusCode.BadRequest, 
+                await HandleExceptionAsync(HttpStatusCode.BadRequest,
                     httpContext, appEx.GeneratorErrorMessage(), cancellationToken);
                 //return StatusCode(400, appEx.GeneratorErrorMessage());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception: {ex.GeneratorErrorMessage()}");
-                await HandleExceptionAsync(HttpStatusCode.InternalServerError, 
+                await HandleExceptionAsync(HttpStatusCode.InternalServerError,
                     httpContext, ex.GeneratorErrorMessage(), cancellationToken);
                 //return StatusCode(500, ex.GeneratorErrorMessage());
             }
         }
 
         private async Task HandleExceptionAsync(HttpStatusCode statusCode,
-            HttpContext context, string message, 
+            HttpContext context, string message,
             CancellationToken cancellationToken = default)
         {
             context.Response.ContentType = "application/json";

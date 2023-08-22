@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -64,13 +59,15 @@ namespace ViGo.Services
                 // Get All the Bookings
                 bookings = await work.Bookings.GetAllAsync(cancellationToken: cancellationToken);
 
-            } else if (user.Role == UserRole.CUSTOMER)
+            }
+            else if (user.Role == UserRole.CUSTOMER)
             {
                 bookings = await work.Bookings.GetAllAsync(
                     query => query.Where(b => b.CustomerId.Equals(user.Id)),
                     cancellationToken: cancellationToken);
 
-            } else
+            }
+            else
             {
                 // Driver
                 IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
@@ -795,7 +792,7 @@ namespace ViGo.Services
             try
             {
                 // Delete current BookingDetails
-                
+
                 foreach (BookingDetail detail in currentDetails)
                 {
                     await work.BookingDetails.DeleteAsync(detail, false,

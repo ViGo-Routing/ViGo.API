@@ -1,20 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain.Enumerations;
-using ViGo.Domain;
-using ViGo.Utilities.Configuration;
-using ViGo.Utilities.Payments;
-using ViGo.Utilities;
-using ViGo.Models.WalletTransactions;
-using System.Net.Http;
-
-namespace ViGo.Services
+﻿namespace ViGo.Services
 {
     public partial class PaymentServices
     {

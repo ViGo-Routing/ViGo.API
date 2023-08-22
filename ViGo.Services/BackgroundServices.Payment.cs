@@ -1,11 +1,5 @@
-﻿using FirebaseAdmin.Messaging;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Quartz;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Notifications;
@@ -60,11 +54,11 @@ namespace ViGo.Services
                         {
                             _logger.LogInformation("\tWallet Balance before: {0}", wallet.Balance);
                             _logger.LogInformation("\tTransaction Amount: {0}", transaction.Amount);
-                            
+
                             wallet.Balance -= transaction.Amount;
 
                             _logger.LogInformation("\tWallet Balance AFTERWARD: {0}", wallet.Balance);
-                            
+
                             transaction.Status = WalletTransactionStatus.SUCCESSFULL;
 
                             await work.Wallets.UpdateAsync(wallet, isManuallyAssignTracking: true);
@@ -137,7 +131,7 @@ namespace ViGo.Services
 
 
                 _logger.LogInformation("Trying to schedule for Transaction: ID: " +
-                        walletTransaction.Id + "; Created Time: " 
+                        walletTransaction.Id + "; Created Time: "
                         + walletTransaction.CreatedTime.ToString("dd/MM/yyyy - HH:mm:ss"));
 
                 DateTimeOffset scheduleDatetimeOffset = walletTransaction.CreatedTime.ToVnDateTimeOffset()

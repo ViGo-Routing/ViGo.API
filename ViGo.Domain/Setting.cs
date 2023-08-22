@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ViGo.Domain.Enumerations;
+﻿using ViGo.Domain.Enumerations;
 
 namespace ViGo.Domain
 {

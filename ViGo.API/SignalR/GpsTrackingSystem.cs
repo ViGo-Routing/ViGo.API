@@ -13,7 +13,7 @@ namespace ViGo.API.SignalR
         private readonly ILogger<GpsTrackingSystem> _logger;
         private readonly IHubContext<GpsTrackingSystem> _hubContext;
 
-        public GpsTrackingSystem(ILogger<GpsTrackingSystem> logger, 
+        public GpsTrackingSystem(ILogger<GpsTrackingSystem> logger,
             IHubContext<GpsTrackingSystem> hubContext)
         {
             registerredConnections = new Dictionary<string, List<Guid>>();
@@ -46,7 +46,7 @@ namespace ViGo.API.SignalR
             {
                 _logger.LogError("Error on sending location. Detail: {0}", ex.GeneratorErrorMessage());
             }
-            
+
         }
 
         [Authorize(Roles = "DRIVER,CUSTOMER")]
@@ -59,7 +59,8 @@ namespace ViGo.API.SignalR
                 await RegisterTrip(Context.ConnectionId, tripId);
 
                 await Groups.AddToGroupAsync(Context.ConnectionId, tripId);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError("Error on register user to track location. Detail: {0}", ex.GeneratorErrorMessage());
             }
@@ -76,7 +77,8 @@ namespace ViGo.API.SignalR
                     value = value.Distinct().ToList();
 
                     registerredConnections[connectionId] = value;
-                } else
+                }
+                else
                 {
                     registerredConnections[connectionId] = new List<Guid>
                     {
@@ -95,7 +97,8 @@ namespace ViGo.API.SignalR
                     registerredConnections[connectionId] = null;
                     registerredConnections.Remove(connectionId);
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError("Error on delete connection. Detail: {0}", ex.GeneratorErrorMessage());
             }

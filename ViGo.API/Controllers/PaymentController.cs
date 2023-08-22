@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using Quartz;
-using System.Data;
 using ViGo.API.SignalR.Core;
 using ViGo.Domain;
-using ViGo.Domain.Enumerations;
 using ViGo.Models.WalletTransactions;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.BackgroundTasks;
-using ViGo.Utilities.Extensions;
-using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Payments;
 
 namespace ViGo.API.Controllers
@@ -85,7 +79,7 @@ namespace ViGo.API.Controllers
                     {
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
-   
+
                         // Schedule transaction status checking
                         IScheduler scheduler = await schedulerFactory.GetScheduler(token);
                         await backgroundServices.ScheduleCheckTransactionStatusAsync(viewModel.Id, clientIpAddress, scheduler, token);

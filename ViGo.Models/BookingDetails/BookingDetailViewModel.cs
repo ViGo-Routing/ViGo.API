@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.RouteRoutines;
-using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 
@@ -42,7 +36,7 @@ namespace ViGo.Models.BookingDetails
         public string? Feedback { get; set; }
         public BookingDetailStatus Status { get; set; }
         public BookingDetailType Type { get; set; }
-        public Guid? CanceledUserId { get; set; } 
+        public Guid? CanceledUserId { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
@@ -51,7 +45,7 @@ namespace ViGo.Models.BookingDetails
         public BookingDetailViewModel(BookingDetail bookingDetail)
         {
             Id = bookingDetail.Id;
-            BookingId = bookingDetail.BookingId;            
+            BookingId = bookingDetail.BookingId;
             CustomerRouteRoutineId = bookingDetail.CustomerRouteRoutineId;
             CustomerDesiredPickupTime = bookingDetail.CustomerDesiredPickupTime;
             DriverId = bookingDetail.DriverId;
@@ -130,8 +124,8 @@ namespace ViGo.Models.BookingDetails
         public BookingDetailViewModel CurrentTrip { get; set; }
         public BookingDetailViewModel? NextTrip { get; set; }
 
-        public DriverSchedulesForPickingResponse(BookingDetailViewModel? previousTrip, 
-            BookingDetailViewModel currentTrip, 
+        public DriverSchedulesForPickingResponse(BookingDetailViewModel? previousTrip,
+            BookingDetailViewModel currentTrip,
             BookingDetailViewModel? nextTrip)
         {
             PreviousTrip = previousTrip;

@@ -1,14 +1,5 @@
-﻿using Google.Apis.Util;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -17,16 +8,13 @@ using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.RouteRoutines;
-using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google;
-using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services

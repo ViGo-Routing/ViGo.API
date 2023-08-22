@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.UserLicenses;
 using ViGo.Models.Users;
 using ViGo.Models.Vehicles;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {

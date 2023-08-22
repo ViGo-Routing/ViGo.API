@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Repository.Core;
 
@@ -39,23 +34,23 @@ namespace ViGo.Repository
         #region Constructor
         public UnitOfWork(
             ViGoDBContext context,
-            IRepository<Booking> bookings, 
-            IRepository<BookingDetail> bookingDetails, 
-            IRepository<Event> events, 
-            IRepository<Fare> fares, 
-            IRepository<FarePolicy> farePolicies, 
-            IRepository<Notification> notifications, 
-            IRepository<Promotion> promotions, 
-            IRepository<Report> reports, 
-            IRepository<Route> routes, 
-            IRepository<RouteRoutine> routeRoutines, 
-            IRepository<Setting> settings, 
-            IRepository<Station> stations, 
-            IRepository<User> users, 
-            IRepository<UserLicense> userLicenses, 
-            IRepository<Vehicle> vehicles, 
-            IRepository<VehicleType> vehicleTypes, 
-            IRepository<Wallet> wallets, 
+            IRepository<Booking> bookings,
+            IRepository<BookingDetail> bookingDetails,
+            IRepository<Event> events,
+            IRepository<Fare> fares,
+            IRepository<FarePolicy> farePolicies,
+            IRepository<Notification> notifications,
+            IRepository<Promotion> promotions,
+            IRepository<Report> reports,
+            IRepository<Route> routes,
+            IRepository<RouteRoutine> routeRoutines,
+            IRepository<Setting> settings,
+            IRepository<Station> stations,
+            IRepository<User> users,
+            IRepository<UserLicense> userLicenses,
+            IRepository<Vehicle> vehicles,
+            IRepository<VehicleType> vehicleTypes,
+            IRepository<Wallet> wallets,
             IRepository<WalletTransaction> walletTransactions)
         {
             this.context = context;

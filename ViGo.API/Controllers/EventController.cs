@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using System.Threading;
 using ViGo.Models.Events;
-using ViGo.Repository.Core;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Repository.Core;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -114,7 +112,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPost]
-        public async Task<IActionResult> CreateEvent([FromBody]EventCreateModel eventCreate, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateEvent([FromBody] EventCreateModel eventCreate, CancellationToken cancellationToken)
         {
             EventViewModel eventView = await eventServices.CreateEvent(eventCreate, cancellationToken);
             if (eventView == null)
@@ -137,7 +135,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody]EventUpdateModel eventUpdate)
+        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody] EventUpdateModel eventUpdate)
         {
             EventViewModel eventView = await eventServices.UpdateEvent(id, eventUpdate);
             return StatusCode(200, eventView);

@@ -1,22 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.GoogleMaps;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Stations;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Utilities.Google;
 using ViGo.Utilities.Validator;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {

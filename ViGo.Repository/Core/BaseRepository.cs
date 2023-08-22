@@ -1,16 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Core;
 
 namespace ViGo.Repository.Core
 {
-    public abstract partial class BaseRepository<TEntity> : IRepository<TEntity> 
+    public abstract partial class BaseRepository<TEntity> : IRepository<TEntity>
         where TEntity : BaseEntity
     {
 

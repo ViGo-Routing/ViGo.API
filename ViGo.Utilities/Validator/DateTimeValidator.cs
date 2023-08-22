@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ViGo.Utilities.Validator
+﻿namespace ViGo.Utilities.Validator
 {
     public class DateTimeRange
     {
@@ -77,6 +75,6 @@ namespace ViGo.Utilities.Validator
                 throw new ApplicationException(errorMessage);
             }
             return false;
-        } 
+        }
     }
 }

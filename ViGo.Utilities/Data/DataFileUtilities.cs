@@ -1,17 +1,13 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ViGo.Utilities.Data
 {
     internal static class DataFileUtilities
     {
-        private static string hcmBoundariesFile = 
+        private static string hcmBoundariesFile =
             Path.Combine(
                 Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
             "Data\\hcm-boundaries.json");

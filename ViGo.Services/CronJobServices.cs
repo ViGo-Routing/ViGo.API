@@ -1,14 +1,7 @@
-﻿using FirebaseAdmin.Messaging;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl.Matchers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.CronJobs;
@@ -16,7 +9,6 @@ using ViGo.Models.Notifications;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
-using ViGo.Utilities;
 using ViGo.Utilities.BackgroundTasks;
 
 namespace ViGo.Services
@@ -293,7 +285,7 @@ namespace ViGo.Services
                         }
                     });
                 }
-                
+
             }
         }
 
@@ -304,7 +296,7 @@ namespace ViGo.Services
             IEnumerable<string> jobGroups = await scheduler.GetJobGroupNames(cancellationToken);
 
             IList<CronJobViewModel> results = new List<CronJobViewModel>();
-            
+
             foreach (string group in jobGroups)
             {
                 var groupMatcher = GroupMatcher<JobKey>.GroupContains(group);

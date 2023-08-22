@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Quartz;
 using ViGo.Domain;
-using ViGo.Models.Bookings;
 using ViGo.Models.CronJobs;
 using ViGo.Models.GoogleMaps;
 using ViGo.Repository.Core;
@@ -38,17 +36,17 @@ namespace ViGo.API.Controllers
         /// 
         /// </summary>
         /// <remarks>
-            /// Sample:
-            /// {
-            ///  "origin": {
-            ///    "latitude": 10.8047903620383,
-            ///    "longtitude": 106.79502630962487
-            ///  },
-            ///  "destination": {
-            ///    "latitude": 10.758846315012603,
-            ///    "longtitude": 106.67546265195486
-            ///  }
-            ///}
+        /// Sample:
+        /// {
+        ///  "origin": {
+        ///    "latitude": 10.8047903620383,
+        ///    "longtitude": 106.79502630962487
+        ///  },
+        ///  "destination": {
+        ///    "latitude": 10.758846315012603,
+        ///    "longtitude": 106.67546265195486
+        ///  }
+        ///}
         /// </remarks>
         /// <returns></returns>
         [HttpPost("Distance")]

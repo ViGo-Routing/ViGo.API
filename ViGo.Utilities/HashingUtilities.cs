@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ViGo.Utilities
 {
@@ -52,7 +48,7 @@ namespace ViGo.Utilities
 
         public static Guid FromBase64String(string base64String)
         {
-            if (string.IsNullOrEmpty(base64String) || 
+            if (string.IsNullOrEmpty(base64String) ||
                 base64String.Length != 22)
             {
                 throw new FormatException("Input string was not in a correct format!!");

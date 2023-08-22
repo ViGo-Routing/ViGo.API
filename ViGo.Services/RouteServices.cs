@@ -1,25 +1,18 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Bson;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.RouteRoutines;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Validator;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -800,7 +793,7 @@ namespace ViGo.Services
             //route.RouteStations = routeStations;
             //route.RouteRoutines = routeRoutines.OrderBy(r => r.StartDate)
             //    .ThenBy(r => r.StartTime).ToList();
-            
+
             if (!isCalledFromBooking)
             {
                 route.EndStation = endStation;

@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.Models.Fares;
 using ViGo.Models.Notifications;
-using ViGo.Repository.Core;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Repository.Core;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -81,7 +79,7 @@ namespace ViGo.API.Controllers
             //}
 
             IPagedEnumerable<NotificationViewModel> models = await notificationServices
-                .GetNotificationsAsync(userId, 
+                .GetNotificationsAsync(userId,
                 pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, models);
@@ -108,7 +106,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN,STAFF")]
-        public async Task<IActionResult> CreateNotificationAsync(NotificationCreateModel model, 
+        public async Task<IActionResult> CreateNotificationAsync(NotificationCreateModel model,
             CancellationToken cancellationToken)
         {
             Notification notification = await notificationServices.CreateNotificationAsync(model, cancellationToken);

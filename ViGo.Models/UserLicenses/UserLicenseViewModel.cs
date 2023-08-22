@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Domain;
-using ViGo.Models.Users;
-using ViGo.Models.Vehicles;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Sorting;
+using ViGo.Models.Users;
 
 namespace ViGo.Models.UserLicenses
 {

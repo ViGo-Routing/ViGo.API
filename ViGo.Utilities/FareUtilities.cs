@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ViGo.Utilities
+﻿namespace ViGo.Utilities
 {
     public static class FareUtilities
     {
@@ -52,8 +46,9 @@ namespace ViGo.Utilities
                         throw new ApplicationException(errorMessage);
                     }
                 }
-                
-            } else
+
+            }
+            else
             {
                 if (firstRange.MaxDistance > secondRange.MinDistance)
                 {

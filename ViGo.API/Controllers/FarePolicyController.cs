@@ -1,13 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using ViGo.Domain;
 using ViGo.Models.FarePolicies;
-using ViGo.Models.Fares;
 using ViGo.Repository.Core;
 using ViGo.Services;
-using ViGo.Services.Core;
 
 namespace ViGo.API.Controllers
 {

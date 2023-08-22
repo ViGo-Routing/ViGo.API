@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ViGo.Domain.Enumerations
+﻿namespace ViGo.Domain.Enumerations
 {
     public enum WalletStatus : short
     {
@@ -23,7 +17,7 @@ namespace ViGo.Domain.Enumerations
         //MOMO_TOPUP = 1, //nạp vô
         //BOOKING_PAID = 2, // wallet cus
         //BOOKING_REFUND = 3, 
-        
+
         //TRIP_INCOME = 4, //dri receive 
         //PAY_FOR_DRIVER = 5, //wallet system
         //BOOKING_PAID_BY_MOMO = 6, // cus paid

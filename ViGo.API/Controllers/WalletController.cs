@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Wallets;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
-using ViGo.Models.Bookings;
 
 namespace ViGo.API.Controllers
 {
@@ -15,7 +14,7 @@ namespace ViGo.API.Controllers
     {
         private WalletServices walletServices;
         private ILogger<WalletController> _logger;
-        public WalletController(IUnitOfWork work, ILogger<WalletController> logger) 
+        public WalletController(IUnitOfWork work, ILogger<WalletController> logger)
         {
             walletServices = new WalletServices(work, logger);
             _logger = logger;
@@ -68,7 +67,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "CUSTOMER,DRIVER,ADMIN")]
         [HttpGet("User/{userId}")]
-        public async Task<IActionResult> GetWalletByUserId(Guid userId, 
+        public async Task<IActionResult> GetWalletByUserId(Guid userId,
             CancellationToken cancellationToken)
         {
             WalletViewModel wallet = await walletServices.GetWalletByUserId(userId, cancellationToken);
@@ -88,7 +87,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateWalletStatusById(Guid id, 
+        public async Task<IActionResult> UpdateWalletStatusById(Guid id,
             WalletUpdateModel walletStatusUpdate, CancellationToken cancellationToken)
         {
             WalletViewModel wallet = await walletServices

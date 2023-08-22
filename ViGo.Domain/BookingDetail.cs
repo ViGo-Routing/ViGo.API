@@ -1,6 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using ViGo.Domain.Enumerations;
 
 namespace ViGo.Domain
@@ -58,7 +56,7 @@ namespace ViGo.Domain
         //[System.Text.Json.Serialization.JsonIgnore]
         //public virtual Route? DriverRoute { get; set; }
 
-        public virtual RouteRoutine CustomerRouteRoutine{ get; set; }
+        public virtual RouteRoutine CustomerRouteRoutine { get; set; }
 
         [JsonIgnore]
         public virtual Station StartStation { get; set; }

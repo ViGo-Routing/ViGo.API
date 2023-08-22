@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ViGo.Domain.Enumerations
+﻿namespace ViGo.Domain.Enumerations
 {
     public enum NotificationStatus : short
     {
@@ -15,7 +8,7 @@ namespace ViGo.Domain.Enumerations
 
     public enum NotificationType : short
     {
-        SPECIFIC_USER = 0,  
+        SPECIFIC_USER = 0,
         BOOKER = 1,
         DRIVER = 2,
         BOOKER_AND_DRIVER = 3,

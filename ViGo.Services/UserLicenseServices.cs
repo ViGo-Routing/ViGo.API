@@ -1,20 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.UserLicenses;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Models.QueryString;
 using ViGo.Utilities.Exceptions;
 
 namespace ViGo.Services
@@ -136,7 +130,7 @@ namespace ViGo.Services
 
         }
 
-        public async Task<UserLicenseViewModel> UpdateUserLicense(Guid id, 
+        public async Task<UserLicenseViewModel> UpdateUserLicense(Guid id,
             UserLicenseUpdateModel userLicenseUpdate, CancellationToken cancellationToken)
         {
             var currentUserLicense = await work.UserLicenses.GetAsync(id,

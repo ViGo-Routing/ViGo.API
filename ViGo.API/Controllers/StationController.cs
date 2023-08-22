@@ -1,17 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.Models.Bookings;
 using ViGo.Models.GoogleMaps;
-using ViGo.Models.Routes;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Stations;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
-using ViGo.Utilities;
-using ViGo.Utilities.Extensions;
-using ViGo.Utilities.Google;
 
 namespace ViGo.API.Controllers
 {
@@ -92,7 +86,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> IsInRegion([FromQuery]GoogleMapPoint googleMapPoint,
+        public async Task<IActionResult> IsInRegion([FromQuery] GoogleMapPoint googleMapPoint,
             CancellationToken cancellationToken)
         {
             bool result = await stationServices.IsStationInRegionAsync(googleMapPoint, cancellationToken);
@@ -205,7 +199,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateStation(Guid stationId, 
+        public async Task<IActionResult> UpdateStation(Guid stationId,
             StationUpdateModel model,
             CancellationToken cancellationToken)
         {

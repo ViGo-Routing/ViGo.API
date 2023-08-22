@@ -1,19 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Events;
-using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
-using ViGo.Services.Core;
-using ViGo.Utilities;
-using ViGo.Utilities.Validator;
 using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
+using ViGo.Repository.Core;
+using ViGo.Services.Core;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
@@ -31,7 +25,7 @@ namespace ViGo.Services
             IEnumerable<Event> events = await work.Events.GetAllAsync(cancellationToken: cancellationToken);
 
             events = events.Sort(sorting.OrderBy);
-            
+
             int totalRecords = events.Count();
 
             events = events.ToPagedEnumerable(
@@ -54,7 +48,7 @@ namespace ViGo.Services
                 q => q.Where(x => x.Status.Equals(EventStatus.ACTIVE)), cancellationToken: cancellationToken);
 
             events = events.Sort(sorting.OrderBy);
-            
+
             int totalRecords = events.Count();
 
             events = events.ToPagedEnumerable(
@@ -108,7 +102,7 @@ namespace ViGo.Services
             if (currentEvent != null)
             {
                 if (eventUpdate.Title != null) currentEvent.Title = eventUpdate.Title;
-                if (eventUpdate.Content != null) currentEvent.Content = eventUpdate.Content;                
+                if (eventUpdate.Content != null) currentEvent.Content = eventUpdate.Content;
                 if (eventUpdate.StartDate != null)
                 {
                     eventUpdate.StartDate.Value.DateTimeValidate(maximum: eventUpdate.EndDate, maxErrorMessage: "Ngày bắt đầu phải trước ngày kết thúc!");
@@ -118,7 +112,7 @@ namespace ViGo.Services
                 {
                     eventUpdate.EndDate.Value.DateTimeValidate(minimum: eventUpdate.StartDate, minErrorMessage: "Ngày kết thúc phải sau ngày bắt đầu!");
                     currentEvent.EndDate = (DateTime)eventUpdate.EndDate;
-                }                
+                }
                 if (eventUpdate.Status != null) currentEvent.Status = (EventStatus)eventUpdate.Status;
             }
 

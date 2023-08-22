@@ -1,18 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
-using ViGo.Domain.Enumerations;
 using ViGo.Models.GoogleMaps;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
-using ViGo.Utilities;
-using ViGo.Utilities.Google;
 
 namespace ViGo.Services
 {
@@ -173,7 +163,7 @@ namespace ViGo.Services
         //    foreach (BookingDetail bookingDetail in bookingDetails)
         //    {
         //        TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(bookingDetail.BeginTime, bookingToMap.Duration);
-                    
+
         //        IList<DriverMappingItem> prioritizedDrivers = new List<DriverMappingItem>();
 
         //        IEnumerable<RouteRoutine> routinesByDate = routeRoutines
@@ -228,7 +218,7 @@ namespace ViGo.Services
         //                            DriverMappingItem (driverId, routineByDate.RouteId, 
         //                                20 + (short)routineByDate.Route.RouteType)); // Average value
         //                    }
-                            
+
         //                }
         //                else
         //                {
@@ -297,12 +287,12 @@ namespace ViGo.Services
 
         //                        // TODO Code
         //                        // Calculate for distance prioritization
-                                
+
         //                    }
         //                }
         //            }
         //        }
-                
+
         //        //prioritizedRoutines = (from routine in routinesByDate
         //        //                       select new KeyValuePair<Guid, int>(routine.Id, 
         //        //                            (routine.StartTime.Value - bookingDetail.BeginTime).Minutes)).ToList();

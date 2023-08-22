@@ -1,25 +1,17 @@
 ﻿using FirebaseAdmin.Auth;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
-using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
-using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.Services
 {
     public class FirebaseServices : BaseServices
     {
-        public FirebaseServices (IUnitOfWork work, ILogger logger) : base(work, logger)
+        public FirebaseServices(IUnitOfWork work, ILogger logger) : base(work, logger)
         {
         }
 
@@ -78,7 +70,7 @@ namespace ViGo.Services
                     .CreateCustomTokenAsync(user.FirebaseUid, cancellationToken);
 
                 using HttpClient client = new HttpClient();
-                string endpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=" 
+                string endpoint = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key="
                     + ViGoConfiguration.FirebaseApiKey;
 
                 client.DefaultRequestHeaders.Accept.Add(
@@ -96,7 +88,7 @@ namespace ViGo.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string result = await response.Content.ReadAsStringAsync(cancellationToken);
-                    FirebaseIdTokenResponse? data = 
+                    FirebaseIdTokenResponse? data =
                         JsonConvert.DeserializeObject<FirebaseIdTokenResponse>(result);
 
                     if (data != null && !string.IsNullOrEmpty(data.IdToken))

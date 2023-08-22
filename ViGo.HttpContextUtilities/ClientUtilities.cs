@@ -1,9 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ViGo.HttpContextUtilities
 {
@@ -15,7 +10,8 @@ namespace ViGo.HttpContextUtilities
             try
             {
                 ipAddress = context.Connection.RemoteIpAddress.ToString();
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 ipAddress = "Invalid IP: " + ex.Message;
             }

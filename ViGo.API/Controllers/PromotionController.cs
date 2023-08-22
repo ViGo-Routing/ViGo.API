@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.Models.Notifications;
 using ViGo.Models.Promotions;
-using ViGo.Repository.Core;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Repository.Core;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
