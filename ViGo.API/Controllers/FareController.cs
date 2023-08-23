@@ -1,13 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using ViGo.Domain;
-using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
-using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -111,9 +106,9 @@ namespace ViGo.API.Controllers
             CancellationToken cancellationToken)
         {
 
-           FareViewModel model = await
-                fareServices.GetFareAsync(fareId,
-                cancellationToken);
+            FareViewModel model = await
+                 fareServices.GetFareAsync(fareId,
+                 cancellationToken);
             return StatusCode(200, model);
         }
 

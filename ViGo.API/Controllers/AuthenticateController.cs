@@ -1,7 +1,5 @@
-﻿using FirebaseAdmin.Auth;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -14,7 +12,6 @@ using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
-using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
 {

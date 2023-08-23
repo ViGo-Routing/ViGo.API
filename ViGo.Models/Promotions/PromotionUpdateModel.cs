@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain.Enumerations;
-using ViGo.Models.Events;
-using ViGo.Models.VehicleTypes;
+﻿using ViGo.Domain.Enumerations;
 
 namespace ViGo.Models.Promotions
 {
@@ -14,7 +7,7 @@ namespace ViGo.Models.Promotions
         public Guid Id { get; set; }
         //public string? Code { get; set; } // Cannot update Code
         public Guid? EventId { get; set; }
-        public string? Name { get; set; } 
+        public string? Name { get; set; }
         public string? Description { get; set; }
         public double? DiscountAmount { get; set; }
         public bool? IsPercentage { get; set; }

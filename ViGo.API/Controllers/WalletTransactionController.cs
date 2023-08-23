@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using ViGo.Domain;
-using ViGo.Models.Wallets;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.WalletTransactions;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -43,7 +41,7 @@ namespace ViGo.API.Controllers
             //{
             //    pagination = PaginationParameter.Default;
             //}
-            IPagedEnumerable<WalletTransactionViewModel> walletTransactions = await 
+            IPagedEnumerable<WalletTransactionViewModel> walletTransactions = await
                 walletTransactionServices.GetAllWalletTransactionsAsync(walletId,
                     pagination, HttpContext, cancellationToken);
             return StatusCode(200, walletTransactions);

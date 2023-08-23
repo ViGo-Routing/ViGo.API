@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain.Enumerations;
-using ViGo.Models.RouteRoutines;
+﻿using ViGo.Domain.Enumerations;
 using ViGo.Models.Stations;
 
 namespace ViGo.Models.Routes

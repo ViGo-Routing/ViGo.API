@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 
 namespace ViGo.Models.Fares
 {
@@ -13,8 +8,9 @@ namespace ViGo.Models.Fares
 
         public double MinimumBasePrice { get; set; }
 
-        public IList<FarePolicyForCalculationModel> 
-            FarePolicies { get; set; }
+        public IList<FarePolicyForCalculationModel>
+            FarePolicies
+        { get; set; }
 
         public FareForCalculationModel(Fare fare,
             IList<FarePolicy> farePolicies)
@@ -23,7 +19,7 @@ namespace ViGo.Models.Fares
             MinimumBasePrice = fare.BasePrice;
 
             FarePolicies = (from policy in farePolicies.OrderBy(p => p.MinDistance)
-                           select new FarePolicyForCalculationModel(policy))
+                            select new FarePolicyForCalculationModel(policy))
                            .ToList();
         }
 

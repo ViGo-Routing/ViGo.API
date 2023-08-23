@@ -1,12 +1,9 @@
 ﻿using Quartz;
-using System.Linq.Dynamic.Core.Tokenizer;
-using System.Runtime.CompilerServices;
-using ViGo.Domain;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
-using ViGo.Utilities.CronJobs;
 using ViGo.Utilities;
+using ViGo.Utilities.CronJobs;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.CronJobs
@@ -37,11 +34,13 @@ namespace ViGo.API.CronJobs
                     await cronJobServices.ResetUserWeeklyCancelRateAsync(context.CancellationToken);
                 }
 
-            } catch (Exception exception)
+            }
+            catch (Exception exception)
             {
                 _logger.LogError(exception, "Exception thrown when executing CronJob.\n" +
                     "Details: {0}", exception.GeneratorErrorMessage());
-            } finally
+            }
+            finally
             {
                 _logger.LogInformation("========= FINISH CRON JOBS =========");
 

@@ -1,26 +1,11 @@
-﻿using FirebaseAdmin.Messaging;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.WalletTransactions;
-using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Utilities.BackgroundTasks;
-using ViGo.Utilities.Configuration;
-using ViGo.Utilities.Extensions;
-using ViGo.Utilities.Google.Firebase;
-using ViGo.Utilities.Payments;
-using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {
@@ -30,12 +15,12 @@ namespace ViGo.Services
             (TopupTransactionCreateModel model, WalletTransaction walletTransaction,
             HttpContext httpContext, CancellationToken cancellationToken);
 
-        public PaymentServices(IUnitOfWork work, ILogger logger) 
+        public PaymentServices(IUnitOfWork work, ILogger logger)
             : base(work, logger)
         {
         }
 
-        public async Task<(TopupTransactionViewModel?, string)> 
+        public async Task<(TopupTransactionViewModel?, string)>
             CreateTopUpTransactionRequest(TopupTransactionCreateModel model,
                 //PaymentMethod paymentMethod,
                 HttpContext httpContext,
@@ -62,8 +47,8 @@ namespace ViGo.Services
                 throw new ApplicationException("Giá trị nạp tiền phải lớn hơn 1.000VND!");
             }
 
-            if (!Enum.IsDefined(model.PaymentMethod) || 
-                (model.PaymentMethod != PaymentMethod.VNPAY 
+            if (!Enum.IsDefined(model.PaymentMethod) ||
+                (model.PaymentMethod != PaymentMethod.VNPAY
                 /* && model.PaymentMethod != PaymentMethod.ZALO*/))
             {
                 throw new ApplicationException("Phương thức thanh toán không hợp lệ!!");

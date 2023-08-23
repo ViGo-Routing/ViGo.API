@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.BookingDetails;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.Routes;
@@ -47,7 +41,7 @@ namespace ViGo.Models.Bookings
         public bool IsDeleted { get; set; }
 
         //public IEnumerable<BookingDetailViewModel> BookingDetails { get; set; }
-        
+
         public BookingViewModel(Booking booking, UserViewModel customer,
             VehicleType vehicleType)
         {

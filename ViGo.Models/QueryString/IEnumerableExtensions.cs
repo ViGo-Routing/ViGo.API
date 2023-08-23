@@ -1,15 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using ViGo.HttpContextUtilities;
 using ViGo.Models.QueryString.Pagination;
-using System.Linq.Dynamic.Core;
 
 namespace ViGo.Models.QueryString
 {
@@ -80,7 +74,7 @@ namespace ViGo.Models.QueryString
                     }
 
                     string orderQuery = orderQueryBuilder.ToString().TrimEnd(',', ' ');
-                    if (!string.IsNullOrWhiteSpace(orderQuery)) 
+                    if (!string.IsNullOrWhiteSpace(orderQuery))
                     {
                         source = source.AsQueryable().OrderBy(orderQuery);
                     }

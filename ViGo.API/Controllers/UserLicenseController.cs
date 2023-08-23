@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.UserLicenses;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 
 namespace ViGo.API.Controllers
@@ -44,7 +44,7 @@ namespace ViGo.API.Controllers
             //    pagination = PaginationParameter.Default;
             //}
 
-            IPagedEnumerable<UserLicenseViewModel> userLicenseViews = await 
+            IPagedEnumerable<UserLicenseViewModel> userLicenseViews = await
                 userLicenseServices.GetAllUserLicenses(pagination, sorting,
                 HttpContext, cancellationToken);
 
@@ -110,12 +110,12 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        [Authorize(Roles ="DRIVER")]
+        [Authorize(Roles = "DRIVER")]
         [HttpPost]
         public async Task<IActionResult> CreateUserLicense([FromBody] UserLicenseCreateModel userLicenseCreate, CancellationToken cancellationToken)
         {
             UserLicenseViewModel userLicense = await userLicenseServices.CreateUserLicense(userLicenseCreate, cancellationToken);
-            if(userLicense == null)
+            if (userLicense == null)
             {
                 throw new ApplicationException("Tạo mới không thành công!");
             }
@@ -135,7 +135,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUserLicense(Guid id, 
+        public async Task<IActionResult> UpdateUserLicense(Guid id,
             [FromBody] UserLicenseUpdateModel userLicenseUpdateModel,
             CancellationToken cancellationToken)
         {

@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.RouteRoutines;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
-using ViGo.Utilities.Validator;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-using ViGo.Models.QueryString.Pagination;
-using ViGo.Models.QueryString;
+using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
 {

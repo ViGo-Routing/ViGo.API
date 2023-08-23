@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
-using ViGo.Models.Users;
-
-namespace ViGo.Models.Vehicles
+﻿namespace ViGo.Models.Vehicles
 {
     public class VehiclesCreateModel
     {

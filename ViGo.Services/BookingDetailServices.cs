@@ -1,14 +1,5 @@
-﻿using Google.Apis.Util;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -17,16 +8,13 @@ using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.RouteRoutines;
-using ViGo.Models.Routes;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Utilities.BackgroundTasks;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google;
-using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -352,6 +340,20 @@ namespace ViGo.Services
 
                 // TODO Code
                 // Time validation
+                if (updateDto.Status == BookingDetailStatus.GOING_TO_PICKUP)
+                {
+                    DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+                    if ((bookingDetail.PickUpDateTime() - vnNow)
+                        .TotalMinutes <= -2)
+                    {
+                        throw new ApplicationException("Chuyến đi trong quá khứ, không thể cập nhật trạng thái!");
+                    }
+
+                    //if ((updateDto.Time.Value - bookingDetail.PickUpDateTime()).TotalHours > 1.5)
+                    //{
+                    //    throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
+                    //}
+                }
             }
 
             if (!bookingDetail.DriverId.HasValue)

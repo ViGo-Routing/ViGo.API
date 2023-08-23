@@ -1,10 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Json;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace ViGo.Utilities
@@ -55,7 +50,8 @@ namespace ViGo.Utilities
                 if (response.IsSuccessStatusCode)
                 {
                     result = JsonConvert.DeserializeObject<T>(resultText);
-                } else
+                }
+                else
                 {
                     throw new Exception("Failed to fetch: " +
                         requestUrl + queryString + "\n" +

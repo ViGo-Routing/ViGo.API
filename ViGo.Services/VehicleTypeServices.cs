@@ -1,18 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -76,10 +68,10 @@ namespace ViGo.Services
                 throw new ApplicationException("Loại phương tiện không tồn tại!!");
             }
 
-                if (vehicleTypeUpdate.Name != null) currentVehicleType.Name = vehicleTypeUpdate.Name;
-                if (vehicleTypeUpdate.Slot != null) currentVehicleType.Slot = (short)vehicleTypeUpdate.Slot;
-                if (vehicleTypeUpdate.Type != null) currentVehicleType.Type = (VehicleSubType)vehicleTypeUpdate.Type;
-                if (vehicleTypeUpdate.IsDeleted != null) currentVehicleType.IsDeleted = (bool)vehicleTypeUpdate.IsDeleted;
+            if (vehicleTypeUpdate.Name != null) currentVehicleType.Name = vehicleTypeUpdate.Name;
+            if (vehicleTypeUpdate.Slot != null) currentVehicleType.Slot = (short)vehicleTypeUpdate.Slot;
+            if (vehicleTypeUpdate.Type != null) currentVehicleType.Type = (VehicleSubType)vehicleTypeUpdate.Type;
+            if (vehicleTypeUpdate.IsDeleted != null) currentVehicleType.IsDeleted = (bool)vehicleTypeUpdate.IsDeleted;
 
             await work.VehicleTypes.UpdateAsync(currentVehicleType);
             await work.SaveChangesAsync();

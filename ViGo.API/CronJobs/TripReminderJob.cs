@@ -1,10 +1,9 @@
 ﻿using Quartz;
-using ViGo.Repository.Core;
 using ViGo.Repository;
+using ViGo.Repository.Core;
 using ViGo.Services;
-using ViGo.Utilities.Extensions;
 using ViGo.Utilities.CronJobs;
-using ViGo.Utilities;
+using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.CronJobs
 {

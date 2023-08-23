@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
@@ -50,7 +45,7 @@ namespace ViGo.Models.WalletTransactions
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet)
-            : this (walletTransaction)
+            : this(walletTransaction)
         {
             //Id = walletTransaction.Id;
             //WalletId = walletTransaction.WalletId;
@@ -68,7 +63,7 @@ namespace ViGo.Models.WalletTransactions
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet, BookingViewModel booking)
-            : this (walletTransaction, wallet)
+            : this(walletTransaction, wallet)
         {
             //Id = walletTransaction.Id;
             //WalletId = walletTransaction.WalletId;
@@ -87,7 +82,7 @@ namespace ViGo.Models.WalletTransactions
         }
 
         public WalletTransactionViewModel(WalletTransaction walletTransaction, WalletViewModel wallet, BookingViewModel? booking, BookingDetailViewModel? bookingDetail)
-            : this (walletTransaction, wallet)
+            : this(walletTransaction, wallet)
         {
             //Id = walletTransaction.Id;
             //WalletId = walletTransaction.WalletId;

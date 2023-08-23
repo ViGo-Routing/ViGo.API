@@ -1,11 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
 using ViGo.Models.WalletTransactions;
 using ViGo.Utilities.Configuration;
 
@@ -19,7 +13,8 @@ namespace ViGo.Utilities.Payments
             {
                 string mac = HashingUtilities.HmacSHA256(data, ViGoConfiguration.ZaloPayKey2);
                 return requestMac.Equals(mac);
-            } catch
+            }
+            catch
             {
                 return false;
             }
@@ -64,7 +59,7 @@ namespace ViGo.Utilities.Payments
         public string Title { get; set; }
 
         public ZaloPayOrderCreateModel(TopupTransactionCreateModel transaction,
-            Guid id, HttpContext context) 
+            Guid id, HttpContext context)
         {
             //string transactionId = Convert.ToBase64String(id.ToByteArray());
             string transactionId = HashingUtilities.ToBase64String(id);

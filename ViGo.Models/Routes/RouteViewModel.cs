@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Sorting;
-using ViGo.Models.RouteRoutines;
 using ViGo.Models.Stations;
 using ViGo.Models.Users;
 
@@ -77,7 +71,7 @@ namespace ViGo.Models.Routes
         public RouteViewModel(Route route, StationViewModel startStation,
             StationViewModel endStation, UserViewModel? user = null,
             RouteViewModel? roundTripRoute = null)
-            : this (route, startStation, endStation, user)
+            : this(route, startStation, endStation, user)
         {
             RoundTripRoute = roundTripRoute;
         }

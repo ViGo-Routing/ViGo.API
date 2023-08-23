@@ -1,9 +1,4 @@
 ﻿using FirebaseAdmin.Messaging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ViGo.Utilities.Google.Firebase
 {
@@ -137,7 +132,7 @@ namespace ViGo.Utilities.Google.Firebase
         }
 
         public static async Task<string> SendNotificationToTopicAsync(
-            string topic, string title, string content, Dictionary<string, string>? data = null, 
+            string topic, string title, string content, Dictionary<string, string>? data = null,
             string? imageUrl = null, CancellationToken cancellationToken = default)
         {
             Notification notification = new Notification

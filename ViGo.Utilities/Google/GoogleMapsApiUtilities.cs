@@ -1,9 +1,4 @@
 ﻿using GoogleMapsApi.Entities.DistanceMatrix.Response;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Models.GoogleMaps;
 using ViGo.Utilities.Configuration;
 
@@ -12,7 +7,7 @@ namespace ViGo.Utilities.Google
     public static class GoogleMapsApiUtilities
     {
         private static string baseUrl = "https://maps.googleapis.com/maps/api";
-        
+
         /// <summary>
         /// In kilometers
         /// </summary>
@@ -21,7 +16,7 @@ namespace ViGo.Utilities.Google
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static async Task<double> GetDistanceBetweenTwoPointsAsync(
-            GoogleMapPoint origin, GoogleMapPoint destination, 
+            GoogleMapPoint origin, GoogleMapPoint destination,
             //DateTime? departureTime,
             CancellationToken cancellationToken)
         {
@@ -103,6 +98,6 @@ namespace ViGo.Utilities.Google
             return 0;
         }
     }
-     
-    
+
+
 }

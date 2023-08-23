@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Domain;
+﻿using ViGo.Domain;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Sorting;
 using ViGo.Models.UserLicenses;
@@ -30,7 +25,8 @@ namespace ViGo.Models.Vehicles
         public UserLicenseViewModel UserLicense { get; set; } = null!;
 
 
-        public VehiclesViewModel(Vehicle vehicle, UserViewModel user, VehicleTypeViewModel vehicleType, UserLicenseViewModel userLicense) {
+        public VehiclesViewModel(Vehicle vehicle, UserViewModel user, VehicleTypeViewModel vehicleType, UserLicenseViewModel userLicense)
+        {
             Id = vehicle.Id;
             Name = vehicle.Name;
             LicensePlate = vehicle.LicensePlate;

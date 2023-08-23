@@ -1,5 +1,4 @@
 ﻿using Quartz;
-using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 using ViGo.Utilities.CronJobs;
 

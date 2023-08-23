@@ -1,21 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 using ViGo.Domain;
 using ViGo.DTOs.Users;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
-using ViGo.Utilities;
-using ViGo.Utilities.Configuration;
-using ViGo.Utilities.Extensions;
-using ViGo.Models.Bookings;
 
 namespace ViGo.API.Controllers
 {
@@ -191,7 +181,7 @@ namespace ViGo.API.Controllers
             CancellationToken cancellationToken)
         {
             UserViewModel? user = await userServices.GetUserByPhoneNumberAsync(phone, cancellationToken);
-            
+
             if (user == null)
             {
                 throw new ApplicationException("Người dùng không tồn tại!");
@@ -213,7 +203,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         [HttpPut("{userId}")]
-        public async Task<IActionResult> UpdateUserAsync(Guid userId, 
+        public async Task<IActionResult> UpdateUserAsync(Guid userId,
             [FromBody] UserUpdateModel userUpdate)
         {
             User user = await userServices.UpdateUserAsync(userId, userUpdate);
@@ -258,11 +248,11 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize]
         [HttpPut("UpdateStatus/{id}")]
-        public async Task<IActionResult> ChangeUserStatus(Guid id, 
+        public async Task<IActionResult> ChangeUserStatus(Guid id,
             [FromBody] UserChangeStatusModel statusModel,
             CancellationToken cancellationToken)
         {
-            UserViewModel userView = await userServices.ChangeUserStatus(id, 
+            UserViewModel userView = await userServices.ChangeUserStatus(id,
                 statusModel, cancellationToken);
             return StatusCode(200, userView);
         }

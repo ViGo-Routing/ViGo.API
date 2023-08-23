@@ -30,7 +30,8 @@ namespace ViGo.Utilities.BackgroundTasks
                 {
                     _logger.LogInformation($"{workItem} is dequeued...");
                     await workItem(cancellationToken);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     _logger.LogError($"Error occured executing {workItem}.{Environment.NewLine}" +
                         $"Details: {ex.GeneratorErrorMessage()}");

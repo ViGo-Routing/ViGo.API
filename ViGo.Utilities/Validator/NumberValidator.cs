@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ViGo.Utilities.Validator
+﻿namespace ViGo.Utilities.Validator
 {
     public static class NumberValidator
     {

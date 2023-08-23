@@ -1,16 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
-using ViGo.Models.Bookings;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities.BackgroundTasks;
-using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
 {

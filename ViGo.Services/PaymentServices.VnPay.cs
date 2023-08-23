@@ -1,11 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.HttpContextUtilities;
@@ -14,7 +8,6 @@ using ViGo.Models.WalletTransactions;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
 using ViGo.Utilities.Extensions;
-using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Payments;
 
 namespace ViGo.Services
@@ -313,7 +306,7 @@ namespace ViGo.Services
                                             //await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thành công",
                                             //"Quý khách đã thực hiện thanh toán topup bằng VNPay thành công!!", data: dataToSend,
                                             //    cancellationToken: cancellationToken);
-                                            
+
                                             //// Send data to mobile application
                                             //await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
 
@@ -335,12 +328,12 @@ namespace ViGo.Services
                                             notification.Title = "Thanh toán bằng VNPay thất bại";
                                             notification.Description = "Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!";
 
-                                           // await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
-                                           //"Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", data: dataToSend,
-                                           //cancellationToken: cancellationToken);
+                                            // await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, "Thanh toán bằng VNPay thất bại",
+                                            //"Giao dịch thực hiện thanh toán topup bằng VNPay của quý khách đã bị thất bại!!", data: dataToSend,
+                                            //cancellationToken: cancellationToken);
 
-                                           // // Send data to mobile application
-                                           // await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
+                                            // // Send data to mobile application
+                                            // await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
 
                                             await notificationServices.CreateFirebaseNotificationAsync(
                                                 notification, fcmToken, dataToSend, cancellationToken);
@@ -387,7 +380,7 @@ namespace ViGo.Services
                     && !string.IsNullOrEmpty(fcmToken) && user != null)
                 {
                     //_logger.LogInformation("Send notification when exception...");
-                   Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                    Dictionary<string, string> dataToSend = new Dictionary<string, string>()
                     {
                         {"action", NotificationAction.TransactionDetail },
                         { "walletTransactionId", walletTransaction.Id.ToString() },

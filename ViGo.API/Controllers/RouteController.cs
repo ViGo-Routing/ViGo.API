@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Routes;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services;
 using ViGo.Utilities;
-using ViGo.Utilities.Exceptions;
-using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
 {
@@ -116,7 +113,7 @@ namespace ViGo.API.Controllers
             //}
 
             IPagedEnumerable<RouteViewModel> dtos = await
-                routeServices.GetRoutesAsync(userId, 
+                routeServices.GetRoutesAsync(userId,
                 pagination, sorting, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
@@ -209,7 +206,7 @@ namespace ViGo.API.Controllers
                 throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
             }
 
-            Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto, 
+            Domain.Route updatedRoute = await routeServices.UpdateRouteAsync(dto,
                 isCalledFromBooking: false,
                 cancellationToken);
             return StatusCode(200, updatedRoute);

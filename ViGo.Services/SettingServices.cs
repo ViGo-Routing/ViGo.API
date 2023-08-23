@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Fares;
@@ -87,7 +82,7 @@ namespace ViGo.Services
             SettingUpdateModel updateModel, CancellationToken cancellationToken)
         {
             Setting? setting = await work.Settings
-                .GetAsync(s => s.Key.Equals(updateModel.Key), 
+                .GetAsync(s => s.Key.Equals(updateModel.Key),
                 cancellationToken: cancellationToken);
 
             if (setting is null)

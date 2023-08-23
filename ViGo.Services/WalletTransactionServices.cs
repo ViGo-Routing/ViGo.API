@@ -1,22 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
-using ViGo.Domain.Enumerations;
-using ViGo.Models.Bookings;
-using ViGo.Models.Users;
-using ViGo.Models.Wallets;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.WalletTransactions;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -28,7 +19,7 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<WalletTransactionViewModel>> GetAllWalletTransactionsAsync(
             Guid walletId,
-            PaginationParameter pagination, 
+            PaginationParameter pagination,
             HttpContext context, CancellationToken cancellationToken)
         {
             Wallet wallet = await work.Wallets.GetAsync(walletId, cancellationToken: cancellationToken);
@@ -40,7 +31,7 @@ namespace ViGo.Services
                 }
             }
 
-            IEnumerable<WalletTransaction> walletTransactions = await 
+            IEnumerable<WalletTransaction> walletTransactions = await
                 work.WalletTransactions.GetAllAsync(
                     query => query.Where(wt => wt.WalletId.Equals(walletId)),
                     cancellationToken: cancellationToken);
@@ -85,8 +76,8 @@ namespace ViGo.Services
             //    }
             //}
             IEnumerable<WalletTransactionViewModel> walletTransactionViewModels = from walletTransaction in walletTransactions
-                                                                                  //join walletView in walletViewModels
-                                                                                    //on walletTransaction.WalletId equals walletView.Id
+                                                                                      //join walletView in walletViewModels
+                                                                                      //on walletTransaction.WalletId equals walletView.Id
                                                                                   select new WalletTransactionViewModel(walletTransaction/*, walletView*/);
 
             return walletTransactionViewModels.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize, totalRecords, context);

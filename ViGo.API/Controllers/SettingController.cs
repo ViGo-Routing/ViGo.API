@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using ViGo.Domain;
-using ViGo.Models.QueryString.Pagination;
-using ViGo.Models.Routes;
 using ViGo.Models.Settings;
 using ViGo.Repository.Core;
 using ViGo.Services;

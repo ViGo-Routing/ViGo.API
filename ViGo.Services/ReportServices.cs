@@ -1,21 +1,15 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Reports;
 using ViGo.Models.Users;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -31,7 +25,7 @@ namespace ViGo.Services
             IEnumerable<Report> reports = await work.Reports.GetAllAsync(cancellationToken: cancellationToken);
 
             reports = reports.Sort(sorting.OrderBy);
-            
+
             int totalRecords = reports.Count();
             reports = reports.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
 
@@ -65,7 +59,7 @@ namespace ViGo.Services
         {
             Guid userId = IdentityUtilities.GetCurrentUserId();
             IEnumerable<Report> reports = await work.Reports.GetAllAsync(
-                q => q.Where(x => x.UserId.Equals(userId)),cancellationToken: cancellationToken);
+                q => q.Where(x => x.UserId.Equals(userId)), cancellationToken: cancellationToken);
 
             reports = reports.Sort(sorting.OrderBy);
             int totalRecords = reports.Count();

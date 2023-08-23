@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace ViGo.API.Converters
+﻿namespace ViGo.API.Converters
 {
     //public class CustomStringEnumConverter<Enum> : JsonConverter
     //{

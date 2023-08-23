@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using ViGo.Models.QueryString.Pagination;
-
-namespace ViGo.Models.QueryString
+﻿namespace ViGo.Models.QueryString
 {
     //public abstract class QueryStringParameters
     //{

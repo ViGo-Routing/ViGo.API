@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Quartz;
+﻿using Microsoft.AspNetCore.Mvc;
 using ViGo.Repository.Core;
-using ViGo.Services;
 using ViGo.Utilities.Google;
 
 namespace ViGo.API.Controllers

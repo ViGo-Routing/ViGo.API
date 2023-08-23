@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ViGo.Domain.Core
+﻿namespace ViGo.Domain.Core
 {
     // Base Class for Entity
     public abstract class BaseEntity

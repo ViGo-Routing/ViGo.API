@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Quartz;
-using System.Globalization;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
 using ViGo.Models.QueryString.Pagination;
@@ -15,7 +12,6 @@ using ViGo.Repository.Core;
 using ViGo.Services;
 using ViGo.Utilities;
 using ViGo.Utilities.BackgroundTasks;
-using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
 {
@@ -77,8 +73,7 @@ namespace ViGo.API.Controllers
         /// Get list of Bookings. 
         /// </summary>
         /// <remarks>
-        /// If the current user is Admin, all the bookings will be fetched.
-        /// Otherwise, only bookings of current user (Customer) will be fetched.
+        /// Only Admin
         /// </remarks>
         /// <returns>
         /// List of Bookings
@@ -119,6 +114,35 @@ namespace ViGo.API.Controllers
                     pagination, sorting, filters, HttpContext,
                     cancellationToken);
             }
+            return StatusCode(200, dtos);
+        }
+
+        /// <summary>
+        /// Get list of Bookings of a customer
+        /// </summary>
+        /// <returns>
+        /// List of Bookings
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of bookings successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Customer/{customerId}")]
+        [ProducesResponseType(typeof(IPagedEnumerable<BookingViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
+        public async Task<IActionResult> GetCustomerBookings(
+            Guid customerId, [FromQuery] PaginationParameter pagination,
+            [FromQuery] BookingSortingParameters sorting,
+            [FromQuery] BookingFilterParameters filters,
+            CancellationToken cancellationToken)
+        {
+            IPagedEnumerable<BookingViewModel> dtos =
+                await bookingServices.GetBookingsAsync(
+                    customerId, pagination, sorting, filters, HttpContext,
+                    cancellationToken);
             return StatusCode(200, dtos);
         }
 

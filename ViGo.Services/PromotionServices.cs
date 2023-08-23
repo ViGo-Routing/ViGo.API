@@ -1,18 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.Promotions;
-using ViGo.Repository.Core;
+using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities.Validator;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -32,7 +27,8 @@ namespace ViGo.Services
             {
                 promotions = await work.Promotions.GetAllAsync(
                     cancellationToken: cancellationToken);
-            } else
+            }
+            else
             {
                 // Get by event
                 promotions = await work.Promotions.GetAllAsync(query => query.Where(
@@ -128,7 +124,7 @@ namespace ViGo.Services
                 minLengthErrorMessage: "Tên mã giảm giá phải có từ 5 kí tự trở lên!",
                 maxLength: 50,
                 maxLengthErrorMessage: "Tên mã giảm giá không được vượt quá 50 kí tự!!");
-            
+
             model.Description.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Mô tả mã giảm giá không được bỏ trống!",
@@ -257,10 +253,10 @@ namespace ViGo.Services
                     minLengthErrorMessage: "Tên mã giảm giá phải có từ 5 kí tự trở lên!",
                     maxLength: 50,
                     maxLengthErrorMessage: "Tên mã giảm giá không được vượt quá 50 kí tự!!");
-                
+
                 promotion.Name = model.Name;
             }
-            
+
             if (model.Description != null && !string.IsNullOrEmpty(model.Description))
             {
                 model.Description.StringValidate(
@@ -284,7 +280,7 @@ namespace ViGo.Services
 
                 promotion.DiscountAmount = model.DiscountAmount.Value;
             }
-           
+
             if (model.IsPercentage.HasValue)
             {
                 if (model.IsPercentage.Value)
@@ -295,7 +291,8 @@ namespace ViGo.Services
                         {
                             throw new ApplicationException("Giá trị giảm giá phải nhỏ hơn 100%!");
                         }
-                    } else
+                    }
+                    else
                     {
                         if (promotion.DiscountAmount > 100)
                         {
@@ -332,7 +329,8 @@ namespace ViGo.Services
                     {
                         throw new ApplicationException("Ngày bắt đầu và ngày hết hạn không hợp lệ!!");
                     }
-                } else
+                }
+                else
                 {
                     if (promotion.StartTime > model.ExpireTime.Value)
                     {
@@ -341,7 +339,7 @@ namespace ViGo.Services
                 }
 
                 promotion.ExpireTime = model.ExpireTime;
-                
+
             }
 
             // MaxTotalUsage
@@ -389,7 +387,7 @@ namespace ViGo.Services
 
                 promotion.VehicleTypeId = model.VehicleTypeId.Value;
             }
-            
+
 
             // Event
             if (model.EventId.HasValue)

@@ -1,19 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.QueryString;
+using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Users;
 using ViGo.Models.Wallets;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -52,7 +47,7 @@ namespace ViGo.Services
             IEnumerable<Wallet> wallets = await work.Wallets.GetAllAsync(cancellationToken: cancellationToken);
             int totalRecords = wallets.Count();
             wallets = wallets.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
-            
+
             IEnumerable<Guid> userIds = wallets.Select(w => w.UserId);
             IEnumerable<User> users = await work.Users.GetAllAsync(e => e.Where(r => userIds.Contains(r.Id)), cancellationToken: cancellationToken);
             IEnumerable<UserViewModel> userView = from user in users
@@ -71,8 +66,8 @@ namespace ViGo.Services
                 userId = IdentityUtilities.GetCurrentUserId();
             }
 
-            Wallet wallet = await work.Wallets.GetAsync(q => q.UserId.Equals(userId), cancellationToken : cancellationToken);
-            
+            Wallet wallet = await work.Wallets.GetAsync(q => q.UserId.Equals(userId), cancellationToken: cancellationToken);
+
             if (wallet is null)
             {
                 throw new ApplicationException("Ví của người dùng không tồn tại!!");
@@ -86,7 +81,7 @@ namespace ViGo.Services
             return walletView;
         }
 
-        public async Task<WalletViewModel> UpdateWalletStatusById(Guid id, 
+        public async Task<WalletViewModel> UpdateWalletStatusById(Guid id,
             WalletUpdateModel walletUpdate, CancellationToken cancellationToken)
         {
             var currentWallet = await work.Wallets.GetAsync(id,

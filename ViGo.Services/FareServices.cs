@@ -1,21 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Bson;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.FarePolicies;
 using ViGo.Models.Fares;
 using ViGo.Models.VehicleTypes;
 using ViGo.Repository.Core;
-using ViGo.Models.QueryString.Pagination;
 using ViGo.Services.Core;
 using ViGo.Utilities;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Services
 {
@@ -304,7 +296,8 @@ namespace ViGo.Services
             if (fareModel.TripType == BookingType.ONE_WAY)
             {
                 totalTickets = fareModel.TotalNumberOfTickets;
-            } else
+            }
+            else
             {
                 totalTickets = fareModel.TotalNumberOfTickets / 2;
             }
@@ -320,7 +313,7 @@ namespace ViGo.Services
                     responseModel.RoundTripOriginalFare) * totalTickets;
                 responseModel.RoundTripNumberTicketsDiscount *= totalTickets;
                 responseModel.RoundTripAdditionalFare *= totalTickets;
-                responseModel.RoundTripFinalFare = responseModel.RoundTripOriginalFare 
+                responseModel.RoundTripFinalFare = responseModel.RoundTripOriginalFare
                     + responseModel.RoundTripAdditionalFare - responseModel.RoundTripNumberTicketsDiscount;
             }
 

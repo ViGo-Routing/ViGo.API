@@ -1,14 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
-using ViGo.Models.RouteRoutines;
-using ViGo.Models.Routes;
-using ViGo.Repository.Core;
 using ViGo.Models.QueryString.Pagination;
+using ViGo.Models.RouteRoutines;
+using ViGo.Repository.Core;
 using ViGo.Services;
-using ViGo.Utilities.Exceptions;
-using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.Controllers
 {
@@ -52,7 +48,7 @@ namespace ViGo.API.Controllers
             //}
 
             IEnumerable<RouteRoutineViewModel> dtos = await routeRoutineServices
-                .GetRouteRoutinesAsync(routeId, 
+                .GetRouteRoutinesAsync(routeId,
                 pagination, HttpContext,
                 cancellationToken);
             return StatusCode(200, dtos);
@@ -142,7 +138,7 @@ namespace ViGo.API.Controllers
                 throw new ApplicationException("Thông tin tuyến đường không trùng khớp! Vui lòng kiểm tra ID của tuyến đường");
             }
 
-            IEnumerable<RouteRoutine> updatedRoutines = await 
+            IEnumerable<RouteRoutine> updatedRoutines = await
                 routeRoutineServices.UpdateRouteRoutinesAsync(model, true, cancellationToken);
             return StatusCode(200, updatedRoutines);
         }
@@ -167,7 +163,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        public async Task<IActionResult> UpdateRouteRoutine(Guid routineId, 
+        public async Task<IActionResult> UpdateRouteRoutine(Guid routineId,
             RouteRoutineSingleUpdateModel model,
             CancellationToken cancellationToken)
         {

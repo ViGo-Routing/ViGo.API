@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Serilog;
-using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Text;
 using ViGo.API.CronJobs;
@@ -32,7 +30,8 @@ namespace ViGo.API
             {
                 Console.OutputEncoding = Encoding.UTF8;
                 loggerConfig = loggerConfig.WriteTo.Console(outputTemplate: logOutputTemplate);
-            } else
+            }
+            else
             {
                 loggerConfig = loggerConfig.WriteTo.AzureApp(outputTemplate: logOutputTemplate);
             }
@@ -164,31 +163,31 @@ namespace ViGo.API
                         }
                     };
                 });
-                //.AddPolicyScheme(JwtBearerDefaults.AuthenticationScheme, JwtBearerDefaults.AuthenticationScheme, options =>
-                //{
-                //    options.ForwardDefaultSelector = context =>
-                //    {
-                //        string authorization = context.Request.Headers[HeaderNames.Authorization];
-                //        if (!string.IsNullOrEmpty(authorization) &&
-                //            authorization.StartsWith("Bearer "))
-                //        {
-                //            string token = authorization.Substring("Bearer ".Length).Trim();
-                //            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
+            //.AddPolicyScheme(JwtBearerDefaults.AuthenticationScheme, JwtBearerDefaults.AuthenticationScheme, options =>
+            //{
+            //    options.ForwardDefaultSelector = context =>
+            //    {
+            //        string authorization = context.Request.Headers[HeaderNames.Authorization];
+            //        if (!string.IsNullOrEmpty(authorization) &&
+            //            authorization.StartsWith("Bearer "))
+            //        {
+            //            string token = authorization.Substring("Bearer ".Length).Trim();
+            //            JwtSecurityTokenHandler jwtHandler = new JwtSecurityTokenHandler();
 
-                //            if (jwtHandler.CanReadToken(token))
-                //            {
-                //                if (jwtHandler.ReadJwtToken(token).Issuer.Equals("https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId))
-                //                {
-                //                    return "Firebase_Bearer";
-                //                } else
-                //                {
-                //                    return "API_Bearer";
-                //                }
-                //            }
-                //        }
-                //        return "API_Bearer";
-                //    };
-                //});
+            //            if (jwtHandler.CanReadToken(token))
+            //            {
+            //                if (jwtHandler.ReadJwtToken(token).Issuer.Equals("https://securetoken.google.com/" + ViGoConfiguration.FirebaseProjectId))
+            //                {
+            //                    return "Firebase_Bearer";
+            //                } else
+            //                {
+            //                    return "API_Bearer";
+            //                }
+            //            }
+            //        }
+            //        return "API_Bearer";
+            //    };
+            //});
             builder.Services.AddAuthorization();
 
             // CORS
@@ -206,8 +205,8 @@ namespace ViGo.API
             // Configure the HTTP request pipeline.
             //if (app.Environment.IsDevelopment())
             //{
-                app.UseSwagger();
-                app.UseSwaggerUI();
+            app.UseSwagger();
+            app.UseSwaggerUI();
             //}
 
             app.UseHttpsRedirection();
