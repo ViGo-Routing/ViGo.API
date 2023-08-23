@@ -161,7 +161,7 @@ namespace ViGo.Services
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(userId)
                     && (bookingId.HasValue ? bd.BookingId.Equals(bookingId.Value) : true)
-                    && bd.Status != BookingDetailStatus.CANCELLED), cancellationToken: cancellationToken);
+                    /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
             }
 
             bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
@@ -306,6 +306,155 @@ namespace ViGo.Services
 
             return dtos.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context);
+        }
+
+        public async Task<BookingDetailViewModel?> GetUpcomingTripAsync(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                userId = IdentityUtilities.GetCurrentUserId();
+            }
+
+            User user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            if (user is null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!!!");
+            }
+            if (user.Role != UserRole.CUSTOMER && user.Role != UserRole.DRIVER)
+            {
+                throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
+            }
+
+            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+            IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
+            if (user.Role == UserRole.CUSTOMER)
+            {
+                IEnumerable<Booking> bookings = await work.Bookings
+                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
+                cancellationToken: cancellationToken);
+                IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
+                bookingDetails = await work.BookingDetails.GetAllAsync(
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                    cancellationToken: cancellationToken);
+
+            }
+            else if (user.Role == UserRole.DRIVER)
+            {
+                bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                    bd.DriverId.Value.Equals(userId)
+                    /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
+            }
+            bookingDetails = bookingDetails.Where(
+                d => d.PickUpDateTime() > vnNow).OrderBy(d => d.Date)
+                .ThenBy(d => d.CustomerDesiredPickupTime);
+            if (!bookingDetails.Any())
+            {
+                return null;
+            }
+
+            BookingDetail upcoming = bookingDetails.First();
+
+            UserViewModel? driverDto = null;
+            if (upcoming.DriverId.HasValue)
+            {
+                User driver = await work.Users.GetAsync(upcoming.DriverId.Value, cancellationToken: cancellationToken);
+                driverDto = new UserViewModel(driver);
+            }
+
+            RouteRoutine customerRoutine = await work.RouteRoutines
+                .GetAsync(upcoming.CustomerRouteRoutineId, cancellationToken: cancellationToken);
+            RouteRoutineViewModel customerRoutineModel = new RouteRoutineViewModel(customerRoutine);
+
+            Station startStation = await work.Stations.GetAsync(upcoming.StartStationId, includeDeleted: true,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(upcoming.EndStationId, includeDeleted: true,
+                cancellationToken: cancellationToken);
+
+            BookingDetailViewModel bookingDetailViewModel = new BookingDetailViewModel(upcoming, customerRoutineModel,
+                 new StationViewModel(startStation), new StationViewModel(endStation), driverDto);
+
+            return bookingDetailViewModel;
+        }
+
+        public async Task<BookingDetailViewModel?> GetCurrentTripAsync(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            if (!IdentityUtilities.IsAdmin())
+            {
+                userId = IdentityUtilities.GetCurrentUserId();
+            }
+
+            User user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            if (user is null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!!!");
+            }
+            if (user.Role != UserRole.CUSTOMER && user.Role != UserRole.DRIVER)
+            {
+                throw new ApplicationException("Vai trò người dùng không hợp lệ!!");
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = new List<BookingDetail>();
+            if (user.Role == UserRole.CUSTOMER)
+            {
+                IEnumerable<Booking> bookings = await work.Bookings
+                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
+                cancellationToken: cancellationToken);
+                IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+
+                bookingDetails = await work.BookingDetails.GetAllAsync(
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                    cancellationToken: cancellationToken);
+
+            }
+            else if (user.Role == UserRole.DRIVER)
+            {
+                bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                    bd.DriverId.Value.Equals(userId)
+                    /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
+            }
+            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+
+            bookingDetails = bookingDetails.Where(
+                d => d.Status == BookingDetailStatus.GOING_TO_PICKUP ||
+                    d.Status == BookingDetailStatus.ARRIVE_AT_PICKUP ||
+                    d.Status == BookingDetailStatus.GOING_TO_DROPOFF ||
+                    d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                .OrderByDescending(d => d.Date)
+                .ThenByDescending(d => d.CustomerDesiredPickupTime);
+            if (!bookingDetails.Any())
+            {
+                return null;
+            }
+
+            BookingDetail current = bookingDetails.First();
+
+            UserViewModel? driverDto = null;
+            if (current.DriverId.HasValue)
+            {
+                User driver = await work.Users.GetAsync(current.DriverId.Value, cancellationToken: cancellationToken);
+                driverDto = new UserViewModel(driver);
+            }
+
+            RouteRoutine customerRoutine = await work.RouteRoutines
+                .GetAsync(current.CustomerRouteRoutineId, cancellationToken: cancellationToken);
+            RouteRoutineViewModel customerRoutineModel = new RouteRoutineViewModel(customerRoutine);
+
+            Station startStation = await work.Stations.GetAsync(current.StartStationId, includeDeleted: true,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(current.EndStationId, includeDeleted: true,
+                cancellationToken: cancellationToken);
+
+            BookingDetailViewModel bookingDetailViewModel = new BookingDetailViewModel(current, customerRoutineModel,
+                 new StationViewModel(startStation), new StationViewModel(endStation), driverDto);
+
+            return bookingDetailViewModel;
         }
 
         public async Task<(BookingDetail, Guid)> UpdateBookingDetailStatusAsync(

@@ -56,8 +56,68 @@ namespace ViGo.API.Controllers
                 .GetBookingDetailAsync(bookingDetailId, cancellationToken);
             if (dto == null)
             {
-                throw new ApplicationException("Booking Detail không tồn tại!!");
+                throw new ApplicationException("Chuyến đi không tồn tại!!");
             }
+
+            return StatusCode(200, dto);
+        }
+
+        /// <summary>
+        /// Get upcoming Trip for a user
+        /// </summary>
+        /// <remarks>If there is no upcoming trip, the result will be null.</remarks>
+        /// <returns>
+        /// Upcoming Booking Detail information.
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get Booking Detail information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Upcoming/{userId}")]
+        [ProducesResponseType(typeof(BookingDetailViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> GetUpcomingBookingDetail(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetailViewModel? dto = await bookingDetailServices
+                .GetUpcomingTripAsync(userId, cancellationToken);
+            //if (dto == null)
+            //{
+            //    throw new ApplicationException("Booking Detail không tồn tại!!");
+            //}
+
+            return StatusCode(200, dto);
+        }
+
+        /// <summary>
+        /// Get current Trip for a user
+        /// </summary>
+        /// <remarks>If there is no current trip, the result will be null.</remarks>
+        /// <returns>
+        /// Current Booking Detail information.
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get Booking Detail information successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Current/{userId}")]
+        [ProducesResponseType(typeof(BookingDetailViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> GetCurrentBookingDetail(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetailViewModel? dto = await bookingDetailServices
+                .GetCurrentTripAsync(userId, cancellationToken);
+            //if (dto == null)
+            //{
+            //    throw new ApplicationException("Booking Detail không tồn tại!!");
+            //}
 
             return StatusCode(200, dto);
         }
