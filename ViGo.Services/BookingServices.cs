@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Data;
+using System.Globalization;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -107,21 +108,21 @@ namespace ViGo.Services
                 from userDto in users
                 select new UserViewModel(userDto);
 
-            //IEnumerable<Guid> customerRouteIds = bookings.Select(b => b.CustomerRouteId).Distinct();
-            //IEnumerable<Route> customerRoutes = await work.Routes.GetAllAsync(
-            //    query => query.Where(
-            //        r => customerRouteIds.Contains(r.Id)), cancellationToken: cancellationToken);
+            IEnumerable<Guid> customerRouteIds = bookings.Select(b => b.CustomerRouteId).Distinct();
+            IEnumerable<Route> customerRoutes = await work.Routes.GetAllAsync(
+                query => query.Where(
+                    r => customerRouteIds.Contains(r.Id)), cancellationToken: cancellationToken);
 
             ////IEnumerable<RouteStation> routeStations = await work.RouteStations
             ////    .GetAllAsync(query => query.Where(
             ////        rs => routeStationIds.Contains(rs.Id)), cancellationToken: cancellationToken);
-            //IEnumerable<Guid> stationIds =
-            //    customerRoutes.Select(rs => rs.StartStationId)
-            //    .Concat(customerRoutes.Select(r => r.EndStationId))
-            //    .Distinct();
-            //IEnumerable<Station> stations = await work.Stations
-            //    .GetAllAsync(query => query.Where(
-            //        s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
+            IEnumerable<Guid> stationIds =
+                customerRoutes.Select(rs => rs.StartStationId)
+                .Concat(customerRoutes.Select(r => r.EndStationId))
+                .Distinct();
+            IEnumerable<Station> stations = await work.Stations
+                .GetAllAsync(query => query.Where(
+                    s => stationIds.Contains(s.Id)), cancellationToken: cancellationToken);
 
             IEnumerable<Guid> vehicleTypeIds = bookings.Select(b => b.VehicleTypeId).Distinct();
             IEnumerable<VehicleType> vehicleTypes = await work.VehicleTypes
@@ -132,24 +133,33 @@ namespace ViGo.Services
                 from booking in bookings
                 join customer in userDtos
                     on booking.CustomerId equals customer.Id
-                //join route in customerRoutes
-                //    on booking.CustomerRouteId equals route.Id
+                join route in customerRoutes
+                    on booking.CustomerRouteId equals route.Id
                 //join startRouteStation in routeStations
                 //    on booking.StartRouteStationId equals startRouteStation.Id
-                //join startStation in stations
-                //    on route.StartStationId equals startStation.Id
+                join startStation in stations
+                    on route.StartStationId equals startStation.Id
                 //join endRouteStation in routeStations
                 //    on booking.EndRouteStationId equals endRouteStation.Id
-                //join endStation in stations
-                //    on route.EndStationId equals endStation.Id
+                join endStation in stations
+                    on route.EndStationId equals endStation.Id
                 join vehicleType in vehicleTypes
                     on booking.VehicleTypeId equals vehicleType.Id
                 select new BookingViewModel(
-                    booking, customer, /*route,*/
-                    //new StationViewModel(startStation, 1),
-                    //new StationViewModel(endStation, 2),
+                    booking, customer, route,
+                    new StationViewModel(startStation),
+                    new StationViewModel(endStation),
                     vehicleType
                     );
+
+            dtos = dtos.ToList();
+
+            foreach (BookingViewModel booking in dtos)
+            {
+                (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+                booking.TotalBookingDetailsCount = total;
+                booking.TotalAssignedBookingDetailsCount = assigned;
+            }
             //IEnumerable<BookingViewModel> dtos
             //    = from booking in bookings
             //      select new BookingViewModel(booking);
@@ -248,6 +258,14 @@ namespace ViGo.Services
             //IEnumerable<BookingViewModel> dtos
             //    = from booking in bookings
             //      select new BookingViewModel(booking);
+            dtos = dtos.ToList();
+
+            foreach (BookingViewModel booking in dtos)
+            {
+                (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+                booking.TotalBookingDetailsCount = total;
+                booking.TotalAssignedBookingDetailsCount = assigned;
+            }
 
             return dtos.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context);
@@ -314,10 +332,12 @@ namespace ViGo.Services
             //    bookingDetailDtos.Add(new BookingDetailViewModel(bookingDetail, driver));
             //}
 
+            (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+
             BookingViewModel dto = new BookingViewModel(booking,
                 customerDto, route,
                 new StationViewModel(startStation),
-                new StationViewModel(endStation), vehicleType);
+                new StationViewModel(endStation), vehicleType, total, assigned);
             //BookingViewModel dto = new BookingViewModel(booking);
 
             return dto;
@@ -1642,6 +1662,21 @@ namespace ViGo.Services
                 });
 
             return bookings;
+        }
+
+        private async Task<(int, int)> CountBookingDetailsAsync(Guid bookingId,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
+            if (!bookingDetails.Any())
+            {
+                return (0, 0);
+            }
+            int bookingDetailsCount = bookingDetails.Count();
+            int assignedBookingDetailsCount = bookingDetails.Count(d => d.DriverId.HasValue);
+            return (bookingDetailsCount, assignedBookingDetailsCount);
         }
         #endregion
     }

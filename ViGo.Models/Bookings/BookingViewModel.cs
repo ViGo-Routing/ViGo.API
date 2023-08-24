@@ -39,6 +39,8 @@ namespace ViGo.Models.Bookings
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
+        public int? TotalBookingDetailsCount { get; set; }
+        public int? TotalAssignedBookingDetailsCount { get; set; }
 
         //public IEnumerable<BookingDetailViewModel> BookingDetails { get; set; }
 
@@ -75,6 +77,15 @@ namespace ViGo.Models.Bookings
         }
 
         public BookingViewModel(Booking booking, UserViewModel customer,
+            VehicleType vehicleType, int totalBookingDetailsCount,
+            int totalAssignedBookingDetailsCount) : this(booking, customer, vehicleType)
+        {
+            
+            TotalBookingDetailsCount = totalBookingDetailsCount;
+            TotalAssignedBookingDetailsCount = totalAssignedBookingDetailsCount;
+        }
+
+        public BookingViewModel(Booking booking, UserViewModel customer,
             Route customerRoute,
             StationViewModel startRouteStation,
             StationViewModel endRouteStation,
@@ -105,6 +116,16 @@ namespace ViGo.Models.Bookings
             //UpdatedTime = booking.UpdatedTime;
             //UpdatedBy = booking.UpdatedBy;
             //IsDeleted = booking.IsDeleted;
+        }
+        public BookingViewModel(Booking booking, UserViewModel customer,
+            Route customerRoute,
+            StationViewModel startRouteStation,
+            StationViewModel endRouteStation,
+            VehicleType vehicleType, int totalBookingDetailsCount,
+            int totalAssignedBookingDetailsCount) : this(booking, customer, customerRoute, startRouteStation, endRouteStation, vehicleType)
+        {
+            TotalBookingDetailsCount = totalBookingDetailsCount;
+            TotalAssignedBookingDetailsCount = totalAssignedBookingDetailsCount;
         }
 
         //public BookingViewModel(Booking booking, UserViewModel customer,
