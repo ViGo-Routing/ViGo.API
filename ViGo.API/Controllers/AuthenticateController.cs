@@ -83,7 +83,7 @@ namespace ViGo.API.Controllers
             var token = new JwtSecurityToken(
                 issuer: ViGoConfiguration.ValidIssuer,
                 audience: ViGoConfiguration.ValidAudience,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.Now.AddHours(2),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(
                     authSigningKey, SecurityAlgorithms.HmacSha256));
@@ -152,7 +152,7 @@ namespace ViGo.API.Controllers
             var token = new JwtSecurityToken(
                 issuer: ViGoConfiguration.ValidIssuer,
                 audience: ViGoConfiguration.ValidAudience,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.Now.AddHours(2),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(
                     authSigningKey, SecurityAlgorithms.HmacSha256));
