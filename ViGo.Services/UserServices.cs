@@ -539,6 +539,33 @@ namespace ViGo.Services
             return analysisModel;
         }
 
+        public async Task<SingleUserAnalysisModel?> GetSingleUserAnalysisAsync(Guid userId,
+            CancellationToken cancellationToken)
+        {
+            User? user = await work.Users.GetAsync(userId, cancellationToken: cancellationToken);
+            if (user is null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!!");
+            }
+
+            if (user.Role == UserRole.DRIVER)
+            {
+                IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                    .GetAllAsync(query => query.Where(
+                        d => d.DriverId.HasValue && d.DriverId.Equals(userId)
+                        && (d.Status == BookingDetailStatus.COMPLETED ||
+                        d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF ||
+                        d.Status == BookingDetailStatus.PENDING_PAID)),
+                        cancellationToken: cancellationToken);
+
+                return new SingleUserAnalysisModel
+                {
+                    TotalCompletedTrips = bookingDetails.Count()
+                };
+            }
+            return null;
+        }
+
 
         #region Private
         private IEnumerable<User> FilterUsers(IEnumerable<User> users,
