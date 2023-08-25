@@ -41,6 +41,7 @@ namespace ViGo.Models.WalletTransactions
             UpdatedBy = walletTransaction.UpdatedBy;
             IsDeleted = walletTransaction.IsDeleted;
             PaymentMethod = walletTransaction.PaymentMethod;
+            BookingId = walletTransaction.BookingId;
             //Wallet = wallet;
         }
 
