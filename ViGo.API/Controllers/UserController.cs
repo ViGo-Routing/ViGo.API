@@ -283,5 +283,33 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, analysisModel);
         }
+
+        /// <summary>
+        /// Get single User analysis data.
+        /// </summary>
+        /// <remarks>Driver only for now
+        /// </remarks>
+        /// <returns>
+        /// User analysis information
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get User analysis successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Analysis/{userId}")]
+        [ProducesResponseType(typeof(SingleUserAnalysisModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "CUSTOMER,DRIVER")]
+        public async Task<IActionResult> GetUserAnalysis(
+            Guid userId,
+            CancellationToken cancellationToken)
+        {
+            SingleUserAnalysisModel? analysisModel = await userServices
+                .GetSingleUserAnalysisAsync(userId, cancellationToken);
+
+            return StatusCode(200, analysisModel);
+        }
     }
 }

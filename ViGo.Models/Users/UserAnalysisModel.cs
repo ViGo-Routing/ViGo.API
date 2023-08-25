@@ -13,4 +13,9 @@
         public int TotalNewDriversInCurrentMonth { get; set; }
 
     }
+
+    public class SingleUserAnalysisModel
+    {
+        public int TotalCompletedTrips { get; set; }
+    }
 }
