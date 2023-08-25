@@ -255,9 +255,7 @@ namespace ViGo.Services
                     new StationViewModel(endStation),
                     vehicleType
                     );
-            //IEnumerable<BookingViewModel> dtos
-            //    = from booking in bookings
-            //      select new BookingViewModel(booking);
+
             dtos = dtos.ToList();
 
             foreach (BookingViewModel booking in dtos)
