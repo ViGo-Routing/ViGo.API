@@ -1224,6 +1224,8 @@ namespace ViGo.Services
                 {
                     throw new ApplicationException($"Chuyến đi vào lúc {bookingDetail.PickUpDateTimeString()} đã có tài xế chọn! Vui lòng chọn chuyến khác...");
                 }
+
+                bookingDetails = bookingDetails.Append(bookingDetail);
             }
 
             BookingDetail firstDetail = bookingDetails.First();
