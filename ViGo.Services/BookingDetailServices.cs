@@ -814,8 +814,13 @@ namespace ViGo.Services
                     !bd.DriverId.HasValue
                     && bd.Status == BookingDetailStatus.PENDING_ASSIGN
                     // Only for future ones
-                    && bd.Date >= DateTimeUtilities.GetDateTimeVnNow()),
+                    /*&& bd.Date >= DateTimeUtilities.GetDateTimeVnNow()*/),
                     cancellationToken: cancellationToken);
+
+            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+
+            unassignedBookingDetails = unassignedBookingDetails.Where(
+                bd => (bd.PickUpDateTime() - vnNow).TotalHours >= 3);
 
             // Get Bookings
             IEnumerable<Guid> bookingIds = unassignedBookingDetails.Select(
@@ -2156,7 +2161,7 @@ namespace ViGo.Services
                 {
                     IEnumerable<BookingDetail> tripsInDate = driverBookingDetails.Where(
                         bd => DateOnly.FromDateTime(bd.Date) == tripDate);
-                    IEnumerable<DriverTrip> trips = from detail in driverBookingDetails
+                    IEnumerable<DriverTrip> trips = from detail in tripsInDate
                                                     join booking in driverBookings
                                                         on detail.BookingId equals booking.Id
                                                     join startStation in driverStations
