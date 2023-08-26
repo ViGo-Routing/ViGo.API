@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString.Pagination;
@@ -197,7 +198,8 @@ namespace ViGo.Services
             IEnumerable<RouteRoutineListItemModel> routinesModel = model.RouteRoutines;
             if (routinesModel.Any())
             {
-                await IsValidRoutines(routinesModel.ToList(), route, true, checkForRoundTripRoutines, cancellationToken);
+                await IsValidRoutines(routinesModel.ToList(), route,
+                    checkForRoundTripRoutines: checkForRoundTripRoutines, isUpdate: true, cancellationToken);
                 routeRoutines =
                     (from routine in routinesModel
                      select new RouteRoutine
@@ -342,6 +344,50 @@ namespace ViGo.Services
             return routeRoutine;
         }
 
+        public async Task CheckRouteRoutinesAsync(RouteRoutineCheckModel checkModel,
+            CancellationToken cancellationToken)
+        {
+            Route? route = await work.Routes.GetAsync(checkModel.RouteId, 
+                cancellationToken: cancellationToken);
+            if (route == null)
+            {
+                throw new ApplicationException("Tuyến đường không tồn tại!!");
+            }
+
+            if (checkModel.RouteRoutines.Count == 0)
+            {
+                throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
+            }
+
+            foreach (RouteRoutineListItemModel routine in checkModel.RouteRoutines)
+            {
+                IsValidRoutine(routine);
+            }
+
+            // Check for existing Routines
+            IEnumerable<RouteRoutine> currentRoutines = await work.RouteRoutines
+                .GetAllAsync(query => query.Where(
+                    r => r.RouteId.Equals(checkModel.RouteId)), cancellationToken: cancellationToken);
+
+            bool isUpdate = false;
+            if (currentRoutines.Any())
+            {
+                //Đã có lịch trình
+                isUpdate = true;
+            }
+            //currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
+            //    .ThenBy(r => r.PickupTime);
+
+            IList<RouteRoutine> routeRoutines = new List<RouteRoutine>();
+            IEnumerable<RouteRoutineListItemModel> routinesModel = checkModel.RouteRoutines;
+
+            if (routinesModel.Any())
+            {
+                await IsValidRoutines(routinesModel.ToList(), route, 
+                    checkForRoundTripRoutines: true, isUpdate: isUpdate, cancellationToken);
+            }
+
+        }
         #region Validation
 
         private void IsValidRoutine(RouteRoutineListItemModel routine)

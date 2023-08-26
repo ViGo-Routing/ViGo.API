@@ -179,6 +179,34 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Check for valid routines for a route
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <returns>
+        /// 200 if routines are valid, if not a 400 status is returned
+        /// </returns>
+        /// <response code="400">Routines information are not valid</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">User Role is not valid</response>
+        /// <response code="200">Routines are valid</response>
+        /// <response code="500">Server error</response>
+        [HttpPost("Validate")]
+        [Authorize(Roles = "CUSTOMER,ADMIN")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> ValidateRouteRoutines(RouteRoutineCheckModel model,
+            CancellationToken cancellationToken)
+        {
+            await routeRoutineServices.CheckRouteRoutinesAsync(model, cancellationToken);
+
+            return StatusCode(200);
+        }
+
+        /// <summary>
         /// Delete a Route Routine
         /// </summary>
         /// <remarks>
