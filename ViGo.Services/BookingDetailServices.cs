@@ -2141,7 +2141,8 @@ namespace ViGo.Services
             IEnumerable<BookingDetail> driverBookingDetails = await
                 work.BookingDetails.GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
-                        bd.DriverId.Value.Equals(driverId)), cancellationToken: cancellationToken);
+                        bd.DriverId.Value.Equals(driverId)
+                        && bd.Status != BookingDetailStatus.CANCELLED), cancellationToken: cancellationToken);
 
             if (driverBookingDetails.Any())
             {
