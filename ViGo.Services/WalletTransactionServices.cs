@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.WalletTransactions;
@@ -131,5 +132,74 @@ namespace ViGo.Services
         //       || walletTransaction.Type == WalletTransactionType.BOOKING_TOPUP_BY_MOMO
         //       || walletTransaction.Type == WalletTransactionType.BOOKING_TOPUP_BY_VNPAY
         //}
+
+        public async Task<BookingDetailTransactions> GetBookingDetailTransactionsAsync(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            Guid currentUserId = IdentityUtilities.GetCurrentUserId();
+            Wallet wallet = await work.Wallets.GetAsync(
+                w => w.UserId.Equals(currentUserId), cancellationToken: cancellationToken);
+
+            IEnumerable<WalletTransaction> walletTransactions = await
+                work.WalletTransactions.GetAllAsync(
+                    query => query.Where(wt => wt.WalletId.Equals(wallet.Id) && wt.BookingDetailId.HasValue 
+                    && wt.BookingDetailId.Value.Equals(bookingDetailId)),
+                    cancellationToken: cancellationToken);
+
+            walletTransactions = walletTransactions.OrderByDescending(w => w.CreatedTime);
+
+            IEnumerable<WalletTransactionViewModel> walletTransactionViewModels = from walletTransaction in walletTransactions
+                                                                                      //join walletView in walletViewModels
+                                                                                      //on walletTransaction.WalletId equals walletView.Id
+                                                                                  select new WalletTransactionViewModel(walletTransaction/*, walletView*/);
+
+            double total = walletTransactions.Sum(t =>
+            {
+                if (!IdentityUtilities.IsAdmin())
+                {
+                    switch (t.Type)
+                    {
+                        case WalletTransactionType.TRIP_INCOME:
+                        case WalletTransactionType.TOPUP:
+                        case WalletTransactionType.CANCEL_REFUND:
+                        case WalletTransactionType.TRIP_PICK_REFUND:
+                        case WalletTransactionType.BOOKING_REFUND:
+                            return t.Amount;
+                        case WalletTransactionType.TRIP_PAID:
+                        case WalletTransactionType.CANCEL_FEE:
+                        case WalletTransactionType.BOOKING_PAID:
+                        case WalletTransactionType.TRIP_PICK:
+                            return -(t.Amount);
+                        default:
+                            return t.Amount;
+                    }
+                }
+                else
+                {
+                    // Admin
+                    switch (t.Type)
+                    {
+                        //case WalletTransactionType.TRIP_INCOME:
+                        //case WalletTransactionType.TOPUP:
+                        case WalletTransactionType.CANCEL_REFUND:
+                        case WalletTransactionType.TRIP_PICK_REFUND:
+                        case WalletTransactionType.BOOKING_REFUND:
+                        case WalletTransactionType.TRIP_PAID:
+                            return -(t.Amount);
+                        case WalletTransactionType.CANCEL_FEE:
+                        case WalletTransactionType.BOOKING_PAID:
+                        case WalletTransactionType.TRIP_PICK:
+                            return (t.Amount);
+                        default:
+                            return t.Amount;
+                    }
+                }
+
+            });
+
+            return new BookingDetailTransactions(bookingDetailId, walletTransactionViewModels, total);
+
+        }
     }
 }

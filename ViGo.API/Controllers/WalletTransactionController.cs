@@ -48,6 +48,27 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get list of Wallet Transactions of a Booking Detail
+        /// </summary>
+        /// <response code="401">Login failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Get list of Wallet Transactions successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(BookingDetailTransactions), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpGet("BookingDetail/{bookingDetailId}")]
+        public async Task<IActionResult> GetBookingDetailTransactionsAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetailTransactions transactions = await walletTransactionServices
+                .GetBookingDetailTransactionsAsync(bookingDetailId, cancellationToken);
+            return StatusCode(200, transactions);
+        }
+
+        /// <summary>
         /// Get details of a Wallet Transaction
         /// </summary>
         /// <response code="401">Login failed</response>
