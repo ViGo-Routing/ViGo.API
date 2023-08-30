@@ -102,4 +102,20 @@ namespace ViGo.Models.WalletTransactions
             BookingDetail = bookingDetail;
         }
     }
+
+    public class BookingDetailTransactions
+    {
+        public Guid BookingDetailId { get; set; }
+        public IEnumerable<WalletTransactionViewModel> Transactions { get; set; }
+        public double TotalAmount { get; set; }
+
+        public BookingDetailTransactions(Guid bookingDetailId, 
+            IEnumerable<WalletTransactionViewModel> transactions,
+            double totalAmount)
+        {
+            BookingDetailId = bookingDetailId;
+            Transactions = transactions;
+            TotalAmount = totalAmount;
+        }
+    }
 }
