@@ -541,6 +541,7 @@ namespace ViGo.Services
                 CustomerId = model.CustomerId.Value,
                 CustomerRouteId = model.CustomerRouteId,
                 StartDate = model.StartDate,
+                DaysOfWeek = model.DaysOfWeek,
                 EndDate = model.EndDate,
                 TotalPrice = model.TotalPrice,
                 PriceAfterDiscount = model.PriceAfterDiscount,
@@ -910,6 +911,7 @@ namespace ViGo.Services
 
                 booking.StartDate = bookingUpdate.StartDate;
                 booking.EndDate = bookingUpdate.EndDate;
+                booking.DaysOfWeek = bookingUpdate.DaysOfWeek;
                 booking.TotalPrice = bookingUpdate.TotalPrice;
                 booking.PriceAfterDiscount = bookingUpdate.PriceAfterDiscount;
                 booking.IsShared = bookingUpdate.IsShared;
