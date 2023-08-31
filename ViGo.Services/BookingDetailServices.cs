@@ -1265,39 +1265,47 @@ namespace ViGo.Services
 
             FareServices fareServices = new FareServices(work, _logger);
             double pickingFee = await fareServices.CalculateDriverPickFee(
-                bookingDetails.Sum(d => d.Price.Value), cancellationToken);
+                bookingDetails.First().Price.Value, cancellationToken);
 
-            if (driverWallet.Balance < pickingFee)
+            double totalPickingFee = pickingFee * bookingDetails.Count();
+
+            if (driverWallet.Balance < totalPickingFee)
             {
                 throw new ApplicationException("Số dư ví không đủ để thực hiện chọn chuyến đi!");
             }
 
-            WalletTransaction pickingTransaction = new WalletTransaction
+            foreach (BookingDetail bookingDetail in bookingDetails)
             {
-                WalletId = driverWallet.Id,
-                Amount = pickingFee,
-                PaymentMethod = PaymentMethod.WALLET,
-                Status = WalletTransactionStatus.SUCCESSFULL,
-                Type = WalletTransactionType.TRIP_PICK,
-                //BookingDetailId = bookingDetail.Id,
-                BookingId = booking.Id,
-            };
-            WalletTransaction systemTransaction = new WalletTransaction
-            {
-                WalletId = systemWallet.Id,
-                Amount = pickingFee,
-                PaymentMethod = PaymentMethod.WALLET,
-                Status = WalletTransactionStatus.SUCCESSFULL,
-                Type = WalletTransactionType.TRIP_PICK,
-                //BookingDetailId = bookingDetail.Id
-                BookingId = booking.Id,
-            };
+                WalletTransaction pickingTransaction = new WalletTransaction
+                {
+                    WalletId = driverWallet.Id,
+                    Amount = pickingFee,
+                    PaymentMethod = PaymentMethod.WALLET,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                    Type = WalletTransactionType.TRIP_PICK,
+                    BookingDetailId = bookingDetail.Id,
+                    //BookingId = booking.Id,
+                };
 
-            driverWallet.Balance -= pickingFee;
-            systemWallet.Balance += pickingFee;
+                await work.WalletTransactions.InsertAsync(pickingTransaction, cancellationToken: cancellationToken);
 
-            await work.WalletTransactions.InsertAsync(pickingTransaction, cancellationToken: cancellationToken);
-            await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+                WalletTransaction systemTransaction = new WalletTransaction
+                {
+                    WalletId = systemWallet.Id,
+                    Amount = pickingFee,
+                    PaymentMethod = PaymentMethod.WALLET,
+                    Status = WalletTransactionStatus.SUCCESSFULL,
+                    Type = WalletTransactionType.TRIP_PICK,
+                    BookingDetailId = bookingDetail.Id
+                    //BookingId = booking.Id,
+                };
+
+                await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+            }
+
+            driverWallet.Balance -= totalPickingFee;
+            systemWallet.Balance += totalPickingFee;
+
             await work.Wallets.UpdateAsync(driverWallet);
             await work.Wallets.UpdateAsync(systemWallet);
 
