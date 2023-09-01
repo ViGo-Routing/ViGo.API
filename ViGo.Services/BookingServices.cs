@@ -475,7 +475,7 @@ namespace ViGo.Services
 
             IEnumerable<Booking> currentBookings = await
                 work.Bookings.GetAllAsync(query => query.Where(
-                    b => b.CustomerId.Equals(model.CustomerId)
+                    b => b.CustomerRouteId.Equals(model.CustomerRouteId)
                     && b.Status == BookingStatus.CONFIRMED),
                     cancellationToken: cancellationToken);
 
