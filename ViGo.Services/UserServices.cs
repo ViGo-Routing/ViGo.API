@@ -104,88 +104,123 @@ namespace ViGo.Services
                     throw new ApplicationException("Vai trò đăng nhập không hợp lệ!!");
                 }
 
-                //FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
-                //.VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true, 
-                //    cancellationToken: cancellationToken);
+                if (string.IsNullOrEmpty(loginModel.Password) &&
+                    string.IsNullOrEmpty(loginModel.FirebaseToken))
+                {
+                    throw new ApplicationException("Thiếu thông tin đăng nhập!!");
+                }
 
-                //string uid = decodedToken.Uid;
-
-                //User? user = await work.Users.GetAsync(
-                //    u => !string.IsNullOrEmpty(u.FirebaseUid) &&
-                //        u.FirebaseUid.Equals(uid)
-                //    // Only Customer and Driver can login with Firebase
-                //    && (u.Role == loginModel.Role), 
-                //    cancellationToken: cancellationToken);
                 User? user = await work.Users.GetAsync(
                     u => u.Phone != null && !string.IsNullOrEmpty(u.Phone)
-                    && u.Phone.Equals(loginModel.Phone)
-                    && u.Role == loginModel.Role,
+                        && u.Phone.Equals(loginModel.Phone)
+                        && u.Role == loginModel.Role,
                     cancellationToken: cancellationToken);
 
                 if (user == null)
                 {
                     return user;
                 }
-                //if (!string.IsNullOrEmpty(user.Phone) 
-                //    && !user.Phone.Equals(loginModel.Phone))
-                //{
-                //    throw new ApplicationException("Thông tin số điện thoại không trùng khớp!!");
-                //}
-                if (user.IsLockedOut &&
-                DateTimeUtilities.GetDateTimeVnNow() <= user.LockedOutEnd)
-                {
-                    throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!\n" +
-                        "Vui lòng thử đăng nhập lại sau " + (user.LockedOutEnd - DateTimeUtilities.GetDateTimeVnNow()).Value.Minutes
-                        + " phút nữa");
-                }
-                else if (DateTimeUtilities.GetDateTimeVnNow() > user.LockedOutEnd)
-                {
-                    user.IsLockedOut = false;
-                }
 
-                bool checkPassword = user.Password.Equals(loginModel.Password.Encrypt());
-                if (!checkPassword)
+                if (!string.IsNullOrEmpty(loginModel.Password))
                 {
-                    // Wrong password
-                    if (user.FailedLoginCount == 4)
+                    // login with password
+
+                    //if (!string.IsNullOrEmpty(user.Phone) 
+                    //    && !user.Phone.Equals(loginModel.Phone))
+                    //{
+                    //    throw new ApplicationException("Thông tin số điện thoại không trùng khớp!!");
+                    //}
+                    if (user.IsLockedOut &&
+                    DateTimeUtilities.GetDateTimeVnNow() <= user.LockedOutEnd)
                     {
-                        // This time will be the fifth time
-                        user.FailedLoginCount = 0;
-                        user.IsLockedOut = true;
-                        user.LockedOutStart = DateTimeUtilities.GetDateTimeVnNow();
-                        user.LockedOutEnd = DateTimeUtilities.GetDateTimeVnNow().AddMinutes(30);
+                        throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!\n" +
+                            "Vui lòng thử đăng nhập lại sau " + (user.LockedOutEnd - DateTimeUtilities.GetDateTimeVnNow()).Value.Minutes
+                            + " phút nữa");
+                    }
+                    else if (DateTimeUtilities.GetDateTimeVnNow() > user.LockedOutEnd)
+                    {
+                        user.IsLockedOut = false;
+                    }
 
-                        await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                        await work.SaveChangesAsync(cancellationToken);
+                    if (string.IsNullOrEmpty(user.Password))
+                    {
+                        throw new ApplicationException("Tài khoản này không được phép đăng nhập bằng mật khẩu! Vui lòng sử dụng OTP!");
+                    }
 
-                        throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!");
+                    bool checkPassword = user.Password.Equals(loginModel.Password.Encrypt());
+                    if (!checkPassword)
+                    {
+                        // Wrong password
+                        if (user.FailedLoginCount == 4)
+                        {
+                            // This time will be the fifth time
+                            user.FailedLoginCount = 0;
+                            user.IsLockedOut = true;
+                            user.LockedOutStart = DateTimeUtilities.GetDateTimeVnNow();
+                            user.LockedOutEnd = DateTimeUtilities.GetDateTimeVnNow().AddMinutes(30);
+
+                            await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                            await work.SaveChangesAsync(cancellationToken);
+
+                            throw new ApplicationException("Tài khoản của bạn đã bị khóa đăng nhập trong vòng 30 phút!");
+                        }
+                        else
+                        {
+                            user.FailedLoginCount++;
+                            await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                            await work.SaveChangesAsync(cancellationToken);
+                        }
+
+                        return null;
                     }
                     else
                     {
-                        user.FailedLoginCount++;
-                        await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                        await work.SaveChangesAsync(cancellationToken);
-                    }
+                        // Correct password
+                        if (user.FailedLoginCount > 0)
+                        {
+                            user.FailedLoginCount = 0;
+                            user.IsLockedOut = false;
+                            user.LockedOutStart = null;
+                            user.LockedOutEnd = null;
 
-                    return null;
-                }
-                else
+                            await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
+                            await work.SaveChangesAsync(cancellationToken);
+                        }
+
+                        return user;
+                    }
+                } else if (!string.IsNullOrEmpty(loginModel.FirebaseToken))
                 {
-                    // Correct password
-                    if (user.FailedLoginCount > 0)
+                    FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
+                    .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true,
+                        cancellationToken: cancellationToken);
+
+                    string uid = decodedToken.Uid;
+
+                    //user = await work.Users.GetAsync(
+                    //    u => !string.IsNullOrEmpty(u.FirebaseUid) &&
+                    //        u.FirebaseUid.Equals(uid)
+                    //        && u.Phone.Equals(loginModel.Phone)
+                    //    // Only Customer and Driver can login with Firebase
+                    //    && (u.Role == loginModel.Role),
+                    //    cancellationToken: cancellationToken);
+
+                    if (string.IsNullOrEmpty(user.FirebaseUid))
                     {
-                        user.FailedLoginCount = 0;
-                        user.IsLockedOut = false;
-                        user.LockedOutStart = null;
-                        user.LockedOutEnd = null;
-
-                        await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
-                        await work.SaveChangesAsync(cancellationToken);
+                        throw new ApplicationException("Tài khoản này không được phép đăng nhập bằng OTP! Vui lòng sử dụng mật khẩu!");
                     }
+                    bool checkFirebaseUid = user.FirebaseUid.Equals(uid);
 
-                    return user;
+                    if (checkFirebaseUid)
+                    {
+                        return user;
+
+                    }
+                    return null;
+
                 }
 
+                return null;
             }
             catch (FirebaseAuthException ex)
             {
@@ -221,13 +256,36 @@ namespace ViGo.Services
             CancellationToken cancellationToken)
         {
             dto.Phone.IsPhoneNumber("Số điện thoại không hợp lệ!");
-            dto.Password.StringValidate(
+
+            if (string.IsNullOrEmpty(dto.Password) && string.IsNullOrEmpty(dto.FirebaseUid))
+            {
+                throw new ApplicationException("Thông tin đăng ký không hợp lệ!!");
+            }
+
+            if (!string.IsNullOrEmpty(dto.Password))
+            {
+                dto.Password.StringValidate(
                 allowEmpty: false,
                 emptyErrorMessage: "Mật khẩu không được bỏ trống!",
                 minLength: 5,
                 minLengthErrorMessage: "Mật khẩu phải có ít nhất 5 kí tự!",
                 maxLength: 20,
                 maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
+
+            } else if (!string.IsNullOrEmpty(dto.FirebaseUid))
+            {
+                User checkFirebase = await work.Users.GetAsync(
+                    u => !string.IsNullOrEmpty(u.FirebaseUid)
+                    && u.FirebaseUid.Equals(dto.FirebaseUid)
+                    && u.Role == dto.Role,
+                    cancellationToken: cancellationToken);
+
+                if (checkFirebase != null)
+                {
+                    throw new ApplicationException("Thông tin Firebase UId không hợp lệ!");
+                }
+            }
+
             if (!Enum.IsDefined(dto.Role)
                 || (dto.Role != UserRole.CUSTOMER &&
                 dto.Role != UserRole.DRIVER))
@@ -262,24 +320,13 @@ namespace ViGo.Services
                 throw new ApplicationException("Số điện thoại đã được sử dụng!");
             }
 
-            //User checkFirebase = await work.Users.GetAsync(
-            //    u => !string.IsNullOrEmpty(u.FirebaseUid)
-            //    && u.FirebaseUid.Equals(dto.FirebaseUid)
-            //    && u.Role == dto.Role, 
-            //    cancellationToken: cancellationToken);
-
-            //if (checkFirebase != null)
-            //{
-            //    throw new ApplicationException("Thông tin Firebase UId không hợp lệ!");
-            //}
-
             User newUser = new User
             {
                 Name = dto.Name,
                 Phone = dto.Phone,
-                Password = dto.Password.Encrypt(),
+                Password = dto.Password?.Encrypt(),
                 Role = dto.Role,
-                //FirebaseUid = dto.FirebaseUid,
+                FirebaseUid = dto.FirebaseUid,
                 Status = dto.Role == UserRole.DRIVER
                     ? UserStatus.PENDING
                     : UserStatus.ACTIVE
