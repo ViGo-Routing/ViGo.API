@@ -280,16 +280,16 @@ namespace ViGo.Services
 
             } else if (!string.IsNullOrEmpty(dto.FirebaseUid))
             {
-                User checkFirebase = await work.Users.GetAsync(
-                    u => !string.IsNullOrEmpty(u.FirebaseUid)
-                    && u.FirebaseUid.Equals(dto.FirebaseUid)
-                    && u.Role == dto.Role,
-                    cancellationToken: cancellationToken);
+                //User checkFirebase = await work.Users.GetAsync(
+                //    u => !string.IsNullOrEmpty(u.FirebaseUid)
+                //    && u.FirebaseUid.Equals(dto.FirebaseUid)
+                //    && u.Role == dto.Role,
+                //    cancellationToken: cancellationToken);
 
-                if (checkFirebase != null)
-                {
-                    throw new ApplicationException("Thông tin Firebase UId không hợp lệ!");
-                }
+                //if (checkFirebase != null)
+                //{
+                //    throw new ApplicationException("Thông tin Firebase UId không hợp lệ!");
+                //}
             }
 
             if (!Enum.IsDefined(dto.Role)
