@@ -788,7 +788,7 @@ namespace ViGo.Services
 
             IEnumerable<Booking> currentBookings = await
                 work.Bookings.GetAllAsync(query => query.Where(
-                    b => b.CustomerId.Equals(booking.CustomerId)
+                    b => b.CustomerRouteId.Equals(booking.CustomerRouteId)
                     && b.Status == BookingStatus.CONFIRMED
                     && !b.Id.Equals(booking.Id)), // Except for the updated booking
                     cancellationToken: cancellationToken);
