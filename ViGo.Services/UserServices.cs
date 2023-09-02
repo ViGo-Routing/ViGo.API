@@ -207,16 +207,22 @@ namespace ViGo.Services
 
                     if (string.IsNullOrEmpty(user.FirebaseUid))
                     {
-                        throw new ApplicationException("Tài khoản này không được phép đăng nhập bằng OTP! Vui lòng sử dụng mật khẩu!");
-                    }
-                    bool checkFirebaseUid = user.FirebaseUid.Equals(uid);
+                        //throw new ApplicationException("Tài khoản này không được phép đăng nhập bằng OTP! Vui lòng sử dụng mật khẩu!");
+                        user.FirebaseUid = uid;
+                        await work.Users.UpdateAsync(user, isManuallyAssignTracking: true);
 
-                    if (checkFirebaseUid)
-                    {
-                        return user;
-
+                        await work.SaveChangesAsync(cancellationToken);
                     }
-                    return null;
+                    return user;
+                    
+                    //bool checkFirebaseUid = user.FirebaseUid.Equals(uid);
+
+                    //if (checkFirebaseUid)
+                    //{
+                    //    return user;
+
+                    //}
+                    //return null;
 
                 }
 
