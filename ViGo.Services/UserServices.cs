@@ -110,20 +110,21 @@ namespace ViGo.Services
                     throw new ApplicationException("Thiếu thông tin đăng nhập!!");
                 }
 
-                User? user = null;
-                if (!string.IsNullOrEmpty(loginModel.Password))
-                {
-                    // login with password
-                    user = await work.Users.GetAsync(
+                User? user = await work.Users.GetAsync(
                     u => u.Phone != null && !string.IsNullOrEmpty(u.Phone)
                         && u.Phone.Equals(loginModel.Phone)
                         && u.Role == loginModel.Role,
                     cancellationToken: cancellationToken);
 
-                    if (user == null)
-                    {
-                        return user;
-                    }
+                if (user == null)
+                {
+                    return user;
+                }
+
+                if (!string.IsNullOrEmpty(loginModel.Password))
+                {
+                    // login with password
+
                     //if (!string.IsNullOrEmpty(user.Phone) 
                     //    && !user.Phone.Equals(loginModel.Phone))
                     //{
@@ -196,14 +197,27 @@ namespace ViGo.Services
 
                     string uid = decodedToken.Uid;
 
-                    user = await work.Users.GetAsync(
-                        u => !string.IsNullOrEmpty(u.FirebaseUid) &&
-                            u.FirebaseUid.Equals(uid)
-                        // Only Customer and Driver can login with Firebase
-                        && (u.Role == loginModel.Role),
-                        cancellationToken: cancellationToken);
+                    //user = await work.Users.GetAsync(
+                    //    u => !string.IsNullOrEmpty(u.FirebaseUid) &&
+                    //        u.FirebaseUid.Equals(uid)
+                    //        && u.Phone.Equals(loginModel.Phone)
+                    //    // Only Customer and Driver can login with Firebase
+                    //    && (u.Role == loginModel.Role),
+                    //    cancellationToken: cancellationToken);
 
-                    return user;
+                    if (string.IsNullOrEmpty(user.FirebaseUid))
+                    {
+                        throw new ApplicationException("Tài khoản này không được phép đăng nhập bằng OTP! Vui lòng sử dụng mật khẩu!");
+                    }
+                    bool checkFirebaseUid = user.FirebaseUid.Equals(uid);
+
+                    if (checkFirebaseUid)
+                    {
+                        return user;
+
+                    }
+                    return null;
+
                 }
 
                 return null;
