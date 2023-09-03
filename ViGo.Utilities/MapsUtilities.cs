@@ -6,9 +6,9 @@ namespace ViGo.Utilities
 {
     public static class MapsUtilities
     {
-        private static PointF[] hcmBoundaries = DataFileUtilities.GetHcmCityBoundaries();
+        private static System.Drawing.PointF[] hcmBoundaries = DataFileUtilities.GetHcmCityBoundaries();
 
-        public static bool IsInRegion(PointF point)
+        public static bool IsInRegion(System.Drawing.PointF point)
         {
             int result = hcmBoundaries.Zip(hcmBoundaries.Skip(1).Concat(hcmBoundaries),
                 (a, b) =>
@@ -28,9 +28,9 @@ namespace ViGo.Utilities
             return (result == 1 || result == 0) ? true : false;
         }
 
-        public static PointF ToPointF(this GoogleMapPoint googleMapPoint)
+        public static System.Drawing.PointF ToPointF(this GoogleMapPoint googleMapPoint)
         {
-            return new PointF(
+            return new System.Drawing.PointF(
                 Convert.ToSingle(googleMapPoint.Latitude),
                 Convert.ToSingle(googleMapPoint.Longitude));
         }

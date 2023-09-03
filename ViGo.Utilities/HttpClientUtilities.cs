@@ -62,5 +62,17 @@ namespace ViGo.Utilities
 
             return result;
         }
+
+        public static async Task<Stream> GetImageFromUrlAsync(string imageUrl)
+        {
+            using (var client = new HttpClient())
+            {
+                using (var response = await client.GetAsync(imageUrl))
+                {
+                    byte[] imageBytes = await response.Content.ReadAsByteArrayAsync();
+                    return new MemoryStream(imageBytes);
+                }
+            }
+        }
     }
 }

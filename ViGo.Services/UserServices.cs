@@ -512,10 +512,23 @@ namespace ViGo.Services
                 cancellationToken: cancellationToken);
             if (currentUser is null)
             {
-                throw new ApplicationException("User không tồn tại!");
+                throw new ApplicationException("Người dùng không tồn tại!");
             }
             else
             {
+                if (statusChange.Status == UserStatus.ACTIVE ||
+                    statusChange.Status == UserStatus.REJECTED)
+                {
+                    IEnumerable<UserLicense> userLicenses = await work.UserLicenses
+                        .GetAllAsync(query => query.Where(
+                            ul => ul.UserId.Equals(id)
+                            && ul.Status == UserLicenseStatus.PENDING), cancellationToken: cancellationToken);
+                    if (userLicenses.Any())
+                    {
+                        throw new ApplicationException("Vui lòng xem xét duyệt / từ chối các " +
+                            "giấy tờ của người dùng trước khi thay đổi trạng thái!");
+                    }
+                }
                 currentUser.Status = statusChange.Status;
             }
 
