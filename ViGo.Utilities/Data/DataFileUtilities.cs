@@ -19,7 +19,7 @@ namespace ViGo.Utilities.Data
         //    return data;
         //}
 
-        internal static PointF[] GetHcmCityBoundaries()
+        internal static System.Drawing.PointF[] GetHcmCityBoundaries()
         {
             using StreamReader r = new StreamReader(hcmBoundariesFile);
             string data = r.ReadToEnd();
@@ -27,12 +27,12 @@ namespace ViGo.Utilities.Data
 
             dynamic[] boundaries = JsonConvert.DeserializeObject<dynamic[]>(data);
 
-            PointF[] result = (from boundary in boundaries
-                               select new PointF((float)boundary[0], (float)boundary[1])).ToArray();
+            System.Drawing.PointF[] result = (from boundary in boundaries
+                               select new System.Drawing.PointF((float)boundary[0], (float)boundary[1])).ToArray();
 
             StringBuilder newBoundaryData = new StringBuilder();
             newBoundaryData.AppendLine("[");
-            foreach (PointF point in result)
+            foreach (System.Drawing.PointF point in result)
             {
                 newBoundaryData.AppendLine($"[{point.Y},{point.X}],");
             }

@@ -1,15 +1,20 @@
 ﻿using Microsoft.Extensions.Configuration;
+using System.Text;
 using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
+using ViGo.Utilities.ImageUtilities;
 
 namespace ViGoConsole
 {
     internal class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Configure();
-            Console.WriteLine("admin".Encrypt());
+            //Console.WriteLine("admin".Encrypt());
+            //string imageUrl = "https://firebasestorage.googleapis.com/v0/b/vigo-a7754.appspot.com/o/images%2Fdriver_CCCD_Front_6x9tBuGAfO1690801264506.png?alt=media&token=4e7e81bc-1891-490a-ad60-5fd0fabe905e";
+            //var result = await OcrUtilities.ReadTextFromImage(imageUrl);
+            //Console.WriteLine(result);
         }
 
         static void Configure()

@@ -131,5 +131,10 @@ namespace ViGo.Utilities.Configuration
             => Configuration.GetSection("Quartz");
         #endregion
 
+        #region FPT AI
+        public static string FptAiApiKey
+            => Configuration["FPT_AI:ApiKey"];
+        #endregion
+
     }
 }
