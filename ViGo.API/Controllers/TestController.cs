@@ -21,9 +21,10 @@ namespace ViGo.API.Controllers
         private CronJobServices cronJobServices;
         private ISchedulerFactory _schedulerFactory;
         private ILogger<TestController> _logger;
+        private IHttpClientFactory _httpClientFactory;
 
         public TestController(IUnitOfWork work, ILogger<TestController> logger,
-            ISchedulerFactory schedulerFactory)
+            ISchedulerFactory schedulerFactory, IHttpClientFactory httpClientFactory)
         {
             bookingServices = new BookingServices(work, logger);
             tripMappingServices = new TripMappingServices(work, logger);
@@ -31,6 +32,7 @@ namespace ViGo.API.Controllers
             cronJobServices = new CronJobServices(work, logger);
             _schedulerFactory = schedulerFactory;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
         /// <summary>
         /// 
@@ -54,8 +56,10 @@ namespace ViGo.API.Controllers
             [FromBody] DistanceRequest distanceRequest,
             CancellationToken cancellationToken)
         {
+            HttpClient httpClient = _httpClientFactory.CreateClient();
+
             double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                distanceRequest.Origin, distanceRequest.Destination, cancellationToken);
+                distanceRequest.Origin, distanceRequest.Destination, httpClient, cancellationToken);
             return StatusCode(200, distance);
         }
 
