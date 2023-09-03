@@ -66,7 +66,7 @@ namespace ViGo.Utilities.ImageUtilities
                     {
                         IdNumber = idData.id,
                         Name = StringUtilities.TransformToTitleCase(idData.name.ToString()),
-                        Dob = DateOnly.Parse(idData.dob.ToString().Replace("/", "-")),
+                        Dob = idData.dob.ToString(),
                         Sex = idData.sex.ToString().ToLower() == "nam" ? true : false,
                         Address = StringUtilities.TransformToTitleCase(idData.address.ToString())
                     };
@@ -79,7 +79,7 @@ namespace ViGo.Utilities.ImageUtilities
                     {
                         IdNumber = idData.id,
                         Name = StringUtilities.TransformToTitleCase(idData.name.ToString()),
-                        Dob = DateOnly.Parse(idData.dob.ToString().Replace("/", "-")),
+                        Dob = idData.dob.ToString(),
                         Address = StringUtilities.TransformToTitleCase(idData.address.ToString())
 
                     };
@@ -100,14 +100,14 @@ namespace ViGo.Utilities.ImageUtilities
     {
         string IdNumber { get; set; }
         string Name { get; set; }
-        DateOnly Dob { get; set; }
+        string Dob { get; set; }
         string Address { get; set; }
     }
     public class IdFromImage : ILicenseFromImage
     {
         public string IdNumber { get; set; }
         public string Name { get; set; }
-        public DateOnly Dob { get; set; }
+        public string Dob { get; set; }
         public bool Sex { get; set; }
         public string Address { get; set; }
     }
@@ -116,7 +116,7 @@ namespace ViGo.Utilities.ImageUtilities
     {
         public string IdNumber { get; set; }
         public string Name { get; set; }
-        public DateOnly Dob { get; set;}
+        public string Dob { get; set;}
         public string Address { get; set; }
 
     }
