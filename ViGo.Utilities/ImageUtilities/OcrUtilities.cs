@@ -25,29 +25,31 @@ namespace ViGo.Utilities.ImageUtilities
     public static class OcrUtilities
     {
         public static async Task<ILicenseFromImage?> ReadTextFromImageAsync(
+            this HttpClient httpClient,
+            HttpClient imageClient,
             string imageUrl, OcrType ocrType, CancellationToken cancellationToken = default)
         {
-            using var client = new HttpClient();
+            //using var client = new HttpClient();
             if (ocrType == OcrType.ID)
             {
-                client.BaseAddress = new Uri("https://api.fpt.ai/vision/idr/vnm/");
+                httpClient.BaseAddress = new Uri("https://api.fpt.ai/vision/idr/vnm/");
             }
             else if (ocrType == OcrType.DRIVER_LICENSE)
             {
-                client.BaseAddress = new Uri("https://api.fpt.ai/vision/dlr/vnm");
+                httpClient.BaseAddress = new Uri("https://api.fpt.ai/vision/dlr/vnm");
 
             }
 
-            client.DefaultRequestHeaders.Add("api-key", ViGoConfiguration.FptAiApiKey);
+            httpClient.DefaultRequestHeaders.Add("api-key", ViGoConfiguration.FptAiApiKey);
 
             using var content = new MultipartFormDataContent("ReadText-----" +
                 DateTime.Now.ToString(CultureInfo.InvariantCulture));
-            Stream image = await HttpClientUtilities.GetImageFromUrlAsync(imageUrl);
+            Stream image = await imageClient.GetImageFromUrlAsync(imageUrl);
             var imageStreamContent = new StreamContent(image);
             imageStreamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/png");
             content.Add(imageStreamContent, "image", "read-text.png");
 
-            var message = await client.PostAsync("", content, cancellationToken);
+            var message = await httpClient.PostAsync("", content, cancellationToken);
             if (message.IsSuccessStatusCode)
             {
                 var result = await message.Content.ReadAsStringAsync(cancellationToken);

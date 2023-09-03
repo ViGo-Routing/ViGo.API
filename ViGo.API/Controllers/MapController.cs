@@ -9,10 +9,13 @@ namespace ViGo.API.Controllers
     public class MapController : ControllerBase
     {
         private ILogger<TestController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public MapController(IUnitOfWork work, ILogger<TestController> logger)
+        public MapController(IUnitOfWork work, ILogger<TestController> logger, 
+            IHttpClientFactory httpClientFactory)
         {
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -37,8 +40,10 @@ namespace ViGo.API.Controllers
             [FromBody] DurationRequest durationRequest,
             CancellationToken cancellationToken)
         {
+            HttpClient httpClient = _httpClientFactory.CreateClient();
+
             double duration = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
-                durationRequest.Origin, durationRequest.Destination, cancellationToken);
+                durationRequest.Origin, durationRequest.Destination, httpClient, cancellationToken);
             return StatusCode(200, duration);
         }
 
@@ -64,8 +69,9 @@ namespace ViGo.API.Controllers
             [FromBody] DistanceRequest distanceRequest,
             CancellationToken cancellationToken)
         {
+            HttpClient httpClient = _httpClientFactory.CreateClient();
             double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                distanceRequest.Origin, distanceRequest.Destination, cancellationToken);
+                distanceRequest.Origin, distanceRequest.Destination, httpClient, cancellationToken);
             return StatusCode(200, distance);
         }
     }

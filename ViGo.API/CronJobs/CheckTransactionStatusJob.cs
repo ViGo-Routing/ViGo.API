@@ -14,13 +14,17 @@ namespace ViGo.API.CronJobs
         private IBackgroundTaskQueue _backgroundQueue;
         private ILogger<ResetWeeklyCancelRateJob> _logger;
 
+        private IHttpClientFactory _httpClientFactory;
+
         public CheckTransactionStatusJob(IServiceScopeFactory serviceScopeFactory,
             IBackgroundTaskQueue backgroundTaskQueue,
-            ILogger<ResetWeeklyCancelRateJob> logger)
+            ILogger<ResetWeeklyCancelRateJob> logger,
+            IHttpClientFactory httpClientFactory)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _backgroundQueue = backgroundTaskQueue;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -39,8 +43,11 @@ namespace ViGo.API.CronJobs
                     IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                     CronJobServices cronJobServices = new CronJobServices(unitOfWork, _logger);
 
+                    HttpClient httpClient = _httpClientFactory.CreateClient();
+
                     await cronJobServices.CheckForTopupTransactionStatus(transactionId,
-                        clientIpAddress, _backgroundQueue, _serviceScopeFactory, context.CancellationToken);
+                        clientIpAddress, _backgroundQueue, _serviceScopeFactory, httpClient,
+                        context.CancellationToken);
                 }
 
             }

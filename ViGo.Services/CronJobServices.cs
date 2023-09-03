@@ -100,7 +100,7 @@ namespace ViGo.Services
 
         public async Task CheckForTopupTransactionStatus(Guid transactionId,
             string clientIpAddress, IBackgroundTaskQueue backgroundTaskQueue,
-            IServiceScopeFactory serviceScopeFactory,
+            IServiceScopeFactory serviceScopeFactory, HttpClient httpClient,
             CancellationToken cancellationToken)
         {
             WalletTransaction walletTransaction = await work.WalletTransactions
@@ -115,7 +115,7 @@ namespace ViGo.Services
             {
                 PaymentServices paymentServices = new PaymentServices(work, _logger);
                 var queryResponse = await paymentServices.GetVnPayTransactionStatus(
-                    transactionId, clientIpAddress, cancellationToken);
+                    transactionId, httpClient, clientIpAddress, cancellationToken);
 
                 if (queryResponse is null)
                 {

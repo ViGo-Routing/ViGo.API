@@ -15,6 +15,7 @@ namespace ViGo.Utilities
         }
 
         public static async Task<T?> SendRequestAsync<T, M>(
+            this HttpClient httpClient,
             string requestUrl,
             HttpMethod method,
             IEnumerable<KeyValuePair<string, string>>? parameters = null,
@@ -24,10 +25,10 @@ namespace ViGo.Utilities
         {
             T? result = null;
 
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(requestUrl);
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+            //using (var client = new HttpClient())
+            //{
+            httpClient.BaseAddress = new Uri(requestUrl);
+            httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 
                 HttpResponseMessage response = new HttpResponseMessage();
                 string queryString = parameters is null ? string.Empty :
@@ -37,12 +38,12 @@ namespace ViGo.Utilities
 
                 if (method == HttpMethod.Get)
                 {
-                    response = await client.GetAsync(queryString);
+                    response = await httpClient.GetAsync(queryString);
                 }
                 else if (method == HttpMethod.Post)
                 {
                     StringContent content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
-                    response = await client.PostAsync(queryString, content, cancellationToken);
+                    response = await httpClient.PostAsync(queryString, content, cancellationToken);
                 }
 
                 string resultText = await response.Content.ReadAsStringAsync();
@@ -58,21 +59,23 @@ namespace ViGo.Utilities
                         "Status Code: " + response.StatusCode + "\n" +
                         "Response: " + resultText);
                 }
-            }
+            //}
 
             return result;
         }
 
-        public static async Task<Stream> GetImageFromUrlAsync(string imageUrl)
+        public static async Task<Stream> GetImageFromUrlAsync(
+            this HttpClient httpClient,
+            string imageUrl)
         {
-            using (var client = new HttpClient())
-            {
-                using (var response = await client.GetAsync(imageUrl))
+            //using (var client = new HttpClient())
+            //{
+                using (var response = await httpClient.GetAsync(imageUrl))
                 {
                     byte[] imageBytes = await response.Content.ReadAsByteArrayAsync();
                     return new MemoryStream(imageBytes);
                 }
-            }
+            //}
         }
     }
 }

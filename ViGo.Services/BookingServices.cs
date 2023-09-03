@@ -169,7 +169,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingViewModel>>
-            GetAvailableBookingsAsync(Guid driverId,
+            GetAvailableBookingsAsync(Guid driverId, HttpClient httpClient,
             PaginationParameter pagination, BookingSortingParameters sorting,
             BookingFilterParameters filters, HttpContext context,
             CancellationToken cancellationToken)
@@ -189,7 +189,7 @@ namespace ViGo.Services
             BookingDetailServices bookingDetailServices = new BookingDetailServices(work, _logger);
             IPagedEnumerable<BookingDetailViewModel> availableBookingDetailModels
                 = await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(driverId,
-                null, new PaginationParameter(1, -1), new BookingDetailFilterParameters(),
+                null, httpClient, new PaginationParameter(1, -1), new BookingDetailFilterParameters(),
                 context, cancellationToken);
 
             IEnumerable<BookingDetailViewModel> availableBookingDetails = availableBookingDetailModels.Data;
