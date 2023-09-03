@@ -66,7 +66,7 @@ namespace ViGo.Utilities.ImageUtilities
                     {
                         IdNumber = idData.id,
                         Name = StringUtilities.TransformToTitleCase(idData.name.ToString()),
-                        Dob = DateOnly.Parse(idData.dob.ToString()),
+                        Dob = DateOnly.Parse(idData.dob.ToString().Replace("/", "-")),
                         Sex = idData.sex.ToString().ToLower() == "nam" ? true : false,
                         Address = StringUtilities.TransformToTitleCase(idData.address.ToString())
                     };
@@ -79,7 +79,7 @@ namespace ViGo.Utilities.ImageUtilities
                     {
                         IdNumber = idData.id,
                         Name = StringUtilities.TransformToTitleCase(idData.name.ToString()),
-                        Dob = DateOnly.Parse(idData.dob.ToString()),
+                        Dob = DateOnly.Parse(idData.dob.ToString().Replace("/", "-")),
                         Address = StringUtilities.TransformToTitleCase(idData.address.ToString())
 
                     };
