@@ -324,9 +324,10 @@ namespace ViGo.Services
             if (checkUser != null)
             {
                 throw new ApplicationException("Số điện thoại đã được sử dụng!");
+
             }
 
-            User newUser = new User
+                User newUser = new User
             {
                 Name = dto.Name,
                 Phone = dto.Phone,
@@ -420,6 +421,17 @@ namespace ViGo.Services
                 if (userUpdate.Email != null)
                 {
                     userUpdate.Email.IsEmail("Email không hợp lệ!");
+
+                    User? checkEmail = (await work.Users
+                        .GetAllAsync(query => query.Where(
+                            u => !string.IsNullOrEmpty(u.Email)
+                             && u.Email.Equals(userUpdate.Email)))).FirstOrDefault();
+
+                    if (checkEmail != null)
+                    {
+                        throw new ApplicationException("Email đã có được sử dụng!");
+                    }
+
                     currentUser.Email = userUpdate.Email;
                 }
                 if (userUpdate.Password != null
