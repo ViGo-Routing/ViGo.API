@@ -11,6 +11,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.16" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.16" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.16" />
+		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="6.0.21" />
 		<PackageReference Include="Quartz" Version="3.6.3" />
 		<PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.6.3" />
 		<PackageReference Include="Quartz.Extensions.Hosting" Version="3.6.3" />

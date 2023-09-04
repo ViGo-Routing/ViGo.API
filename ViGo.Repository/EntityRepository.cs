@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using MockQueryable.Moq;
 using System.Linq.Expressions;
 using ViGo.Domain;
 using ViGo.Domain.Core;
@@ -21,13 +23,20 @@ namespace ViGo.Repository
         /// Current table DbSet
         /// </summary>
         protected override DbSet<TEntity> Table { get; }
+
+        /// <summary>
+        /// Cache
+        /// </summary>
+        protected override IDistributedCache cache { get; }
         #endregion
 
         #region Constructor
-        public EntityRepository(ViGoDBContext context)
+        public EntityRepository(ViGoDBContext context,
+            IDistributedCache cache)
         {
             Context = context;
             Table = context.Set<TEntity>();
+            this.cache = cache;
         }
         #endregion
 
@@ -56,6 +65,20 @@ namespace ViGo.Repository
         protected bool IsTypeOf(string interfaceName)
         {
             return typeof(TEntity).GetInterface(interfaceName) != null;
+        }
+
+        protected async Task<List<TEntity>> GetCachedDataAsync(CancellationToken cancellationToken)
+        {
+            List<TEntity> cachedDatas = await
+                cache.GetAsync<List<TEntity>>(typeof(TEntity).ToString(), cancellationToken: cancellationToken);
+
+            if (cachedDatas is null)
+            {
+                cachedDatas = await Table.ToListAsync(cancellationToken);
+                await cache.SetAsync(typeof(TEntity).ToString(), cachedDatas, cancellationToken);
+            }
+
+            return cachedDatas;
         }
 
         #endregion
@@ -160,7 +183,10 @@ namespace ViGo.Repository
             bool includeDeleted = false,
             CancellationToken cancellationToken = default)
         {
-            IQueryable<TEntity> query = AddDeletedFilter(Table,
+
+            List<TEntity> cachedDatas = await GetCachedDataAsync(cancellationToken);
+
+            IQueryable<TEntity> query = AddDeletedFilter(cachedDatas.AsQueryable().BuildMock(),
                 includeDeleted);
             query = func(query);
 
@@ -182,7 +208,9 @@ namespace ViGo.Repository
             bool includeDeleted = false,
             CancellationToken cancellationToken = default)
         {
-            IQueryable<TEntity> query = AddDeletedFilter(Table,
+            List<TEntity> cachedDatas = await GetCachedDataAsync(cancellationToken);
+
+            IQueryable<TEntity> query = AddDeletedFilter(cachedDatas.AsQueryable().BuildMock(),
                 includeDeleted);
             return await query.ToListAsync(cancellationToken);
         }
@@ -206,7 +234,9 @@ namespace ViGo.Repository
             bool includeDeleted = false,
             CancellationToken cancellationToken = default)
         {
-            IQueryable<TEntity> query = AddDeletedFilter(Table,
+            List<TEntity> cachedDatas = await GetCachedDataAsync(cancellationToken);
+
+            IQueryable<TEntity> query = AddDeletedFilter(cachedDatas.AsQueryable().BuildMock(),
                 includeDeleted);
 
             TEntity entity = await query.SingleOrDefaultAsync(predicate, cancellationToken);
@@ -230,7 +260,9 @@ namespace ViGo.Repository
             bool includeDeleted = false,
             CancellationToken cancellationToken = default)
         {
-            IQueryable<TEntity> query = AddDeletedFilter(Table,
+            List<TEntity> cachedDatas = await GetCachedDataAsync(cancellationToken);
+
+            IQueryable<TEntity> query = AddDeletedFilter(cachedDatas.AsQueryable().BuildMock(),
                 includeDeleted);
 
             TEntity entity = await query.SingleOrDefaultAsync(
@@ -436,6 +468,12 @@ namespace ViGo.Repository
             Table.Update(entity);
 
             return entity;
+        }
+
+        public override async Task SaveChangesToRedisAsync(CancellationToken cancellationToken)
+        {
+            List<TEntity> list = await Table.ToListAsync(cancellationToken);
+            await cache.SetAsync(typeof(TEntity).ToString(), list, cancellationToken);
         }
         #endregion
     }

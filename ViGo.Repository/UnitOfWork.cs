@@ -114,7 +114,29 @@ namespace ViGo.Repository
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            return await context.SaveChangesAsync(cancellationToken);
+            int result = await context.SaveChangesAsync(cancellationToken);
+
+            // Save changes to redis
+            await Bookings.SaveChangesToRedisAsync(cancellationToken);
+            await BookingDetails.SaveChangesToRedisAsync(cancellationToken);
+            await Events.SaveChangesToRedisAsync(cancellationToken);
+            await Fares.SaveChangesToRedisAsync(cancellationToken);
+            await FarePolicies.SaveChangesToRedisAsync(cancellationToken);
+            await Notifications.SaveChangesToRedisAsync(cancellationToken);
+            await Promotions.SaveChangesToRedisAsync(cancellationToken);
+            await Reports.SaveChangesToRedisAsync(cancellationToken);
+            await Routes.SaveChangesToRedisAsync(cancellationToken);
+            await RouteRoutines.SaveChangesToRedisAsync(cancellationToken);
+            await Settings.SaveChangesToRedisAsync(cancellationToken);
+            await Stations.SaveChangesToRedisAsync(cancellationToken);
+            await Users.SaveChangesToRedisAsync(cancellationToken);
+            await UserLicenses.SaveChangesToRedisAsync(cancellationToken);
+            await Vehicles.SaveChangesToRedisAsync(cancellationToken);
+            await VehicleTypes.SaveChangesToRedisAsync(cancellationToken);
+            await Wallets.SaveChangesToRedisAsync(cancellationToken);
+            await WalletTransactions.SaveChangesToRedisAsync(cancellationToken);
+
+            return result;
         }
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)

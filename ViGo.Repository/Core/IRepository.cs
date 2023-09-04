@@ -170,6 +170,8 @@ namespace ViGo.Repository.Core
         /// <param name="entity">The entity to be detached</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         Task DetachAsync(TEntity entity);
+
+        Task SaveChangesToRedisAsync(CancellationToken cancellationToken);
         #endregion
     }
 }
