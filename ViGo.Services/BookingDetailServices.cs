@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -110,7 +109,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetUserBookingDetailsAsync(Guid userId, Guid? bookingId, HttpClient httpClient,
+            GetUserBookingDetailsAsync(Guid userId, Guid? bookingId,
             PaginationParameter pagination, BookingDetailSortingParameters sorting,
             BookingDetailFilterParameters filters,
             HttpContext context, CancellationToken cancellationToken)
@@ -165,7 +164,7 @@ namespace ViGo.Services
                     /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
             }
 
-            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, httpClient, cancellationToken);
+            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
 
             bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
@@ -239,7 +238,7 @@ namespace ViGo.Services
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
-            GetBookingDetailsAsync(Guid bookingId, HttpClient httpClient,
+            GetBookingDetailsAsync(Guid bookingId,
             PaginationParameter pagination, BookingDetailSortingParameters sorting,
             BookingDetailFilterParameters filters,
             HttpContext context,
@@ -249,7 +248,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
 
-            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, httpClient, cancellationToken);
+            bookingDetails = await FilterBookingDetailsAsync(bookingDetails, filters, cancellationToken);
 
             bookingDetails = bookingDetails.Sort(sorting.OrderBy);
 
@@ -792,7 +791,7 @@ namespace ViGo.Services
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
             GetDriverAvailableBookingDetailsAsync(Guid driverId,
-                Guid? bookingId, HttpClient httpClient,
+                Guid? bookingId,
                 PaginationParameter pagination, BookingDetailFilterParameters filters,
                 HttpContext context,
                 CancellationToken cancellationToken)
@@ -911,7 +910,7 @@ namespace ViGo.Services
                                 {
                                     // Valid one
                                     await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
-                                        addedTripAsNode.Value, previousTrip, nextTrip, httpClient, cancellationToken);
+                                        addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                 }
                             }
                             // Previous and Next cannot be both null
@@ -927,14 +926,14 @@ namespace ViGo.Services
                                     {
                                         // Valid one
                                         await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
-                                            addedTripAsNode.Value, previousTrip, nextTrip, httpClient, cancellationToken);
+                                            addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                     }
                                 }
                                 else
                                 {
                                     // Valid one
                                     await AddToPrioritizedBookingDetailsAsync(prioritizedBookingDetails, bookingDetail,
-                                        addedTripAsNode.Value, previousTrip, nextTrip, httpClient, cancellationToken);
+                                        addedTripAsNode.Value, previousTrip, nextTrip, cancellationToken);
                                 }
                             }
 
@@ -958,7 +957,7 @@ namespace ViGo.Services
             //IEnumerable<BookingDetail> availableBookingDetails 
 
             prioritizedBookingDetails = (await FilterBookingDetailsAsync(prioritizedBookingDetails,
-                filters, httpClient, cancellationToken)).ToList();
+                filters, cancellationToken)).ToList();
 
             prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(
                 p => p.BookingDetail.Date)
@@ -2210,9 +2209,7 @@ namespace ViGo.Services
 
         private async Task AddToPrioritizedBookingDetailsAsync(IList<DriverMappingItem> prioritizedBookingDetails,
             BookingDetail bookingDetailToAdd, DriverTrip addedTrip,
-            DriverTrip? previousTrip, DriverTrip? nextTrip, 
-            HttpClient httpClient,
-            CancellationToken cancellationToken)
+            DriverTrip? previousTrip, DriverTrip? nextTrip, CancellationToken cancellationToken)
         {
             //TimeSpan addedTripEndTime = addedTrip.EndTime;
 
@@ -2224,7 +2221,7 @@ namespace ViGo.Services
                     //TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     double movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        addedTrip.EndLocation, nextTrip.StartLocation, httpClient, cancellationToken);
+                        addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     if ((nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes > movingDuration + 10)
                     {
@@ -2246,7 +2243,7 @@ namespace ViGo.Services
 
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     double movingDuration = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        previousTrip.EndLocation, addedTrip.StartLocation, httpClient, cancellationToken);
+                        previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
 
                     if ((addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes > movingDuration + 10)
                     {
@@ -2261,9 +2258,9 @@ namespace ViGo.Services
                     // TimeSpan nextTripEndTime = nextTrip.EndTime;
                     // Check for duration from addedTrip EndStation to nextTrip StartStation
                     double movingDurationPrevToAdded = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        previousTrip.EndLocation, addedTrip.StartLocation, httpClient, cancellationToken);
+                        previousTrip.EndLocation, addedTrip.StartLocation, cancellationToken);
                     double movingDurationAddedToNext = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        addedTrip.EndLocation, nextTrip.StartLocation, httpClient, cancellationToken);
+                        addedTrip.EndLocation, nextTrip.StartLocation, cancellationToken);
 
                     double durationPrevToAdded = (addedTrip.BeginTime - previousTrip.EndTime).TotalMinutes;
                     double durationAddedToNext = (nextTrip.BeginTime - addedTrip.EndTime).TotalMinutes;
@@ -2479,7 +2476,7 @@ namespace ViGo.Services
         }
 
         private async Task<IEnumerable<BookingDetail>> FilterBookingDetailsAsync(IEnumerable<BookingDetail> bookingDetails,
-            BookingDetailFilterParameters filters, HttpClient httpClient, CancellationToken cancellationToken)
+            BookingDetailFilterParameters filters, CancellationToken cancellationToken)
         {
             bookingDetails = bookingDetails.Where(
                 d =>
@@ -2529,7 +2526,7 @@ namespace ViGo.Services
                         filters.StartLocationLng.Value);
 
                     double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, httpClient, cancellationToken);
+                        conditionPoint, startPoint, cancellationToken);
 
                     if (distance > filters.StartLocationRadius.Value)
                     {
@@ -2548,7 +2545,7 @@ namespace ViGo.Services
                         filters.EndLocationLng.Value);
 
                     double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, httpClient, cancellationToken);
+                        conditionPoint, startPoint, cancellationToken);
 
                     if (distance > filters.EndLocationRadius.Value)
                     {
@@ -2565,7 +2562,7 @@ namespace ViGo.Services
         }
 
         private async Task<IEnumerable<DriverMappingItem>> FilterBookingDetailsAsync(IEnumerable<DriverMappingItem> bookingDetails,
-            BookingDetailFilterParameters filters, HttpClient httpClient, CancellationToken cancellationToken)
+            BookingDetailFilterParameters filters, CancellationToken cancellationToken)
         {
             bookingDetails = bookingDetails.Where(
                 d =>
@@ -2618,7 +2615,7 @@ namespace ViGo.Services
                         filters.StartLocationLng.Value);
 
                     double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, httpClient, cancellationToken);
+                        conditionPoint, startPoint, cancellationToken);
 
                     if (distance > filters.StartLocationRadius.Value)
                     {
@@ -2641,7 +2638,7 @@ namespace ViGo.Services
                         filters.EndLocationLng.Value);
 
                     double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, httpClient, cancellationToken);
+                        conditionPoint, startPoint, cancellationToken);
 
                     if (distance > filters.EndLocationRadius.Value)
                     {

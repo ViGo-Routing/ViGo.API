@@ -14,12 +14,9 @@ namespace ViGo.API.Controllers
     public class ImageController : ControllerBase
     {
         private ILogger<ImageController> _logger;
-        private readonly IHttpClientFactory _httpClientFactory;
-
-        public ImageController(ILogger<ImageController> logger, IHttpClientFactory httpClientFactory)
+        public ImageController(ILogger<ImageController> logger)
         {
             _logger = logger;
-            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -43,11 +40,7 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> ReadTextFromImage(ReadTextRequest model,
             CancellationToken cancellationToken)
         {
-            HttpClient httpClient = _httpClientFactory.CreateClient();
-            HttpClient imageClient = _httpClientFactory.CreateClient();
-
-            ILicenseFromImage? licenseFromImage = await httpClient.ReadTextFromImageAsync(
-                imageClient,
+            ILicenseFromImage? licenseFromImage = await OcrUtilities.ReadTextFromImageAsync(
                 model.ImageUrl, model.OcrType, cancellationToken);
             return StatusCode(200, licenseFromImage);
         }

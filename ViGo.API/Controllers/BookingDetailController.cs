@@ -22,19 +22,15 @@ namespace ViGo.API.Controllers
         private IBackgroundTaskQueue _backgroundQueue;
         private IServiceScopeFactory _serviceScopeFactory;
 
-        private IHttpClientFactory _httpClientFactory;
-
         public BookingDetailController(IUnitOfWork work,
             ILogger<BookingDetailController> logger,
             IBackgroundTaskQueue backgroundQueue,
-            IServiceScopeFactory serviceScopeFactory,
-            IHttpClientFactory httpClientFactory)
+            IServiceScopeFactory serviceScopeFactory)
         {
             bookingDetailServices = new BookingDetailServices(work, logger);
             _logger = logger;
             _backgroundQueue = backgroundQueue;
             _serviceScopeFactory = serviceScopeFactory;
-            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -155,10 +151,9 @@ namespace ViGo.API.Controllers
             //{
             //    pagination = PaginationParameter.Default;
             //}
-            HttpClient httpClient = _httpClientFactory.CreateClient();
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    driverId, bookingId, httpClient,  pagination, sorting, filters, HttpContext,
+                    driverId, bookingId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -219,10 +214,9 @@ namespace ViGo.API.Controllers
             //{
             //    pagination = PaginationParameter.Default;
             //}
-            HttpClient httpClient = _httpClientFactory.CreateClient();
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetUserBookingDetailsAsync(
-                    customerId, null, httpClient, pagination, sorting, filters, HttpContext,
+                    customerId, null, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }
@@ -254,11 +248,10 @@ namespace ViGo.API.Controllers
             //{
             //    pagination = PaginationParameter.Default;
             //}
-            HttpClient httpClient = _httpClientFactory.CreateClient();
 
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetBookingDetailsAsync(
-                    bookingId, httpClient,
+                    bookingId,
                     pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
@@ -541,10 +534,9 @@ namespace ViGo.API.Controllers
             //{
             //    pagination = PaginationParameter.Default;
             //}
-            HttpClient httpClient = _httpClientFactory.CreateClient();
             IPagedEnumerable<BookingDetailViewModel> dtos =
                 await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(
-                    driverId, bookingId, httpClient, pagination, filters, HttpContext,
+                    driverId, bookingId, pagination, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }

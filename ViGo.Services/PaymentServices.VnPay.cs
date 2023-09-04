@@ -413,7 +413,6 @@ namespace ViGo.Services
 
         public async Task<VnPayQueryViGoResponse?>
             GetVnPayTransactionStatus(Guid walletTransactionId,
-            HttpClient httpClient,
             HttpContext httpContext, CancellationToken cancellationToken)
         {
             WalletTransaction? walletTransaction = await work.WalletTransactions
@@ -433,7 +432,7 @@ namespace ViGo.Services
             VnPayQueryRequest vnPayQueryRequest = new VnPayQueryRequest(
                 vnPayTransactionRef, vnPayTransactionNo, walletTransaction.CreatedTime, httpContext);
 
-            VnPayQueryResponse? response = await httpClient
+            VnPayQueryResponse? response = await HttpClientUtilities
                 .SendRequestAsync<VnPayQueryResponse, VnPayQueryRequest>(
                 ViGoConfiguration.VnPayQueryUrl, HttpMethod.Post,
                 body: vnPayQueryRequest, cancellationToken: cancellationToken);
@@ -447,7 +446,6 @@ namespace ViGo.Services
 
         public async Task<VnPayQueryViGoResponse?>
             GetVnPayTransactionStatus(Guid walletTransactionId,
-            HttpClient httpClient,
             string clientIpAddress, CancellationToken cancellationToken)
         {
             WalletTransaction? walletTransaction = await work.WalletTransactions
@@ -467,7 +465,7 @@ namespace ViGo.Services
             VnPayQueryRequest vnPayQueryRequest = new VnPayQueryRequest(
                 vnPayTransactionRef, vnPayTransactionNo, walletTransaction.CreatedTime, clientIpAddress);
 
-            VnPayQueryResponse? response = await httpClient
+            VnPayQueryResponse? response = await HttpClientUtilities
                 .SendRequestAsync<VnPayQueryResponse, VnPayQueryRequest>(
                 ViGoConfiguration.VnPayQueryUrl, HttpMethod.Post,
                 body: vnPayQueryRequest, cancellationToken: cancellationToken);
