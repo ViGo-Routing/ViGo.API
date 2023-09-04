@@ -373,6 +373,14 @@ namespace ViGo.Services
             return new UserViewModel(user);
         }
 
+        public async Task<UserViewModel> GetCurrentUserAsync(CancellationToken cancellationToken)
+        {
+            Guid currentUserId = IdentityUtilities.GetCurrentUserId();
+            User currentUser = await work.Users.GetAsync(currentUserId, cancellationToken: cancellationToken);
+
+            return new UserViewModel(currentUser);
+        }
+
         public async Task<UserViewModel> GetBookingDetailCustomerAsync(Guid bookingDetailId,
             CancellationToken cancellationToken)
         {

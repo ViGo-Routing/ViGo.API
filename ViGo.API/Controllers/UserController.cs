@@ -143,6 +143,31 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get current logged in user
+        /// </summary>
+        /// <response code="401">User in unauthorized</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Get current user successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(UserViewModel), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        [HttpGet("CurrentUser")]
+        public async Task<IActionResult> GetCurrentUserAsync(CancellationToken cancellationToken)
+        {
+            UserViewModel user = await userServices.GetCurrentUserAsync(cancellationToken);
+            
+            if (user is null)
+            {
+                throw new ApplicationException("Người dùng không tồn tại!");
+            }
+
+            return StatusCode(200, user);
+        }
+
+        /// <summary>
         /// Get Customer of a Booking Detail
         /// </summary>
         /// <response code="401">Login failed</response>
