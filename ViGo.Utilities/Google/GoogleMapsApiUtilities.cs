@@ -1,5 +1,4 @@
 ﻿using GoogleMapsApi.Entities.DistanceMatrix.Response;
-using System.Net.Http;
 using ViGo.Models.GoogleMaps;
 using ViGo.Utilities.Configuration;
 
@@ -18,7 +17,6 @@ namespace ViGo.Utilities.Google
         /// <exception cref="Exception"></exception>
         public static async Task<double> GetDistanceBetweenTwoPointsAsync(
             GoogleMapPoint origin, GoogleMapPoint destination,
-            HttpClient httpClient,
             //DateTime? departureTime,
             CancellationToken cancellationToken)
         {
@@ -35,7 +33,7 @@ namespace ViGo.Utilities.Google
             //    parameters = parameters.Append(new KeyValuePair<string, string>("departure_time", departureTimeInLong.ToString()));
             //}
 
-            DistanceMatrixResponse? response = await httpClient.SendRequestAsync
+            DistanceMatrixResponse? response = await HttpClientUtilities.SendRequestAsync
                 <DistanceMatrixResponse, object>(baseUrl + "/distancematrix/json", HttpMethod.Get,
                 parameters, cancellationToken: cancellationToken);
             if (response != null)
@@ -64,7 +62,6 @@ namespace ViGo.Utilities.Google
         /// <exception cref="Exception"></exception>
         public static async Task<double> GetDurationBetweenTwoPointsAsync(
             GoogleMapPoint origin, GoogleMapPoint destination,
-            HttpClient httpClient,
             //DateTime? departureTime,
             CancellationToken cancellationToken)
         {
@@ -81,7 +78,7 @@ namespace ViGo.Utilities.Google
             //    parameters = parameters.Append(new KeyValuePair<string, string>("departure_time", departureTimeInLong.ToString()));
             //}
 
-            DistanceMatrixResponse? response = await httpClient.SendRequestAsync
+            DistanceMatrixResponse? response = await HttpClientUtilities.SendRequestAsync
                 <DistanceMatrixResponse, object>(baseUrl + "/distancematrix/json", HttpMethod.Get,
                 parameters, cancellationToken: cancellationToken);
             if (response != null)

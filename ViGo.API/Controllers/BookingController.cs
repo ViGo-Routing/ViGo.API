@@ -28,13 +28,11 @@ namespace ViGo.API.Controllers
         private IServiceScopeFactory _serviceScopeFactory;
 
         private ISchedulerFactory schedulerFactory;
-        private IHttpClientFactory _httpClientFactory;
 
         public BookingController(IUnitOfWork work,
             ILogger<BookingController> logger,
             IServiceScopeFactory serviceScopeFactory,
-            IBackgroundTaskQueue backgroundQueue, ISchedulerFactory schedulerFactory, 
-            IHttpClientFactory httpClientFactory)
+            IBackgroundTaskQueue backgroundQueue, ISchedulerFactory schedulerFactory)
         {
             bookingServices = new BookingServices(work, logger);
             fareServices = new FareServices(work, logger);
@@ -42,7 +40,6 @@ namespace ViGo.API.Controllers
             _serviceScopeFactory = serviceScopeFactory;
             _backgroundQueue = backgroundQueue;
             this.schedulerFactory = schedulerFactory;
-            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -172,11 +169,9 @@ namespace ViGo.API.Controllers
             [FromQuery] BookingFilterParameters filters,
             CancellationToken cancellationToken)
         {
-            HttpClient httpClient = _httpClientFactory.CreateClient();
-
             IPagedEnumerable<BookingViewModel> dtos =
                 await bookingServices.GetAvailableBookingsAsync(
-                    driverId, httpClient, pagination, sorting, filters, HttpContext,
+                    driverId, pagination, sorting, filters, HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }

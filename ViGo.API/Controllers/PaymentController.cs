@@ -27,13 +27,11 @@ namespace ViGo.API.Controllers
 
         private ISchedulerFactory schedulerFactory;
 
-        private IHttpClientFactory _httpClientFactory;
 
         public PaymentController(IUnitOfWork work, ISignalRService signalRService,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<PaymentController> logger,
-            IBackgroundTaskQueue queue, ISchedulerFactory schedulerFactory, 
-            IHttpClientFactory httpClientFactory)
+            IBackgroundTaskQueue queue, ISchedulerFactory schedulerFactory)
         {
             paymentServices = new PaymentServices(work, logger);
             //this.signalRService = signalRService;
@@ -44,7 +42,6 @@ namespace ViGo.API.Controllers
             _logger = logger;
             _backgroundQueue = queue;
             this.schedulerFactory = schedulerFactory;
-            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -210,10 +207,8 @@ namespace ViGo.API.Controllers
             Guid walletTransactionId,
             CancellationToken cancellationToken)
         {
-            HttpClient httpClient = _httpClientFactory.CreateClient();
-
             VnPayQueryViGoResponse response = await paymentServices
-                .GetVnPayTransactionStatus(walletTransactionId, httpClient, HttpContext, cancellationToken);
+                .GetVnPayTransactionStatus(walletTransactionId, HttpContext, cancellationToken);
             return StatusCode(200, response);
         }
         #endregion

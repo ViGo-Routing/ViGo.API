@@ -362,21 +362,32 @@ namespace ViGo.Services
             return newUser;
         }
 
-        public async Task<UserViewModel> GetUserByIdAsync(Guid id)
+        public async Task<UserViewModel?> GetUserByIdAsync(Guid id)
         {
             if (!IdentityUtilities.IsAdmin())
             {
                 id = IdentityUtilities.GetCurrentUserId();
             }
 
-            User user = await work.Users.GetAsync(id);
+            User? user = await work.Users.GetAsync(id);
+
+            if (user is null)
+            {
+                return null;
+            }
+
             return new UserViewModel(user);
         }
 
-        public async Task<UserViewModel> GetCurrentUserAsync(CancellationToken cancellationToken)
+        public async Task<UserViewModel?> GetCurrentUserAsync(CancellationToken cancellationToken)
         {
             Guid currentUserId = IdentityUtilities.GetCurrentUserId();
-            User currentUser = await work.Users.GetAsync(currentUserId, cancellationToken: cancellationToken);
+            User? currentUser = await work.Users.GetAsync(currentUserId, cancellationToken: cancellationToken);
+
+            if (currentUser is null)
+            {
+                return null;
+            }
 
             return new UserViewModel(currentUser);
         }
