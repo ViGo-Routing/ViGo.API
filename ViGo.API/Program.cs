@@ -200,6 +200,12 @@ namespace ViGo.API
                     .AllowCredentials());
             });
 
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = ViGoConfiguration.ConnectionString ("Redis");
+                options.InstanceName = "ViGoRedis";
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

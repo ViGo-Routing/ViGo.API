@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Users;
@@ -112,9 +113,10 @@ namespace ViGo.API.Controllers
         /// <response code="500">Server error</response>
         [HttpPost("Generate-Firebase-Token")]
         public async Task<IActionResult> GenerateFirebaseToken(string phone,
+            UserRole role,
             CancellationToken cancellationToken)
         {
-            string token = await firebaseServices.GenerateFirebaseToken(phone, cancellationToken);
+            string token = await firebaseServices.GenerateFirebaseToken(phone, role, cancellationToken);
             return StatusCode(200, new { token = token });
         }
 

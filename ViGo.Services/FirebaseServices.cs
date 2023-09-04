@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net.Http.Json;
 using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities.Configuration;
@@ -57,12 +58,15 @@ namespace ViGo.Services
             return userRecord.Uid;
         }
 
-        public async Task<string> GenerateFirebaseToken(string phone, CancellationToken cancellationToken)
+        public async Task<string> GenerateFirebaseToken(string phone, 
+            UserRole role,
+            CancellationToken cancellationToken)
         {
             User user = await work.Users.GetAsync(
                 u => !string.IsNullOrEmpty(u.Phone) &&
                     u.Phone.ToLower().Trim()
-                    .Equals(phone.ToLower().Trim()), cancellationToken: cancellationToken);
+                    .Equals(phone.ToLower().Trim())
+                    && u.Role == role, cancellationToken: cancellationToken);
 
             if (user != null)
             {

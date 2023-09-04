@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Expressions;
 using ViGo.Domain;
 using ViGo.Domain.Core;
@@ -20,6 +21,11 @@ namespace ViGo.Repository.Core
         /// Current table DbSet
         /// </summary>
         protected abstract DbSet<TEntity> Table { get; }
+
+        /// <summary>
+        /// Cache
+        /// </summary>
+        protected abstract IDistributedCache cache { get; }
         #endregion
 
         #region Methods
@@ -181,6 +187,8 @@ namespace ViGo.Repository.Core
         /// <param name="entity">The entity to be detached</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         public abstract Task DetachAsync(TEntity entity);
+
+        public abstract Task SaveChangesToRedisAsync(CancellationToken cancellationToken);
         #endregion
     }
 }
