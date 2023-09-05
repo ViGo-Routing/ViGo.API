@@ -269,6 +269,9 @@ namespace ViGo.API.Controllers
                         // Schedule trip reminder
                         IScheduler scheduler = await schedulerFactory.GetScheduler(token);
                         await backgroundServices.ScheduleTripReminderAsync(booking.Id, scheduler, token);
+
+                        // Send notification
+                        await backgroundServices.SendNotificationForNewTripsAsync(token);
                     }
                 });
             }
