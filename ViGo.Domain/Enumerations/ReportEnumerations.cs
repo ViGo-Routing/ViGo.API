@@ -11,6 +11,7 @@
     {
         DRIVER_NOT_COMING = 0,
         BOOKER_NOT_COMING = 1,
-        OTHER = 2
+        OTHER = 2,
+        DRIVER_CANCEL_TRIP = 3
     }
 }
