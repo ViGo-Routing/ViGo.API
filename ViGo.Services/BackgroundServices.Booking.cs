@@ -631,5 +631,47 @@ namespace ViGo.Services
                 _logger.LogInformation("====== FINISH TASK - SCHEDULE TRIP REMINDER ON STARTUP ======");
             }
         }
+
+        public async Task SendNotificationForNewTripsAsync(
+            CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("====== BEGIN TASK - SEND NOTIFICATION FOR NEW TRIPS ======");
+            try
+            {
+                IEnumerable<User> drivers = await work.Users
+                    .GetAllAsync(query => query.Where(
+                        u => u.Role == UserRole.DRIVER
+                        && u.Status == UserStatus.ACTIVE), cancellationToken: cancellationToken);
+
+                Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                        {
+                            { "action", NotificationAction.AvailableBookingDetails },
+                        };
+
+                foreach (User driver in drivers)
+                {
+                    if (!string.IsNullOrEmpty(driver.FcmToken))
+                    {
+                        string fcmToken = driver.FcmToken;
+
+                        NotificationCreateModel notification = new NotificationCreateModel()
+                        {
+                            UserId = driver.Id,
+                            Type = NotificationType.SPECIFIC_USER,
+                            Title = "Có chuyến đi mới cần tài xế",
+                            Description = "Các chuyến đi mới vừa được đặt lịch! Nhanh tay chọn chuyến đi phù hợp với bạn thôi nào!!"
+                        };
+
+                        await notificationServices.CreateFirebaseNotificationAsync(
+                            notification, fcmToken, dataToSend, cancellationToken);
+                    }
+                }
+
+                _logger.LogInformation("====== DONE TASK - SEND NOTIFICATION FOR NEW TRIPS ======");
+            } catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@ using ViGo.Models.QueryString.Pagination;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
+using ViGo.Utilities;
 using ViGo.Utilities.BackgroundTasks;
 
 namespace ViGo.API.Controllers
@@ -579,6 +580,12 @@ namespace ViGo.API.Controllers
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
                         await backgroundServices.CalculateTripCancelRateAsync(userId.Value, token);
+
+                        if (IdentityUtilities.GetCurrentRole() == UserRole.DRIVER)
+                        {
+                            // Driver cancels Trip
+                            await backgroundServices.SendNotificationForNewTripsAsync(token);
+                        }
                     }
                 });
 

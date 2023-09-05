@@ -1137,6 +1137,26 @@ namespace ViGo.Services
             bookingDetail.Status = BookingDetailStatus.ASSIGNED;
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
+
+            // Check for pending report
+            IEnumerable<Report> reports = await work.Reports
+                .GetAllAsync(query => query.Where(
+                    r => r.BookingDetailId.HasValue
+                    && r.BookingDetailId.Equals(bookingDetailId)
+                    && r.Status == ReportStatus.PENDING
+                    && r.Type == ReportType.DRIVER_CANCEL_TRIP), cancellationToken: cancellationToken);
+
+            if (reports.Any())
+            {
+                foreach (Report report in reports)
+                {
+                    report.Status = ReportStatus.PROCESSED;
+                    report.ReviewerNote = "Đã được tài xế mới chọn!";
+
+                    await work.Reports.UpdateAsync(report);
+                }
+            }
+
             await work.SaveChangesAsync(cancellationToken);
 
             // Send notification to Driver and Customer
@@ -1316,6 +1336,25 @@ namespace ViGo.Services
                 bookingDetail.Status = BookingDetailStatus.ASSIGNED;
 
                 await work.BookingDetails.UpdateAsync(bookingDetail);
+
+                // Check for pending report
+                IEnumerable<Report> reports = await work.Reports
+                    .GetAllAsync(query => query.Where(
+                        r => r.BookingDetailId.HasValue
+                        && r.BookingDetailId.Equals(bookingDetail.Id)
+                        && r.Status == ReportStatus.PENDING
+                        && r.Type == ReportType.DRIVER_CANCEL_TRIP), cancellationToken: cancellationToken);
+
+                if (reports.Any())
+                {
+                    foreach (Report report in reports)
+                    {
+                        report.Status = ReportStatus.PROCESSED;
+                        report.ReviewerNote = "Đã được tài xế mới chọn!";
+
+                        await work.Reports.UpdateAsync(report);
+                    }
+                }
             }
 
             await work.SaveChangesAsync(cancellationToken);
@@ -1727,6 +1766,20 @@ namespace ViGo.Services
                             cancellationToken: cancellationToken);
                         await work.Wallets.UpdateAsync(systemWallet);
                     }
+
+                    // Create Report to admin for assigning to the trip
+                    Report report = new Report()
+                    {
+                        BookingDetailId = bookingDetail.Id,
+                        Title = "Tài xế hủy chuyến đi",
+                        Content = "Tài xế đã hủy chuyến đi, chuyến đi cần tài xế mới!",
+                        UserId = bookingDetail.DriverId.Value,
+                        Type = ReportType.DRIVER_CANCEL_TRIP,
+                        Status = ReportStatus.PENDING,
+
+                    };
+
+                    await work.Reports.InsertAsync(report, cancellationToken: cancellationToken);
                 }
             }
 
