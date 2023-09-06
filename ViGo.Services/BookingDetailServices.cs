@@ -331,21 +331,25 @@ namespace ViGo.Services
             if (user.Role == UserRole.CUSTOMER)
             {
                 IEnumerable<Booking> bookings = await work.Bookings
-                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
+                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)
+                    && b.Status == BookingStatus.CONFIRMED),
                 cancellationToken: cancellationToken);
                 IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
 
                 bookingDetails = await work.BookingDetails.GetAllAsync(
-                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)
+                    && (d.Status == BookingDetailStatus.PENDING_ASSIGN || 
+                    d.Status == BookingDetailStatus.ASSIGNED)),
                     cancellationToken: cancellationToken);
 
             }
             else if (user.Role == UserRole.DRIVER)
             {
                 bookingDetails = await work.BookingDetails
-                .GetAllAsync(query => query.Where(
+                    .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(userId)
+                    && bd.Status == BookingDetailStatus.ASSIGNED
                     /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
             }
             bookingDetails = bookingDetails.Where(
@@ -402,12 +406,17 @@ namespace ViGo.Services
             if (user.Role == UserRole.CUSTOMER)
             {
                 IEnumerable<Booking> bookings = await work.Bookings
-                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)),
+                    .GetAllAsync(query => query.Where(b => b.CustomerId.Equals(userId)
+                    && b.Status == BookingStatus.CONFIRMED),
                 cancellationToken: cancellationToken);
                 IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
 
                 bookingDetails = await work.BookingDetails.GetAllAsync(
-                    query => query.Where(d => bookingIds.Contains(d.BookingId)),
+                    query => query.Where(d => bookingIds.Contains(d.BookingId)
+                    && (d.Status == BookingDetailStatus.GOING_TO_PICKUP ||
+                    d.Status == BookingDetailStatus.ARRIVE_AT_PICKUP ||
+                    d.Status == BookingDetailStatus.GOING_TO_DROPOFF ||
+                    d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)),
                     cancellationToken: cancellationToken);
 
             }
@@ -417,15 +426,15 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     bd => bd.DriverId.HasValue &&
                     bd.DriverId.Value.Equals(userId)
-                    /*&& bd.Status != BookingDetailStatus.CANCELLED*/), cancellationToken: cancellationToken);
+                    /*&& bd.Status != BookingDetailStatus.CANCELLED*/
+                    && (bd.Status == BookingDetailStatus.GOING_TO_PICKUP ||
+                    bd.Status == BookingDetailStatus.ARRIVE_AT_PICKUP ||
+                    bd.Status == BookingDetailStatus.GOING_TO_DROPOFF ||
+                    bd.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)), cancellationToken: cancellationToken);
             }
             DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
 
-            bookingDetails = bookingDetails.Where(
-                d => d.Status == BookingDetailStatus.GOING_TO_PICKUP ||
-                    d.Status == BookingDetailStatus.ARRIVE_AT_PICKUP ||
-                    d.Status == BookingDetailStatus.GOING_TO_DROPOFF ||
-                    d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+            bookingDetails = bookingDetails
                 .OrderByDescending(d => d.Date)
                 .ThenByDescending(d => d.CustomerDesiredPickupTime);
             if (!bookingDetails.Any())
