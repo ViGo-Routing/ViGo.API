@@ -1875,6 +1875,154 @@ namespace ViGo.Services
             return (bookingDetail, cancelledUser?.Id, isInWeek, isDriverPaid, customerId);
         }
 
+        public async Task<double> CalculateCancelBookingDetailFeeAsync(
+            Guid bookingDetailId, CancellationToken cancellationToken)
+        {
+            BookingDetail? bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!!");
+            }
+
+            if (bookingDetail.Status == BookingDetailStatus.CANCELLED)
+            {
+                return 0;
+            }
+
+            Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
+            if (!IdentityUtilities.IsAdmin())
+            {
+                Guid currentId = IdentityUtilities.GetCurrentUserId();
+                if (!currentId.Equals(booking.CustomerId) &&
+                    (bookingDetail.DriverId.HasValue &&
+                    !currentId.Equals(bookingDetail.DriverId.Value)))
+                {
+                    // Not the accessible user
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
+                }
+            }
+
+            DateTime now = DateTimeUtilities.GetDateTimeVnNow();
+            DateTime pickupDateTime = DateOnly.FromDateTime(bookingDetail.Date)
+                .ToDateTime(TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
+
+            // TODO Code for Cancelling Policy
+            if (now > pickupDateTime)
+            {
+                throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
+            }
+
+            if (IdentityUtilities.GetCurrentRole() == UserRole.CUSTOMER)
+            {
+                // Customer
+                double chargeFee = 0;
+
+                if (!bookingDetail.DriverId.HasValue)
+                {
+                    // BookingDetail has not been selected by a Driver
+                    // No fee
+                    chargeFee = 0;
+                }
+                else
+                {
+                    TimeSpan difference = pickupDateTime - now;
+
+                    if (difference.TotalHours >= 6)
+                    {
+                        // >= 6 hours
+                        // No extra fee
+                        chargeFee = 0;
+                    }
+                    else if (difference.TotalMinutes >= 45)
+                    {
+                        // >= 1 hour but < 6h
+                        // Been selected
+                        // 10% extra fee
+                        chargeFee = 0.1;
+                    }
+                    else
+                    {
+                        // 100% fee
+                        // No fee
+                        chargeFee = 1;
+                    }
+                }
+
+                //double chargeFeeAmount = bookingDetail.PriceAfterDiscount.Value * chargeFee;
+                //chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
+                //double customerRefundAmount = bookingDetail.Price.Value * (1 - chargeFee);
+                return FareUtilities.RoundToThousands(bookingDetail.Price.Value * chargeFee);
+
+            }
+            else if (IdentityUtilities.GetCurrentRole() == UserRole.DRIVER)
+            {
+                // Driver
+                double chargeFee = 0;
+
+                if (!bookingDetail.DriverId.HasValue)
+                {
+                    // BookingDetail has not been selected by a Driver
+                    // No fee
+                    chargeFee = 0;
+                }
+                else
+                {
+                    TimeSpan difference = pickupDateTime - now;
+
+                    if (difference.TotalHours >= 24)
+                    {
+                        // >= 6 hours
+                        // No extra fee
+                        chargeFee = 0;
+                    }
+                    else if (difference.TotalHours >= 6)
+                    {
+                        // >= 1 hour but < 6h
+                        // Been selected
+                        // 10% extra fee
+                        chargeFee = 0.25;
+                    }
+                    else if (difference.TotalHours >= 2)
+                    {
+                        // >= 1 hour but < 6h
+                        // Been selected
+                        // 10% extra fee
+                        chargeFee = 0.5;
+                    }
+                    else
+                    {
+                        // 100% fee
+                        // No fee
+                        chargeFee = 1;
+                    }
+                }
+
+                //double chargeFeeAmount = bookingDetail.PriceAfterDiscount.Value * chargeFee;
+                //chargeFeeAmount = FareUtilities.RoundToThousands(chargeFeeAmount);
+                //double driverRefundAmount = bookingDetail.Price.Value * (1 - chargeFee);
+                //customerRefundAmount = FareUtilities.RoundToThousands(customerRefundAmount);
+
+                // Refund to Driver
+                Wallet driverWallet = await work.Wallets.GetAsync(
+                    w => w.UserId.Equals(bookingDetail.DriverId.Value),
+                    cancellationToken: cancellationToken);
+
+                WalletTransaction driverPickDetailTransaction = await work.WalletTransactions
+                    .GetAsync(t => t.WalletId.Equals(driverWallet.Id)
+                    && t.BookingDetailId.Equals(bookingDetail.Id)
+                    && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
+
+                double pickFee = driverPickDetailTransaction.Amount;
+                //double refundFee = FareUtilities.RoundToThousands(pickFee * (1 - chargeFee));
+                return FareUtilities.RoundToThousands(pickFee * chargeFee);
+            }
+            return 0;
+        }
+
         public async Task<(BookingDetailViewModel, Guid)> UserUpdateFeedback(
             Guid id, BookingDetailFeedbackModel feedback,
             CancellationToken cancellationToken)
