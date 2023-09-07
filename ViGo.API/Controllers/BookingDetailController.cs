@@ -478,6 +478,34 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Calculate cancel fee for canceling a trip
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <returns>
+        /// The calculated cancel fee
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Fee is calculated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Cancel/Fee/{bookingDetailId}")]
+        [ProducesResponseType(typeof(double), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> CalculateCancelFee(
+            Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            double cancelFee = await bookingDetailServices.CalculateCancelBookingDetailFeeAsync(bookingDetailId, cancellationToken);
+            return StatusCode(200, cancelFee);
+        }
+
+        /// <summary>
         /// Calculate driver fee for picking a Booking Detail
         /// </summary>
         /// <remarks>
