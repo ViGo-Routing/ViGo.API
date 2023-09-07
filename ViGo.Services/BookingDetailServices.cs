@@ -1679,6 +1679,10 @@ namespace ViGo.Services
                         }
                     }
 
+                    bookingDetail.Status = BookingDetailStatus.CANCELLED;
+
+                    bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
+
                 }
                 else if (cancelledUser.Role == UserRole.DRIVER)
                 {
@@ -1789,12 +1793,13 @@ namespace ViGo.Services
                     };
 
                     await work.Reports.InsertAsync(report, cancellationToken: cancellationToken);
+
+                    bookingDetail.Status = BookingDetailStatus.PENDING_ASSIGN;
+                    bookingDetail.DriverId = null;
+
+                    bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
                 }
             }
-
-            bookingDetail.Status = BookingDetailStatus.CANCELLED;
-
-            bookingDetail.CanceledUserId = IdentityUtilities.GetCurrentUserId();
 
             // Trigger Background Task for Calculating Cancel Rate
 
@@ -1808,12 +1813,16 @@ namespace ViGo.Services
             {
                 driver = await work.Users.GetAsync(bookingDetail.DriverId.Value,
                     cancellationToken: cancellationToken);
+            } else if (cancelledUser != null && cancelledUser.Role == UserRole.DRIVER)
+            {
+                driver = cancelledUser;
             }
 
             User customer = await work.Users.GetAsync(booking.CustomerId, cancellationToken: cancellationToken);
 
             string? driverFcm = driver?.FcmToken;
             string? customerFcm = customer.FcmToken;
+
 
             Dictionary<string, string> dataToSend = new Dictionary<string, string>()
             {
