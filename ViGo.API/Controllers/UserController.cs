@@ -37,7 +37,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        //[Authorize]
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetUsersAsync(
             [FromQuery] PaginationParameter pagination,
@@ -159,7 +159,7 @@ namespace ViGo.API.Controllers
         [HttpGet("CurrentUser")]
         public async Task<IActionResult> GetCurrentUserAsync(CancellationToken cancellationToken)
         {
-            UserViewModel user = await userServices.GetCurrentUserAsync(cancellationToken);
+            UserViewModel? user = await userServices.GetCurrentUserAsync(cancellationToken);
             
             if (user is null)
             {
