@@ -213,7 +213,7 @@ namespace ViGo.Services
             }
 
                 if (reportAdminUpdate.ReviewerNote != null) currentReport.ReviewerNote = reportAdminUpdate.ReviewerNote;
-                if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status;
+                if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status.Value;
                 //if (reportAdminUpdate.IsDeleted != null) currentReport.IsDeleted = (bool)reportAdminUpdate.IsDeleted;
 
             await work.Reports.UpdateAsync(currentReport);
