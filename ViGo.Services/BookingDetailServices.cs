@@ -458,6 +458,12 @@ namespace ViGo.Services
                     d => !reportedTrips.Contains(d.Id));
 
             }
+
+            if (!bookingDetails.Any())
+            {
+                return null;
+            }
+
             BookingDetail current = bookingDetails.First();
 
             UserViewModel? driverDto = null;
