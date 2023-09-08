@@ -64,9 +64,14 @@ namespace ViGo.Services
                 q => q.Where(x => x.UserId.Equals(userId)), cancellationToken: cancellationToken);
 
             reports = reports.Sort(sorting.OrderBy);
+
+            reports = reports.OrderBy(
+                r => r.Status, new ReportSortByStatusComparer());
+
             int totalRecords = reports.Count();
 
             reports = reports.ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
+
             IEnumerable<Guid> userIds = reports.Select(id => id.UserId);
             IEnumerable<User> users = await work.Users.GetAllAsync(
                 q => q.Where(x => userIds.Contains(x.Id)), cancellationToken: cancellationToken);
@@ -86,6 +91,7 @@ namespace ViGo.Services
                                                        join bookingDetailView in bookingDetailViews
                                                            on report.BookingDetailId equals bookingDetailView.Id
                                                        select new ReportViewModel(report, userView, bookingDetailView);
+
             return reportViews.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize, totalRecords, context);
 

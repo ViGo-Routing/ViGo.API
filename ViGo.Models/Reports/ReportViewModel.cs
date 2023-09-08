@@ -50,7 +50,23 @@ namespace ViGo.Models.Reports
         public ReportSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
-                new SortingCriteria(nameof(Report.CreatedTime)));
+                new SortingCriteria(nameof(Report.CreatedTime)),
+                new SortingCriteria(nameof(Report.Status)));
+        }
+    }
+
+    public class ReportSortByStatusComparer : IComparer<ReportStatus>
+    {
+        public int Compare(ReportStatus x, ReportStatus y)
+        {
+            if (x == y) return 0;
+            if (x == ReportStatus.PENDING) return 1;
+            if (x == ReportStatus.PROCESSED)
+            {
+                if (y == ReportStatus.PENDING) return -1;
+                return 1;
+            }
+            return -1;
         }
     }
 }
