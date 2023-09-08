@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ViGo.Utilities
 {
-    public static class CachUtilities
+    public static class CacheUtilities
     {
         public static async Task SetAsync(this IDistributedCache cache,
             string key, object value, CancellationToken cancellationToken = default)
@@ -24,7 +24,7 @@ namespace ViGo.Utilities
                 });
             byte[] encodedValue = Encoding.UTF8.GetBytes(jsonValue);
             var options = new DistributedCacheEntryOptions()
-                .SetAbsoluteExpiration(DateTime.Now.AddHours(2))
+                .SetAbsoluteExpiration(DateTime.Now.AddHours(5))
                 .SetSlidingExpiration(TimeSpan.FromHours(1.5));
             await cache.SetAsync(key, encodedValue, options, cancellationToken);
         }
