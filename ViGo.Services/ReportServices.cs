@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Castle.Core.Resource;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
+using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Reports;
@@ -13,7 +15,7 @@ using ViGo.Utilities;
 
 namespace ViGo.Services
 {
-    public class ReportServices : BaseServices
+    public class ReportServices : UseNotificationServices
     {
         public ReportServices(IUnitOfWork work, ILogger logger) : base(work, logger) { }
 
@@ -112,6 +114,16 @@ namespace ViGo.Services
 
         public async Task<ReportViewModel> CreateReport(ReportCreateModel reportCreate, CancellationToken cancellationToken)
         {
+            if (reportCreate.Type == ReportType.BOOKER_NOT_COMING ||
+                reportCreate.Type == ReportType.DRIVER_NOT_COMING ||
+                reportCreate.Type == ReportType.DRIVER_CANCEL_TRIP)
+            {
+                if (!reportCreate.BookingDetailId.HasValue)
+                {
+                    throw new ApplicationException("Thiếu dữ liệu chuyến đi!!");
+                }
+            }
+
             Report newReport = new Report
             {
                 UserId = IdentityUtilities.GetCurrentUserId(),
@@ -135,8 +147,8 @@ namespace ViGo.Services
             {
                 return reportView;
             }
-            return null;
 
+            return null;
 
         }
 
@@ -181,33 +193,159 @@ namespace ViGo.Services
             return reportView;
         }
 
-        public async Task<ReportViewModel> AdminUpdateReport(Guid id, ReportAdminUpdateModel reportAdminUpdate)
+        public async Task<(ReportViewModel, Guid?)> AdminUpdateReport(Guid id, ReportAdminUpdateModel reportAdminUpdate,
+            CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin())
             {
                 throw new ApplicationException("Bạn không có vai trò phù hợp để thực hiện chức năng này!");
             }
-            var currentReport = await work.Reports.GetAsync(id);
+            var currentReport = await work.Reports.GetAsync(id, cancellationToken: cancellationToken);
             if (currentReport is null)
             {
                 throw new ApplicationException("ID không tồn tại!");
             }
-            if (currentReport != null)
-            {
+
                 if (reportAdminUpdate.ReviewerNote != null) currentReport.ReviewerNote = reportAdminUpdate.ReviewerNote;
                 if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status;
                 //if (reportAdminUpdate.IsDeleted != null) currentReport.IsDeleted = (bool)reportAdminUpdate.IsDeleted;
+
+            await work.Reports.UpdateAsync(currentReport);
+
+            BookingDetail? bookingDetail = null;
+            string title = "";
+            string description = "";
+            Guid? customerId = null;
+
+            // Handle for report type
+            if (currentReport.Status == ReportStatus.PROCESSED)
+            {
+                if (currentReport.Type == ReportType.DRIVER_NOT_COMING)
+                {
+
+                }
+                else if (currentReport.Type == ReportType.BOOKER_NOT_COMING)
+                {
+                    // Change status to complete and driver gets paid
+                    bookingDetail = await work.BookingDetails.GetAsync(
+                        currentReport.BookingDetailId.Value, cancellationToken: cancellationToken);
+
+                    bookingDetail.Status = BookingDetailStatus.ARRIVE_AT_DROPOFF;
+                    bookingDetail.DropoffTime = DateTimeUtilities.GetDateTimeVnNow();
+
+                    Station startStationDropOff = await work.Stations.GetAsync(
+                           bookingDetail.StartStationId, cancellationToken: cancellationToken);
+
+                    Station endStation = await work.Stations.GetAsync(
+                        bookingDetail.EndStationId, cancellationToken: cancellationToken);
+
+                    title = "Chuyến đi của bạn đã hoàn thành!";
+                    description = $"{bookingDetail.PickUpDateTimeString()}, từ " +
+                                $"{startStationDropOff.Name} đến {endStation.Name}";
+                }
             }
 
-            await work.Reports.UpdateAsync(currentReport!);
-            await work.SaveChangesAsync();
+            await work.SaveChangesAsync(cancellationToken);
 
-            User user = await work.Users.GetAsync(currentReport.UserId);
+            if (bookingDetail != null && !string.IsNullOrEmpty(title) 
+                && !string.IsNullOrEmpty(description))
+            {
+                Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
+                customerId = booking.CustomerId;
+
+                // Send notification to Customer and Driver
+                User customer = await work.Users.GetAsync(booking.CustomerId,
+                    cancellationToken: cancellationToken);
+
+                string? customerFcm = customer.FcmToken;
+
+                Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                {
+                    {"action", NotificationAction.BookingDetail },
+                    { "bookingDetailId", bookingDetail.Id.ToString() },
+                };
+
+                if (bookingDetail.DriverId.HasValue)
+                {
+                    User driver = await work.Users.GetAsync(
+                    bookingDetail.DriverId.Value, cancellationToken: cancellationToken);
+                    string? driverFcm = driver.FcmToken;
+
+                    // Send to driver
+                    if (driverFcm != null && !string.IsNullOrEmpty(driverFcm))
+                    {
+                        NotificationCreateModel driverNotification = new NotificationCreateModel()
+                        {
+                            UserId = bookingDetail.DriverId.Value,
+                            Title = title,
+                            Description = description,
+                            Type = NotificationType.SPECIFIC_USER
+                        };
+
+                        await notificationServices.CreateFirebaseNotificationAsync(
+                            driverNotification, driverFcm, dataToSend, cancellationToken);
+                    }
+                }
+                
+
+                // Send to customer
+                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+                {
+
+                    NotificationCreateModel customerNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Title = title,
+                        Description = description,
+                        Type = NotificationType.SPECIFIC_USER
+                    };
+
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        customerNotification, customerFcm, dataToSend, cancellationToken);
+
+                }
+
+            }
+
+            User user = await work.Users.GetAsync(currentReport.UserId, cancellationToken: cancellationToken);
             UserViewModel userViewModel = new UserViewModel(user);
-            BookingDetail bookingDetail = await work.BookingDetails.GetAsync(currentReport.BookingDetailId.Value);
-            BookingDetailViewModel bookingDetailView = new BookingDetailViewModel(bookingDetail);
+
+            BookingDetailViewModel? bookingDetailView = null;
+            if (currentReport.BookingDetailId.HasValue)
+            {
+                bookingDetail = await work.BookingDetails.GetAsync(currentReport.BookingDetailId.Value,
+                cancellationToken: cancellationToken);
+
+                bookingDetailView = new BookingDetailViewModel(bookingDetail);
+
+            }
+
+            // Send notification for report being processed
+            string? userFcm = user.FcmToken;
+
+            if (!string.IsNullOrEmpty(userFcm))
+            {
+                NotificationCreateModel reportNotification = new NotificationCreateModel()
+                {
+                    UserId = currentReport.UserId,
+                    Title = "Báo cáo của bạn đã " + (currentReport.Status == ReportStatus.PROCESSED ? "được xử lý" : "bị từ chối"),
+                    Description = string.IsNullOrEmpty(currentReport.ReviewerNote) ? "" : currentReport.ReviewerNote,
+                    Type = NotificationType.SPECIFIC_USER
+                };
+                Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+                {
+                    {"action", NotificationAction.Report },
+                    { "reportId", currentReport.Id.ToString() },
+                };
+
+                await notificationServices.CreateFirebaseNotificationAsync(
+                    reportNotification, userFcm, dataToSend, cancellationToken);
+            }
+
             ReportViewModel reportView = new ReportViewModel(currentReport, userViewModel, bookingDetailView);
-            return reportView;
+            return (reportView, customerId);
 
         }
     }

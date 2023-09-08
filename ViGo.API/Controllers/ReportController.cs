@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Castle.Core.Resource;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ViGo.Domain;
+using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Reports;
+using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
+using ViGo.Utilities.BackgroundTasks;
 
 namespace ViGo.API.Controllers
 {
@@ -13,10 +18,17 @@ namespace ViGo.API.Controllers
     {
         private ReportServices reportServices;
         private ILogger<ReportController> _logger;
-        public ReportController(IUnitOfWork work, ILogger<ReportController> logger)
+
+        private IBackgroundTaskQueue _backgroundQueue;
+        private IServiceScopeFactory _serviceScopeFactory;
+        public ReportController(IUnitOfWork work, ILogger<ReportController> logger,
+            IBackgroundTaskQueue backgroundQueue,
+            IServiceScopeFactory serviceScopeFactory)
         {
             reportServices = new ReportServices(work, logger);
             _logger = logger;
+            _backgroundQueue = backgroundQueue;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
 
@@ -155,9 +167,27 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
         [HttpPut("Review/{reportID}")]
-        public async Task<IActionResult> AdminUpdateReport(Guid reportID, [FromBody] ReportAdminUpdateModel reportAdminUpdate)
+        public async Task<IActionResult> AdminUpdateReport(Guid reportID, [FromBody] ReportAdminUpdateModel reportAdminUpdate,
+            CancellationToken cancellationToken)
         {
-            ReportViewModel reportView = await reportServices.AdminUpdateReport(reportID, reportAdminUpdate);
+            (ReportViewModel reportView, Guid? customerId) 
+                = await reportServices.AdminUpdateReport(reportID, reportAdminUpdate, cancellationToken);
+
+            if (reportView != null && reportView.BookingDetail != null && customerId.HasValue)
+            {
+                if (reportView.BookingDetail.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF)
+                {
+                    await _backgroundQueue.QueueBackGroundWorkItemAsync(async token =>
+                    {
+                        await using (var scope = _serviceScopeFactory.CreateAsyncScope())
+                        {
+                            IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
+                            BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
+                            await backgroundServices.TripWasCompletedHandlerAsync(reportView.BookingDetail.Id, customerId.Value, false, token);
+                        }
+                    });
+                }
+            }
             return StatusCode(200, reportView);
         }
     }

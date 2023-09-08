@@ -1515,6 +1515,11 @@ namespace ViGo.Services
                 throw new ApplicationException("Chuyến đi trong quá khứ, không thể thực hiện hủy chuyến đi!");
             }
 
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
             if (cancelledUser != null)
             {
                 if (bookingDetail.Date.IsInCurrentWeek())
@@ -1785,7 +1790,9 @@ namespace ViGo.Services
                     {
                         BookingDetailId = bookingDetail.Id,
                         Title = "Tài xế hủy chuyến đi",
-                        Content = "Tài xế đã hủy chuyến đi, chuyến đi cần tài xế mới!",
+                        Content = "Tài xế đã hủy chuyến đi, chuyến đi cần tài xế mới!\n" +
+                        "Chuyến đi bị hủy: " + $"{bookingDetail.PickUpDateTimeString()}, từ " +
+                                $"{startStation.Name} đến {endStation.Name}",
                         UserId = bookingDetail.DriverId.Value,
                         Type = ReportType.DRIVER_CANCEL_TRIP,
                         Status = ReportStatus.PENDING,
@@ -1830,10 +1837,7 @@ namespace ViGo.Services
                 { "bookingDetailId", bookingDetail.Id.ToString() },
             };
 
-            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
-                cancellationToken: cancellationToken);
-            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
-                cancellationToken: cancellationToken);
+            
 
             if (driver != null
                 && driverFcm != null && !string.IsNullOrEmpty(driverFcm))
