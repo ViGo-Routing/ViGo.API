@@ -202,7 +202,7 @@ namespace ViGo.API
 
             builder.Services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = ViGoConfiguration.ConnectionString ("Redis");
+                options.Configuration = ViGoConfiguration.ConnectionString("Redis");
                 options.InstanceName = "ViGoRedis";
             });
 
