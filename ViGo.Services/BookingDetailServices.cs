@@ -442,6 +442,22 @@ namespace ViGo.Services
                 return null;
             }
 
+            IEnumerable<Report> reports = await work.Reports.GetAllAsync(
+                query => query.Where(
+                    r => r.Status == ReportStatus.PENDING
+                    && r.UserId.Equals(userId)
+                    && (r.Type == ReportType.DRIVER_NOT_COMING
+                        || r.Type == ReportType.BOOKER_NOT_COMING)), cancellationToken: cancellationToken);
+
+            if (reports.Any())
+            {
+                IEnumerable<Guid> reportedTrips = reports.Where(r => r.BookingDetailId.HasValue)
+                    .Select(r => r.BookingDetailId.Value);
+
+                bookingDetails = bookingDetails.Where(
+                    d => !reportedTrips.Contains(d.Id));
+
+            }
             BookingDetail current = bookingDetails.First();
 
             UserViewModel? driverDto = null;
