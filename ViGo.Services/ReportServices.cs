@@ -239,6 +239,8 @@ namespace ViGo.Services
                     bookingDetail.Status = BookingDetailStatus.ARRIVE_AT_DROPOFF;
                     bookingDetail.DropoffTime = DateTimeUtilities.GetDateTimeVnNow();
 
+                    await work.BookingDetails.UpdateAsync(bookingDetail);
+
                     Station startStationDropOff = await work.Stations.GetAsync(
                            bookingDetail.StartStationId, cancellationToken: cancellationToken);
 
