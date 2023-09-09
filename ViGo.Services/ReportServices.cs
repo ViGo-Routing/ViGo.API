@@ -63,9 +63,9 @@ namespace ViGo.Services
             IEnumerable<Report> reports = await work.Reports.GetAllAsync(
                 q => q.Where(x => x.UserId.Equals(userId)), cancellationToken: cancellationToken);
 
-            reports = reports.Sort(sorting.OrderBy);
+            //reports = reports.Sort(sorting.OrderBy);
 
-            reports = reports.OrderBy(
+            reports = reports.OrderByDescending(
                 r => r.Status, new ReportSortByStatusComparer());
 
             int totalRecords = reports.Count();
