@@ -66,7 +66,8 @@ namespace ViGo.Services
             //reports = reports.Sort(sorting.OrderBy);
 
             reports = reports.OrderByDescending(
-                r => r.Status, new ReportSortByStatusComparer());
+                r => r.Status, new ReportSortByStatusComparer())
+                .ThenByDescending(r => r.CreatedTime);
 
             int totalRecords = reports.Count();
 
