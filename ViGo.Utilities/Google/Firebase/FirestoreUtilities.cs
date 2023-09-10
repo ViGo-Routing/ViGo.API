@@ -46,7 +46,7 @@ namespace ViGo.Utilities.Google.Firebase
                 {"user", new Dictionary<string, object> ()
                 {
                     {"_id", message.User.Id.ToString().ToLower() },
-                    {"avatar", message.User.AvatarUrl },
+                    {"avatar", message.User.Avatar },
                     {"name", message.User.Name }
                 } }
             };
@@ -70,7 +70,7 @@ namespace ViGo.Utilities.Google.Firebase
     {
         [JsonProperty("_id")]
         public Guid Id { get; set; }
-        public string AvatarUrl { get; set; }
+        public string Avatar { get; set; }
         public string Name { get; set; }
     }
 }
