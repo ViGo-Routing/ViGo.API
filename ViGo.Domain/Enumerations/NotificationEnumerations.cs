@@ -25,5 +25,6 @@
         public static readonly string Schedule = "schedule";
         public static readonly string AvailableBookingDetails = "availableBookingDetails";
         public static readonly string Report = "report";
+        public static readonly string Chat = "chat";
     }
 }
