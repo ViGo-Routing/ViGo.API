@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Quartz;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
 using ViGo.Models.Fares;
 using ViGo.Models.QueryString.Pagination;
@@ -167,11 +168,13 @@ namespace ViGo.API.Controllers
             Guid driverId, [FromQuery] PaginationParameter pagination,
             [FromQuery] BookingSortingParameters sorting,
             [FromQuery] BookingFilterParameters filters,
+            [FromQuery] BookingDetailFilterParameters? bookingDetailFilters,
             CancellationToken cancellationToken)
         {
             IPagedEnumerable<BookingViewModel> dtos =
                 await bookingServices.GetAvailableBookingsAsync(
-                    driverId, pagination, sorting, filters, HttpContext,
+                    driverId, pagination, sorting, filters, bookingDetailFilters,
+                    HttpContext,
                     cancellationToken);
             return StatusCode(200, dtos);
         }

@@ -113,11 +113,13 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
         [Authorize(Roles = "ADMIN")]
-        public async Task<IActionResult> GetSystemWalletAnalysis(
+        public async Task<IActionResult> GetSystemWalletAnalysis(/*SystemWalletAnalysisRequest request,*/
             CancellationToken cancellationToken)
         {
             SystemWalletAnalysisModel analysisModel = await walletServices
                 .GetSystemWalletAnalysisAsync(cancellationToken);
+            //IEnumerable<SystemWalletAnalysises> analysises = await
+            //    walletServices.GetSystemWalletAnalysisesAsync(request, cancellationToken);
 
             return StatusCode(200, analysisModel);
         }

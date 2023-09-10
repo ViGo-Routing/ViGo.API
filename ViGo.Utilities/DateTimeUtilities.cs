@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using ViGo.Domain;
+using ViGo.Models.QueryString;
 
 namespace ViGo.Utilities
 {
@@ -85,6 +86,33 @@ namespace ViGo.Utilities
                 GetVnTimeZoneInfo.GetUtcOffset(dateTime));
 
             return vnTimeOffset;
+        }
+
+        public static IEnumerable<DateOnly> GetCurrentWeekDates()
+        {
+            DateTime vnNow = GetDateTimeVnNow();
+            int currentDayOfWeek = (int)vnNow.DayOfWeek;
+            DateTime sunday = vnNow.AddDays(-currentDayOfWeek);
+            DateTime monday = sunday.AddDays(1);
+            if (currentDayOfWeek == 0)
+            {
+                monday = monday.AddDays(-7);
+            }
+            IEnumerable<DateOnly> weekDates = Enumerable.Range(0, 7).Select(days =>
+                DateOnly.FromDateTime(monday.AddDays(days))).OrderBy(d => d.Day);
+            return weekDates;
+
+        }
+
+        public static IEnumerable<DateOnly> GetCurrentMonthDates()
+        {
+            DateTime vnNow = GetDateTimeVnNow();
+            DateTime startDate = new DateTime(vnNow.Year, vnNow.Month, 1);
+            DateTime endDate = startDate.AddMonths(1).AddDays(-1);
+            IEnumerable<DateOnly> monthDates = Enumerable.Range(
+                0, endDate.Day).Select(days => 
+                DateOnly.FromDateTime(startDate.AddDays(days))).OrderBy(d => d.Day);
+            return monthDates;
         }
     }
 }
