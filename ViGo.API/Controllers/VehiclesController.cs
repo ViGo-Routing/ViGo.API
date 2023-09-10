@@ -62,7 +62,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        [Authorize(Roles = "ADMIN,DRIVER")]
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleByIdAsync(Guid id, CancellationToken cancellationToken)
         {
@@ -96,7 +96,7 @@ namespace ViGo.API.Controllers
         [ProducesResponseType(401)]
         [ProducesResponseType(400)]
         [ProducesResponseType(500)]
-        [Authorize(Roles = "ADMIN,DRIVER")]
+        [Authorize]
         [HttpGet("User/{userId}")]
         public async Task<IActionResult> GetVehicleByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
