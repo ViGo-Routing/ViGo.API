@@ -1336,6 +1336,7 @@ namespace ViGo.Services
                             {
                                 WalletId = customerWallet.Id,
                                 BookingDetailId = bookingDetail.Id,
+                                BookingId = booking.Id,
                                 Amount = customerRefundAmount,
                                 Type = WalletTransactionType.CANCEL_REFUND,
                                 Status = WalletTransactionStatus.SUCCESSFULL,
@@ -1358,6 +1359,7 @@ namespace ViGo.Services
                             {
                                 WalletId = systemWallet.Id,
                                 BookingDetailId = bookingDetail.Id,
+                                BookingId = booking.Id,
                                 Amount = customerRefundAmount,
                                 Type = WalletTransactionType.CANCEL_REFUND,
                                 Status = WalletTransactionStatus.SUCCESSFULL,
@@ -1404,7 +1406,7 @@ namespace ViGo.Services
                                 {
                                     WalletId = driverWallet.Id,
                                     Amount = pickFee,
-                                    Type = WalletTransactionType.CANCEL_REFUND,
+                                    Type = WalletTransactionType.TRIP_PICK_REFUND,
                                     BookingDetailId = bookingDetail.Id,
                                     Status = WalletTransactionStatus.SUCCESSFULL,
                                     PaymentMethod = PaymentMethod.WALLET
