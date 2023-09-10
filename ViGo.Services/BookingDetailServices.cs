@@ -631,6 +631,7 @@ namespace ViGo.Services
             {
                 {"action", NotificationAction.BookingDetail },
                 { "bookingDetailId", bookingDetail.Id.ToString() },
+                {"status", bookingDetail.Status.ToString() }
             };
 
             User driver = await work.Users.GetAsync(
