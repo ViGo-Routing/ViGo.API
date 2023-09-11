@@ -41,6 +41,7 @@ namespace ViGo.Models.Bookings
         public bool IsDeleted { get; set; }
         public int? TotalBookingDetailsCount { get; set; }
         public int? TotalAssignedBookingDetailsCount { get; set; }
+        public int? TotalCompletedBookingDetailsCount { get; set; }
 
         //public IEnumerable<BookingDetailViewModel> BookingDetails { get; set; }
 
@@ -122,10 +123,12 @@ namespace ViGo.Models.Bookings
             StationViewModel startRouteStation,
             StationViewModel endRouteStation,
             VehicleType vehicleType, int totalBookingDetailsCount,
-            int totalAssignedBookingDetailsCount) : this(booking, customer, customerRoute, startRouteStation, endRouteStation, vehicleType)
+            int totalAssignedBookingDetailsCount, int totalCompletedBookingDetailsCount) 
+            : this(booking, customer, customerRoute, startRouteStation, endRouteStation, vehicleType)
         {
             TotalBookingDetailsCount = totalBookingDetailsCount;
             TotalAssignedBookingDetailsCount = totalAssignedBookingDetailsCount;
+            TotalCompletedBookingDetailsCount = totalCompletedBookingDetailsCount;
         }
 
         //public BookingViewModel(Booking booking, UserViewModel customer,
