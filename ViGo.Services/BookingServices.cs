@@ -158,9 +158,10 @@ namespace ViGo.Services
 
             foreach (BookingViewModel booking in dtos)
             {
-                (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+                (int total, int assigned, int completed) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
                 booking.TotalBookingDetailsCount = total;
                 booking.TotalAssignedBookingDetailsCount = assigned;
+                booking.TotalCompletedBookingDetailsCount = completed;
             }
             //IEnumerable<BookingViewModel> dtos
             //    = from booking in bookings
@@ -263,9 +264,10 @@ namespace ViGo.Services
 
             foreach (BookingViewModel booking in dtos)
             {
-                (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+                (int total, int assigned, int completed) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
                 booking.TotalBookingDetailsCount = total;
                 booking.TotalAssignedBookingDetailsCount = assigned;
+                booking.TotalCompletedBookingDetailsCount = completed;
             }
 
             return dtos.ToPagedEnumerable(pagination.PageNumber,
@@ -333,12 +335,12 @@ namespace ViGo.Services
             //    bookingDetailDtos.Add(new BookingDetailViewModel(bookingDetail, driver));
             //}
 
-            (int total, int assigned) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
+            (int total, int assigned, int completed) = await CountBookingDetailsAsync(booking.Id, cancellationToken);
 
             BookingViewModel dto = new BookingViewModel(booking,
                 customerDto, route,
                 new StationViewModel(startStation),
-                new StationViewModel(endStation), vehicleType, total, assigned);
+                new StationViewModel(endStation), vehicleType, total, assigned, completed);
             //BookingViewModel dto = new BookingViewModel(booking);
 
             return dto;
@@ -1778,7 +1780,7 @@ namespace ViGo.Services
             return bookingDetails;
         }
 
-        private async Task<(int, int)> CountBookingDetailsAsync(Guid bookingId,
+        private async Task<(int, int, int)> CountBookingDetailsAsync(Guid bookingId,
             CancellationToken cancellationToken)
         {
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
@@ -1786,11 +1788,13 @@ namespace ViGo.Services
                     d => d.BookingId.Equals(bookingId)), cancellationToken: cancellationToken);
             if (!bookingDetails.Any())
             {
-                return (0, 0);
+                return (0, 0, 0);
             }
             int bookingDetailsCount = bookingDetails.Count();
             int assignedBookingDetailsCount = bookingDetails.Count(d => d.DriverId.HasValue);
-            return (bookingDetailsCount, assignedBookingDetailsCount);
+            int completedBookingDetailsCount = bookingDetails.Count(d => d.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF
+                || d.Status == BookingDetailStatus.COMPLETED);
+            return (bookingDetailsCount, assignedBookingDetailsCount, completedBookingDetailsCount);
         }
         #endregion
     }
