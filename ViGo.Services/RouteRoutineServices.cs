@@ -458,7 +458,7 @@ namespace ViGo.Services
             //}
 
             // Check for RoundTrip
-            if (checkForRoundTripRoutines && route.Type == RouteType.ROUND_TRIP)
+            if (!isUpdate && checkForRoundTripRoutines && route.Type == RouteType.ROUND_TRIP)
             {
                 if (route.RoundTripRouteId.HasValue)
                 {
