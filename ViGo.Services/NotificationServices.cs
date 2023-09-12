@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FirebaseAdmin.Messaging;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -34,7 +35,7 @@ namespace ViGo.Services
                 throw new AccessDeniedException("Bạn không thể thực hiện hành động này!!");
             }
 
-            IEnumerable<Notification> notifications = await work.Notifications
+            IEnumerable<Domain.Notification> notifications = await work.Notifications
                 .GetAllAsync(query => query.Where(
                     n => n.UserId.HasValue && n.UserId.Equals(userId)), cancellationToken: cancellationToken);
 
@@ -51,7 +52,7 @@ namespace ViGo.Services
                 e => eventIds.Contains(e.Id)), cancellationToken: cancellationToken);
 
             IList<NotificationViewModel> models = new List<NotificationViewModel>();
-            foreach (Notification notification in notifications)
+            foreach (Domain.Notification notification in notifications)
             {
                 EventViewModel? eventModel = null;
                 if (notification.EventId.HasValue)
@@ -69,7 +70,7 @@ namespace ViGo.Services
         public async Task<NotificationViewModel>
             GetNotificationAsync(Guid notificationId, CancellationToken cancellationToken)
         {
-            Notification? notification = await work.Notifications.GetAsync(notificationId, cancellationToken: cancellationToken);
+            Domain.Notification? notification = await work.Notifications.GetAsync(notificationId, cancellationToken: cancellationToken);
             if (notification is null)
             {
                 throw new ApplicationException("Thông báo không tồn tại!!");
@@ -113,9 +114,9 @@ namespace ViGo.Services
             return model;
         }
 
-        public async Task<Notification> DeleteNotificationAsync(Guid notificationId, CancellationToken cancellationToken)
+        public async Task<Domain.Notification> DeleteNotificationAsync(Guid notificationId, CancellationToken cancellationToken)
         {
-            Notification? notification = await work.Notifications.GetAsync(notificationId, cancellationToken: cancellationToken);
+            Domain.Notification? notification = await work.Notifications.GetAsync(notificationId, cancellationToken: cancellationToken);
             if (notification is null)
             {
                 throw new ApplicationException("Thông báo không tồn tại!!");
@@ -146,7 +147,7 @@ namespace ViGo.Services
             return notification;
         }
 
-        public async Task<Notification> CreateNotificationAsync(NotificationCreateModel model,
+        public async Task<Domain.Notification> CreateNotificationAsync(NotificationCreateModel model,
             CancellationToken cancellationToken)
         {
             model.Title.StringValidate(
@@ -188,7 +189,7 @@ namespace ViGo.Services
                 }
             }
 
-            Notification notification = new Notification
+            Domain.Notification notification = new Domain.Notification
             {
                 Title = model.Title,
                 Description = model.Description,
@@ -220,32 +221,56 @@ namespace ViGo.Services
             return notification;
         }
 
-        internal async Task<Notification> CreateFirebaseNotificationAsync(
+        internal async Task<Domain.Notification> CreateFirebaseNotificationAsync(
             NotificationCreateModel model, string fcmToken,
             Dictionary<string, string> dataToSend,
             CancellationToken cancellationToken)
         {
-            Notification notification = new Notification
+            try
             {
-                Title = model.Title,
-                Description = model.Description,
-                Type = model.Type,
-                UserId = model.UserId,
-                EventId = model.EventId,
-                Status = NotificationStatus.ACTIVE,
-                CreatedBy = model.UserId.Value,
-                UpdatedBy = model.UserId.Value
-            };
+                Domain.Notification notification = new Domain.Notification
+                {
+                    Title = model.Title,
+                    Description = model.Description,
+                    Type = model.Type,
+                    UserId = model.UserId,
+                    EventId = model.EventId,
+                    Status = NotificationStatus.ACTIVE,
+                    CreatedBy = model.UserId.Value,
+                    UpdatedBy = model.UserId.Value
+                };
 
-            await work.Notifications.InsertAsync(notification, isManuallyAssignTracking: true,
-                cancellationToken: cancellationToken);
-            await work.SaveChangesAsync(cancellationToken);
+                await work.Notifications.InsertAsync(notification, isManuallyAssignTracking: true,
+                    cancellationToken: cancellationToken);
+                await work.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Firebase Sending Notification...");
-            string firebaseResult = await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
-                                          model.Description, data: dataToSend,
-                                              cancellationToken: cancellationToken);
-            _logger.LogInformation("Firebase Sending Notification Result: " + firebaseResult);
+                _logger.LogInformation("Firebase Sending Notification...");
+                string firebaseResult = await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, model.Title,
+                                              model.Description, data: dataToSend,
+                                                  cancellationToken: cancellationToken);
+                _logger.LogInformation("Firebase Sending Notification Result: " + firebaseResult);
+                return notification;
+
+            }
+            catch (FirebaseMessagingException messagingException)
+            {
+                _logger.LogError($"Firebase Notification token for the user: {model.UserId}, " +
+                    $"error: {messagingException.ErrorCode}, messagingError: {messagingException.MessagingErrorCode}");
+                if (messagingException.ErrorCode == FirebaseAdmin.ErrorCode.InvalidArgument
+                    || messagingException.ErrorCode == FirebaseAdmin.ErrorCode.NotFound)
+                {
+                    if (model.UserId.HasValue)
+                    {
+                        User user = await work.Users.GetAsync(model.UserId.Value, cancellationToken: cancellationToken);
+
+                    }
+                }
+            } catch (Exception ex)
+            {
+                throw;
+            }
+
+            return null;
 
             // Send data to mobile application
             //await FirebaseUtilities.SendDataToDeviceAsync(fcmToken, dataToSend, cancellationToken);
@@ -267,7 +292,6 @@ namespace ViGo.Services
             //    }
             //}
 
-            return notification;
         }
     }
 }

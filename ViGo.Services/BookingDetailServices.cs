@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -2755,6 +2756,30 @@ namespace ViGo.Services
                 if (bookingDetailStatuses.Any())
                 {
                     bookingDetails = bookingDetails.Where(b => bookingDetailStatuses.Contains(b.Status));
+                }
+            }
+
+            // Filter for Type
+            if (filters.Type != null && !string.IsNullOrWhiteSpace(filters.Type))
+            {
+                IEnumerable<BookingDetailType> bookingDetailTypes = new List<BookingDetailType>();
+
+                var types = filters.Type.Split(",");
+                foreach (string type in types)
+                {
+                    if (Enum.TryParse(typeof(BookingDetailType), type.Trim(),
+                        true, out object? result))
+                    {
+                        if (result != null)
+                        {
+                            bookingDetailTypes = bookingDetailTypes.Append((BookingDetailType)result);
+                        }
+                    }
+                }
+
+                if (bookingDetailTypes.Any())
+                {
+                    bookingDetails = bookingDetails.Where(b => bookingDetailTypes.Contains(b.Type));
                 }
             }
 
