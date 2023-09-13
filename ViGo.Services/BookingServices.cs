@@ -917,7 +917,7 @@ namespace ViGo.Services
                 double differenceAmount = Math.Abs(difference);
 
                 await work.Bookings.DetachAsync(booking);
-                
+
                 booking.StartDate = bookingUpdate.StartDate;
                 booking.EndDate = bookingUpdate.EndDate;
                 booking.DaysOfWeek = bookingUpdate.DaysOfWeek;
@@ -1567,6 +1567,112 @@ namespace ViGo.Services
             //}
         }
 
+        public async Task<double> CalculateCancelBookingFeeAsync(
+            Guid bookingId, CancellationToken cancellationToken)
+        {
+            Booking? booking = await work.Bookings
+                .GetAsync(bookingId, cancellationToken: cancellationToken);
+
+            if (booking is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!!");
+            }
+
+            //User? cancelledUser = null;
+
+            //bool isDriverPaid = false;
+            IEnumerable<Guid> completedBookingDetailIds = new List<Guid>();
+
+            if (booking.Status == BookingStatus.CANCELED_BY_BOOKER)
+            {
+                return 0;
+            }
+
+            if (!IdentityUtilities.IsAdmin())
+            {
+                Guid currentId = IdentityUtilities.GetCurrentUserId();
+
+                if (!currentId.Equals(booking.CustomerId))
+                {
+                    // Not the accessible user
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!");
+                }
+
+                //// Customer cancels the bookingdetail
+                //cancelledUser = await work.Users.GetAsync(booking.CustomerId,
+                //    cancellationToken: cancellationToken);
+            }
+
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    bd => bd.BookingId.Equals(booking.Id)
+                    && bd.Status != BookingDetailStatus.CANCELLED),
+                cancellationToken: cancellationToken);
+
+            DateTime now = DateTimeUtilities.GetDateTimeVnNow();
+
+            bookingDetails = bookingDetails.Where(
+                d =>
+                {
+                    DateTime pickupDateTime = DateOnly.FromDateTime(d.Date)
+                        .ToDateTime(TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime));
+                    return pickupDateTime >= now;
+                });
+
+            double cancelFee = 0;
+
+            if (bookingDetails.Count() > 0)
+            {
+                bookingDetails = bookingDetails.OrderBy(bd => bd.PickupTime);
+
+                foreach (BookingDetail bookingDetail in bookingDetails)
+                {
+                    DateTime pickupDateTime = DateOnly.FromDateTime(bookingDetail.Date)
+                        .ToDateTime(TimeOnly.FromTimeSpan(bookingDetail.CustomerDesiredPickupTime));
+                    double chargeFee = 0;
+
+                    if (!bookingDetail.DriverId.HasValue)
+                    {
+                        // BookingDetail has not been selected by a Driver
+                        // No fee
+                        chargeFee = 0;
+                    }
+                    else
+                    {
+                        TimeSpan difference = pickupDateTime - now;
+
+                        if (difference.TotalHours >= 6)
+                        {
+                            // >= 6 hours
+                            // No extra fee
+                            chargeFee = 0;
+                        }
+                        else if (difference.TotalMinutes >= 45)
+                        {
+                            // >= 1 hour but < 6h
+                            // Been selected
+                            // 10% extra fee
+                            chargeFee = 0.1;
+                        }
+                        else
+                        {
+                            // 100% fee
+                            // No fee
+                            chargeFee = 1;
+                        }
+                    }
+
+                    double chargeFeeAmount = bookingDetail.Price.Value * chargeFee;
+                    cancelFee += FareUtilities.RoundToThousands(chargeFeeAmount);
+                    //double customerRefundAmount = bookingDetail.Price.Value * (1 - chargeFee);
+                    //    customerRefundAmount = FareUtilities.RoundToThousands(customerRefundAmount);
+
+                }
+            }
+
+            return cancelFee;
+        }
+
         public async Task<BookingAnalysisModel> GetBookingAnalysisAsync(CancellationToken cancellationToken)
         {
             IEnumerable<Booking> bookings;
@@ -1663,7 +1769,7 @@ namespace ViGo.Services
         }
 
         private async Task<IEnumerable<Booking>> FilterBookings(IEnumerable<Booking> bookings,
-            BookingFilterParameters filters, 
+            BookingFilterParameters filters,
             BookingDetailFilterParameters? bookingDetailFilters, CancellationToken cancellationToken)
         {
             bookings = bookings.Where(
@@ -1697,7 +1803,7 @@ namespace ViGo.Services
 
                 bookings = filteredBookings;
             }
-            
+
             return bookings;
         }
 
