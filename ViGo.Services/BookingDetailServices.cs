@@ -2142,7 +2142,7 @@ namespace ViGo.Services
                 {
                     UserId = driver.Id,
                     Title = "Bạn có một đánh giá mới!",
-                    Description = $"",
+                    Description = $"{feedback.Rate}/5 - {feedback.Feedback}",
                     Type = NotificationType.SPECIFIC_USER
                 };
 
