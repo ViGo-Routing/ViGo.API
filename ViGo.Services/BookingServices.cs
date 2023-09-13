@@ -712,7 +712,7 @@ namespace ViGo.Services
         {
             #region Route Validation
             Route route = await work.Routes.GetAsync(routeBookingUpdateModel.RouteId, cancellationToken: cancellationToken);
-            if (route == null)
+            if (route is null)
             {
                 throw new ApplicationException("Không tìm thấy tuyến đường! Vui lòng kiểm tra lại thông tin");
             }
@@ -734,13 +734,13 @@ namespace ViGo.Services
             }
             if (routeBookingUpdateModel.RouteRoutines is null || routeBookingUpdateModel.RouteRoutines.Count == 0)
             {
-                throw new ApplicationException("Hành trình đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+                throw new ApplicationException("Thiếu thông tin lịch trình! Vui lòng kiểm tra lại");
             }
             if (routeBookingUpdateModel.Type == RouteType.ROUND_TRIP)
             {
                 if (routeBookingUpdateModel.RoundTripRoutines is null || routeBookingUpdateModel.RoundTripRoutines.Count == 0)
                 {
-                    throw new ApplicationException("Hành trình khứ hồi đã được đặt lịch, vui lòng cập nhật cả lịch trình!");
+                    throw new ApplicationException("Không tìm thấy thông tin lịch trình cho chuyến về! Vui lòng kiểm tra lại");
                 }
 
                 IsValidRoundTripRoutines(routeBookingUpdateModel.RouteRoutines,
@@ -768,19 +768,14 @@ namespace ViGo.Services
                 throw new ApplicationException("Thời gian di chuyển phải lớn hơn 0!");
             }
 
-            Route? roundTrip = null;
-            if (route.Type == RouteType.ROUND_TRIP)
+            if (routeBookingUpdateModel.Type == RouteType.ROUND_TRIP)
             {
-                roundTrip = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
-                    cancellationToken: cancellationToken);
-
                 if (bookingUpdate.RoundTripTotalPrice is null || bookingUpdate.RoundTripTotalPrice.Value <= 0 ||
                     bookingUpdate.RoundTripTotalPrice >= bookingUpdate.TotalPrice)
                 {
                     throw new ApplicationException("Tổng giá tiền hành trình khứ hồi không hợp lệ!!");
                 }
             }
-
             //VehicleType vehicleType = await work.VehicleTypes
             //    .GetAsync(bookingUpdate.VehicleTypeId, cancellationToken: cancellationToken);
             //if (vehicleType is null)
@@ -857,6 +852,13 @@ namespace ViGo.Services
                 RouteRoutineUpdateModel? roundTripRoutineUpdateModel = null;
                 IEnumerable<RouteRoutine>? updatedRoundTripRoutines = null;
 
+                Route? roundTrip = null;
+                if (updatedRoute.Type == RouteType.ROUND_TRIP)
+                {
+                    roundTrip = await work.Routes.GetAsync(updatedRoute.RoundTripRouteId.Value,
+                        cancellationToken: cancellationToken);
+                }
+
                 if (roundTrip != null)
                 {
                     roundTripRoutineUpdateModel = new RouteRoutineUpdateModel()
@@ -870,7 +872,7 @@ namespace ViGo.Services
 
                 IEnumerable<RouteRoutine> routeRoutines = await
                     work.RouteRoutines.GetAllAsync(query => query.Where(
-                        r => r.RouteId.Equals(route.Id)
+                        r => r.RouteId.Equals(updatedRoute.Id)
                         && r.RoutineDate >= bookingUpdate.StartDate
                         && r.RoutineDate <= bookingUpdate.EndDate), cancellationToken: cancellationToken);
 
@@ -922,7 +924,7 @@ namespace ViGo.Services
                 booking.IsShared = bookingUpdate.IsShared;
                 booking.Duration = Math.Round(bookingUpdate.Duration, 2);
                 booking.Distance = bookingUpdate.Distance;
-                booking.Type = route.Type == RouteType.ONE_WAY ?
+                booking.Type = updatedRoute.Type == RouteType.ONE_WAY ?
                     BookingType.ONE_WAY : BookingType.ROUND_TRIP;
 
                 await work.Bookings.UpdateAsync(booking);
@@ -1025,8 +1027,8 @@ namespace ViGo.Services
                         Price = priceEachTrip,
                         PriceAfterDiscount = priceAfterDiscountEachTrip,
                         CustomerRouteRoutineId = routeRoutine.Id,
-                        StartStationId = route.StartStationId,
-                        EndStationId = route.EndStationId,
+                        StartStationId = updatedRoute.StartStationId,
+                        EndStationId = updatedRoute.EndStationId,
                         CustomerDesiredPickupTime = routeRoutine.PickupTime,
                         DriverWage = await fareServices.CalculateDriverWage(priceEachTrip, cancellationToken),
                         Status = BookingDetailStatus.PENDING_ASSIGN,
@@ -1067,8 +1069,8 @@ namespace ViGo.Services
                             Price = priceEachRoundTrip,
                             PriceAfterDiscount = priceEachRoundTrip,
                             CustomerRouteRoutineId = routine.Id,
-                            StartStationId = route.StartStationId,
-                            EndStationId = route.EndStationId,
+                            StartStationId = updatedRoute.StartStationId,
+                            EndStationId = updatedRoute.EndStationId,
                             CustomerDesiredPickupTime = routine.PickupTime,
                             DriverWage = await fareServices.CalculateDriverWage(priceEachRoundTrip, cancellationToken),
                             Status = BookingDetailStatus.PENDING_ASSIGN,
