@@ -189,6 +189,8 @@ namespace ViGo.Repository.Core
         public abstract Task DetachAsync(TEntity entity);
 
         public abstract Task SaveChangesToRedisAsync(CancellationToken cancellationToken);
+
+        public abstract Task RemoveFromRedisAsync(CancellationToken cancellationToken);
         #endregion
     }
 }

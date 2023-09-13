@@ -101,7 +101,7 @@ namespace ViGo.Repository
         public override async Task DeleteAsync(TEntity entity,
             bool isSoftDelete = true, CancellationToken cancellationToken = default)
         {
-            await DetachAsync(entity);
+            //await DetachAsync(entity);
 
             if (!isSoftDelete)
             {
@@ -460,7 +460,7 @@ namespace ViGo.Repository
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            await DetachAsync(entity);
+            //await DetachAsync(entity);
 
             if (entity is ITrackingUpdated)
             {
@@ -485,6 +485,11 @@ namespace ViGo.Repository
         {
             List<TEntity> list = await Table.ToListAsync(cancellationToken);
             await cache.SetAsync(typeof(TEntity).ToString(), list, cancellationToken);
+        }
+
+        public override async Task RemoveFromRedisAsync(CancellationToken cancellationToken)
+        {
+            await cache.RemoveAsync(typeof(TEntity).ToString(), cancellationToken);
         }
         #endregion
     }

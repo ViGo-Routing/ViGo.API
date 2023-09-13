@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Distributed;
 using ViGo.Domain;
 
 namespace ViGo.Repository.Core
@@ -33,5 +34,7 @@ namespace ViGo.Repository.Core
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
         Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+        Task FlushAllRedisAsync(CancellationToken cancellationToken = default);
     }
 }
