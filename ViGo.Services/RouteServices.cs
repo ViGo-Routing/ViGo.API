@@ -787,6 +787,8 @@ namespace ViGo.Services
             //     }).ToList();
             //await work.RouteRoutines.InsertAsync(routeRoutines);
 
+            //Route checkroute = await work.Routes.GetAsync(route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
             await work.SaveChangesAsync(cancellationToken);
             //routeStations.ToList()
             //    .ForEach(rs => rs.Station = null);

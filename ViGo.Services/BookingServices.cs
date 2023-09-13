@@ -916,6 +916,8 @@ namespace ViGo.Services
                 double difference = newTotalPrice - oldTotalPrice;
                 double differenceAmount = Math.Abs(difference);
 
+                await work.Bookings.DetachAsync(booking);
+                
                 booking.StartDate = bookingUpdate.StartDate;
                 booking.EndDate = bookingUpdate.EndDate;
                 booking.DaysOfWeek = bookingUpdate.DaysOfWeek;
@@ -931,7 +933,6 @@ namespace ViGo.Services
 
                 if (difference != 0)
                 {
-
                     Wallet customerWallet = await work.Wallets.GetAsync(
                         w => w.UserId.Equals(booking.CustomerId), cancellationToken: cancellationToken);
 
@@ -989,6 +990,9 @@ namespace ViGo.Services
 
                     await work.WalletTransactions.InsertAsync(customerTransaction, cancellationToken: cancellationToken);
                     await work.WalletTransactions.InsertAsync(systemTransaction, cancellationToken: cancellationToken);
+
+                    await work.Wallets.DetachAsync(customerWallet);
+                    await work.Wallets.DetachAsync(systemWallet);
 
                     await work.Wallets.UpdateAsync(customerWallet);
                     await work.Wallets.UpdateAsync(systemWallet);
@@ -1089,6 +1093,7 @@ namespace ViGo.Services
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
+                await work.FlushAllRedisAsync(cancellationToken);
                 throw;
             }
         }

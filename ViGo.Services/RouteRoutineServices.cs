@@ -161,35 +161,43 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(model.RouteId)), cancellationToken: cancellationToken);
 
-            if (!currentRoutines.Any())
+            if (checkForRoundTripRoutines)
             {
-                throw new ApplicationException("Tuyến đường này chưa được thiết lập lịch trình!! " +
+                if (!currentRoutines.Any())
+                {
+                    throw new ApplicationException("Tuyến đường này chưa được thiết lập lịch trình!! " +
                     "Vui lòng dùng chức năng Tạo lịch trình!");
+                }
             }
-            currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
-                .ThenBy(r => r.PickupTime);
-            //IList<RouteRoutineListItemModel> newRoutines = new List<RouteRoutineListItemModel>();
 
-            IList<Guid> routineToDelete = new List<Guid>();
-            foreach (RouteRoutine oldRoutine in currentRoutines)
+            if (currentRoutines.Any())
             {
-                RouteRoutineListItemModel routineModel = new RouteRoutineListItemModel(oldRoutine);
-                if (!model.RouteRoutines.Contains(routineModel))
-                {
-                    // New Routine does not exist in the database
-                    // Need to check for validity and need to delete
-                    //newRoutines.Add(routineModel);
+                currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
+                .ThenBy(r => r.PickupTime);
+                //IList<RouteRoutineListItemModel> newRoutines = new List<RouteRoutineListItemModel>();
 
-                    //await work.RouteRoutines.DetachAsync(oldRoutine);
-
-                    //routineToDelete.Add(oldRoutine.Id);
-                    await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: false, cancellationToken: cancellationToken);
-                }
-                else
+                IList<Guid> routineToDelete = new List<Guid>();
+                foreach (RouteRoutine oldRoutine in currentRoutines)
                 {
-                    model.RouteRoutines.Remove(routineModel);
+                    RouteRoutineListItemModel routineModel = new RouteRoutineListItemModel(oldRoutine);
+                    if (!model.RouteRoutines.Contains(routineModel))
+                    {
+                        // New Routine does not exist in the database
+                        // Need to check for validity and need to delete
+                        //newRoutines.Add(routineModel);
+
+                        await work.RouteRoutines.DetachAsync(oldRoutine);
+
+                        //routineToDelete.Add(oldRoutine.Id);
+                        await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: false, cancellationToken: cancellationToken);
+                    }
+                    else
+                    {
+                        model.RouteRoutines.Remove(routineModel);
+                    }
                 }
             }
+            
 
             //if (routineToDelete.Count > 0)
             //{

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using ViGo.Domain;
 using ViGo.Repository.Core;
@@ -30,6 +31,7 @@ namespace ViGo.Repository
         public IRepository<WalletTransaction> WalletTransactions { get; }
         #endregion
 
+        private IDistributedCache cache { get; }
 
         #region Constructor
         public UnitOfWork(
@@ -51,7 +53,8 @@ namespace ViGo.Repository
             IRepository<Vehicle> vehicles,
             IRepository<VehicleType> vehicleTypes,
             IRepository<Wallet> wallets,
-            IRepository<WalletTransaction> walletTransactions)
+            IRepository<WalletTransaction> walletTransactions,
+            IDistributedCache cache)
         {
             this.context = context;
             Bookings = bookings;
@@ -72,6 +75,7 @@ namespace ViGo.Repository
             VehicleTypes = vehicleTypes;
             Wallets = wallets;
             WalletTransactions = walletTransactions;
+            this.cache = cache;
         }
 
         public UnitOfWork(IServiceProvider serviceProvider)
@@ -95,6 +99,7 @@ namespace ViGo.Repository
             VehicleTypes = serviceProvider.GetRequiredService<IRepository<VehicleType>>();
             Wallets = serviceProvider.GetRequiredService<IRepository<Wallet>>();
             WalletTransactions = serviceProvider.GetRequiredService<IRepository<WalletTransaction>>();
+            cache = serviceProvider.GetRequiredService<IDistributedCache>();
         }
         #endregion
 
@@ -137,6 +142,28 @@ namespace ViGo.Repository
             await WalletTransactions.SaveChangesToRedisAsync(cancellationToken);
 
             return result;
+        }
+
+        public async Task FlushAllRedisAsync(CancellationToken cancellationToken = default)
+        {
+            await Bookings.RemoveFromRedisAsync(cancellationToken);
+            await BookingDetails.RemoveFromRedisAsync(cancellationToken);
+            await Events.RemoveFromRedisAsync(cancellationToken);
+            await Fares.RemoveFromRedisAsync(cancellationToken);
+            await FarePolicies.RemoveFromRedisAsync(cancellationToken);
+            await Notifications.RemoveFromRedisAsync(cancellationToken);
+            await Promotions.RemoveFromRedisAsync(cancellationToken);
+            await Reports.RemoveFromRedisAsync(cancellationToken);
+            await Routes.RemoveFromRedisAsync(cancellationToken);
+            await RouteRoutines.RemoveFromRedisAsync(cancellationToken);
+            await Settings.RemoveFromRedisAsync(cancellationToken);
+            await Stations.RemoveFromRedisAsync(cancellationToken);
+            await Users.RemoveFromRedisAsync(cancellationToken);
+            await UserLicenses.RemoveFromRedisAsync(cancellationToken);
+            await Vehicles.RemoveFromRedisAsync(cancellationToken);
+            await VehicleTypes.RemoveFromRedisAsync(cancellationToken);
+            await Wallets.RemoveFromRedisAsync(cancellationToken);
+            await WalletTransactions.RemoveFromRedisAsync(cancellationToken);
         }
 
         public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
