@@ -29,7 +29,11 @@ namespace ViGo.API.CronJobs
 
                 q.ConfigureResetWeeklyCancelRateJob();
 
-                q.ConfigureTripReminderJob();
+                if (!env.IsDevelopment())
+                {
+                    q.ConfigureTripReminderJob();
+
+                }
 
                 //q.ConfigureCheckTransactionStatusJob();
 

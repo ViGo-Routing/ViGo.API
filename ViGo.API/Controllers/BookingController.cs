@@ -405,6 +405,34 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Calculate cancel fee for canceling a booking
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <returns>
+        /// The calculated cancel fee
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Invalid role</response>
+        /// <response code="200">Fee is calculated successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Cancel/Fee/{bookingId}")]
+        [ProducesResponseType(typeof(double), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize]
+        public async Task<IActionResult> CalculateCancelFee(
+            Guid bookingId,
+            CancellationToken cancellationToken)
+        {
+            double cancelFee = await bookingServices.CalculateCancelBookingFeeAsync(bookingId, cancellationToken);
+            return StatusCode(200, cancelFee);
+        }
+
+        /// <summary>
         /// Get Booking analysis data.
         /// </summary>
         /// <remarks>If the current user is admin, all bookings in the system will be fetched. 

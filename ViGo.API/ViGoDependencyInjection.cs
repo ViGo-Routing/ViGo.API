@@ -94,7 +94,10 @@ namespace ViGo.API
                 }
             });
 
-            services.AddHostedService<ScheduleUpcomingTripReminderBackgroundTask>();
+            if (!env.IsDevelopment())
+            {
+                services.AddHostedService<ScheduleUpcomingTripReminderBackgroundTask>();
+            }
             #endregion
 
             return services;
