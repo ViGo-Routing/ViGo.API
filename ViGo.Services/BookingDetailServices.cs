@@ -2058,9 +2058,12 @@ namespace ViGo.Services
                     && t.BookingDetailId.Equals(bookingDetail.Id)
                     && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
 
-                double pickFee = driverPickDetailTransaction.Amount;
-                //double refundFee = FareUtilities.RoundToThousands(pickFee * (1 - chargeFee));
-                return FareUtilities.RoundToThousands(pickFee * chargeFee);
+                if (driverPickDetailTransaction != null)
+                {
+                    double pickFee = driverPickDetailTransaction.Amount;
+                    //double refundFee = FareUtilities.RoundToThousands(pickFee * (1 - chargeFee));
+                    return FareUtilities.RoundToThousands(pickFee * chargeFee);
+                }
             }
             return 0;
         }
