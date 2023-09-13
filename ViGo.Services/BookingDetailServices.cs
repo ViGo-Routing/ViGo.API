@@ -680,18 +680,23 @@ namespace ViGo.Services
                 await notificationServices.CreateFirebaseNotificationAsync(
                     customerNotification, customerFcm, dataToSend, cancellationToken);
 
-                // Notification to request rating
-                NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
+                if (bookingDetail.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF
+                    || bookingDetail.Status == BookingDetailStatus.COMPLETED)
                 {
-                    UserId = customer.Id,
-                    Type = NotificationType.SPECIFIC_USER,
-                    Title = "Chuyến đi của bạn như thế nào?",
-                    Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
+                    // Notification to request rating
+                    NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Type = NotificationType.SPECIFIC_USER,
+                        Title = "Chuyến đi của bạn như thế nào?",
+                        Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
 
-                };
+                    };
 
-                await notificationServices.CreateFirebaseNotificationAsync(
-                   requestRatingNotification, customerFcm, dataToSend, cancellationToken);
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                       requestRatingNotification, customerFcm, dataToSend, cancellationToken);
+                }
+                
             }
 
             return (bookingDetail, customer.Id);
