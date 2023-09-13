@@ -45,6 +45,8 @@ namespace ViGo.Repository
             IQueryable<TEntity> query, in bool includeDeleted = false
             )
         {
+            query = query.AsNoTracking();
+
             if (includeDeleted)
             {
                 return query;
@@ -56,7 +58,7 @@ namespace ViGo.Repository
             }
 
             return query
-                .AsNoTracking()
+                //.AsNoTracking()
                 .OfType<ISoftDeletedEntity>()
                 .Where(entity => !entity.IsDeleted)
                 .OfType<TEntity>();
@@ -74,7 +76,7 @@ namespace ViGo.Repository
 
             if (cachedDatas is null)
             {
-                cachedDatas = await Table.ToListAsync(cancellationToken);
+                cachedDatas = await Table.AsNoTracking().ToListAsync(cancellationToken);
                 await cache.SetAsync(typeof(TEntity).ToString(), cachedDatas, cancellationToken);
             }
 
@@ -99,6 +101,8 @@ namespace ViGo.Repository
         public override async Task DeleteAsync(TEntity entity,
             bool isSoftDelete = true, CancellationToken cancellationToken = default)
         {
+            await DetachAsync(entity);
+
             if (!isSoftDelete)
             {
                 Table.Remove(entity);
@@ -163,7 +167,12 @@ namespace ViGo.Repository
         /// <returns>A task that represents the asynchronous operation.</returns>
         public override async Task DetachAsync(TEntity entity)
         {
-            Context.Entry(entity).State = EntityState.Detached;
+            TEntity? existingEntity = Table.Local.SingleOrDefault(
+                e => e.Id.Equals(entity.Id));
+            if (existingEntity != null)
+            {
+                Context.Entry(existingEntity).State = EntityState.Detached;
+            }
         }
 
         /// <summary>
@@ -450,6 +459,8 @@ namespace ViGo.Repository
             {
                 throw new ArgumentNullException(nameof(entity));
             }
+
+            await DetachAsync(entity);
 
             if (entity is ITrackingUpdated)
             {

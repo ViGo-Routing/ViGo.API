@@ -180,7 +180,7 @@ namespace ViGo.Services
                     // Need to check for validity and need to delete
                     //newRoutines.Add(routineModel);
 
-                    await work.RouteRoutines.DetachAsync(oldRoutine);
+                    //await work.RouteRoutines.DetachAsync(oldRoutine);
 
                     //routineToDelete.Add(oldRoutine.Id);
                     await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: false, cancellationToken: cancellationToken);
