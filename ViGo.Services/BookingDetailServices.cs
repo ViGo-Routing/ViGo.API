@@ -680,18 +680,23 @@ namespace ViGo.Services
                 await notificationServices.CreateFirebaseNotificationAsync(
                     customerNotification, customerFcm, dataToSend, cancellationToken);
 
-                // Notification to request rating
-                NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
+                if (bookingDetail.Status == BookingDetailStatus.ARRIVE_AT_DROPOFF
+                    || bookingDetail.Status == BookingDetailStatus.COMPLETED)
                 {
-                    UserId = customer.Id,
-                    Type = NotificationType.SPECIFIC_USER,
-                    Title = "Chuyến đi của bạn như thế nào?",
-                    Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
+                    // Notification to request rating
+                    NotificationCreateModel requestRatingNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Type = NotificationType.SPECIFIC_USER,
+                        Title = "Chuyến đi của bạn như thế nào?",
+                        Description = "Dành ra 5 phút để đánh giá chuyến đi và tài xế của bạn nhé!",
 
-                };
+                    };
 
-                await notificationServices.CreateFirebaseNotificationAsync(
-                   requestRatingNotification, customerFcm, dataToSend, cancellationToken);
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                       requestRatingNotification, customerFcm, dataToSend, cancellationToken);
+                }
+                
             }
 
             return (bookingDetail, customer.Id);
@@ -2053,9 +2058,12 @@ namespace ViGo.Services
                     && t.BookingDetailId.Equals(bookingDetail.Id)
                     && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
 
-                double pickFee = driverPickDetailTransaction.Amount;
-                //double refundFee = FareUtilities.RoundToThousands(pickFee * (1 - chargeFee));
-                return FareUtilities.RoundToThousands(pickFee * chargeFee);
+                if (driverPickDetailTransaction != null)
+                {
+                    double pickFee = driverPickDetailTransaction.Amount;
+                    //double refundFee = FareUtilities.RoundToThousands(pickFee * (1 - chargeFee));
+                    return FareUtilities.RoundToThousands(pickFee * chargeFee);
+                }
             }
             return 0;
         }
@@ -2134,7 +2142,7 @@ namespace ViGo.Services
                 {
                     UserId = driver.Id,
                     Title = "Bạn có một đánh giá mới!",
-                    Description = $"",
+                    Description = $"{feedback.Rate}/5 - {feedback.Feedback}",
                     Type = NotificationType.SPECIFIC_USER
                 };
 
