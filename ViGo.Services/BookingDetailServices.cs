@@ -15,6 +15,7 @@ using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
 using ViGo.Utilities.Google;
+using ViGo.Utilities.Google.Firebase;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -553,6 +554,8 @@ namespace ViGo.Services
             string title = "";
             string description = "";
 
+            string message = "";
+
             switch (updateDto.Status)
             {
                 case BookingDetailStatus.GOING_TO_PICKUP:
@@ -566,6 +569,8 @@ namespace ViGo.Services
 
                     title = "Tài xế đang bắt đầu đi đến điểm đón - " + startStationGoing.Name;
                     description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
+                    message = "(Tin nhắn tự động) Tài xế của bạn đang bắt đầu di chuyển đến điểm đón - " + startStationGoing.Name +
+                        ". Hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
                 case BookingDetailStatus.ARRIVE_AT_PICKUP:
                     if (bookingDetail.Status != BookingDetailStatus.GOING_TO_PICKUP)
@@ -579,6 +584,9 @@ namespace ViGo.Services
 
                     title = "Tài xế đã đến điểm đón - " + startStation.Name;
                     description = "Hãy chắc chắn rằng bạn lên đúng xe nhé!";
+                    message = "(Tin nhắn tự động) Tài xế đã đến điểm đón - " + startStation.Name +
+                        " - và sẽ đợi bạn trong vòng 5 phút. Vui lòng di chuyến đến điểm đón và " +
+                        "hãy chắc chắn rằng bạn lên đúng xe nhé!";
                     break;
                 case BookingDetailStatus.GOING_TO_DROPOFF:
                     if (bookingDetail.Status != BookingDetailStatus.ARRIVE_AT_PICKUP)
@@ -589,6 +597,8 @@ namespace ViGo.Services
 
                     title = "Chuyến đi của bạn đã được bắt đầu!";
                     description = "Chúc bạn có một chuyến đi an toàn và vui vẻ nhé!";
+                    message = "(Tin nhắn tự động) Tài xế đã đón bạn thành công. Chúc bạn có một chuyến đi " +
+                        "an toàn và vui vẻ nhé!";
                     break;
                 case BookingDetailStatus.ARRIVE_AT_DROPOFF:
                     if (bookingDetail.Status != BookingDetailStatus.GOING_TO_DROPOFF)
@@ -620,6 +630,8 @@ namespace ViGo.Services
 
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync(cancellationToken);
+
+           
 
             // Send notification to Customer and Driver
             User customer = await work.Users.GetAsync(booking.CustomerId,
@@ -697,6 +709,26 @@ namespace ViGo.Services
                 }
 
             }
+
+            // Send message
+            if (!string.IsNullOrEmpty(message))
+            {
+                await FirestoreUtilities.DbInstance.SendMessageAsync(
+               bookingDetail.Id, new FirestoreMessage
+               {
+                   Id = Guid.NewGuid(),
+                   SentBy = driver.Id,
+                   SentTo = customer.Id,
+                   Text = message,
+                   User = new FirestoreMessageUser
+                   {
+                       Id = driver.Id,
+                       Avatar = driver.AvatarUrl ?? "https://raw.githubusercontent.com/ViGo-Routing/ViGo.Driver.V2/main/assets/images/no-image.jpg",
+                       Name = driver.Name ?? "Không có dữ liệu"
+                   }
+               }, cancellationToken);
+            }
+           
 
             return (bookingDetail, customer.Id);
         }
