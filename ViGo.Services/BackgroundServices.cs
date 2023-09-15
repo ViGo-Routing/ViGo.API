@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using ViGo.Domain;
-using ViGo.Domain.Enumerations;
 using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities.Extensions;
@@ -32,10 +31,10 @@ namespace ViGo.Services
                 string? fcmToken = user.FcmToken;
                 if (!string.IsNullOrEmpty(fcmToken))
                 {
-                    string firebaseResult = await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken, 
+                    string firebaseResult = await FirebaseUtilities.SendNotificationToDeviceAsync(fcmToken,
                         "Bạn có 1 tin nhắn mới", text, data: null, cancellationToken: cancellationToken);
                 }
-                    }
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());

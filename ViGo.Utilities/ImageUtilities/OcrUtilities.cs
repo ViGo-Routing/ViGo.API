@@ -1,12 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Utilities.Configuration;
-using ViGo.Utilities;
 
 namespace ViGo.Utilities.ImageUtilities
 {
@@ -116,7 +110,7 @@ namespace ViGo.Utilities.ImageUtilities
     {
         public string IdNumber { get; set; }
         public string Name { get; set; }
-        public string Dob { get; set;}
+        public string Dob { get; set; }
         public string Address { get; set; }
 
     }

@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
-using ViGo.Models.Routes;
-using ViGo.Repository.Core;
-using ViGo.Services;
 using ViGo.Utilities.ImageUtilities;
 
 namespace ViGo.API.Controllers

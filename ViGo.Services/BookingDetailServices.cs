@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
@@ -339,7 +338,7 @@ namespace ViGo.Services
 
                 bookingDetails = await work.BookingDetails.GetAllAsync(
                     query => query.Where(d => bookingIds.Contains(d.BookingId)
-                    && (d.Status == BookingDetailStatus.PENDING_ASSIGN || 
+                    && (d.Status == BookingDetailStatus.PENDING_ASSIGN ||
                     d.Status == BookingDetailStatus.ASSIGNED)),
                     cancellationToken: cancellationToken);
 
@@ -696,7 +695,7 @@ namespace ViGo.Services
                     await notificationServices.CreateFirebaseNotificationAsync(
                        requestRatingNotification, customerFcm, dataToSend, cancellationToken);
                 }
-                
+
             }
 
             return (bookingDetail, customer.Id);
@@ -999,7 +998,7 @@ namespace ViGo.Services
                 prioritizedBookingDetails = (await FilterBookingDetailsAsync(prioritizedBookingDetails,
                 filters, cancellationToken)).ToList();
             }
-            
+
             prioritizedBookingDetails = prioritizedBookingDetails.OrderBy(
                 p => p.BookingDetail.Date)
                 .ThenBy(p => p.BookingDetail.CustomerDesiredPickupTime)
@@ -1852,7 +1851,8 @@ namespace ViGo.Services
             {
                 driver = await work.Users.GetAsync(bookingDetail.DriverId.Value,
                     cancellationToken: cancellationToken);
-            } else if (cancelledUser != null && cancelledUser.Role == UserRole.DRIVER)
+            }
+            else if (cancelledUser != null && cancelledUser.Role == UserRole.DRIVER)
             {
                 driver = cancelledUser;
             }
@@ -1869,7 +1869,7 @@ namespace ViGo.Services
                 { "bookingDetailId", bookingDetail.Id.ToString() },
             };
 
-            
+
 
             if (driver != null
                 && driverFcm != null && !string.IsNullOrEmpty(driverFcm))
@@ -2931,7 +2931,7 @@ namespace ViGo.Services
 
                 foreach (Station endStation in endStations)
                 {
-                    
+
                     GoogleMapPoint startPoint = new GoogleMapPoint(endStation.Latitude, endStation.Longitude);
                     GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.EndLocationLat.Value,
                         filters.EndLocationLng.Value);
@@ -3014,7 +3014,7 @@ namespace ViGo.Services
                 !removedEndStationIds.Contains(d.BookingDetail.EndStationId));
             foreach (DriverMappingItem item in bookingDetails)
             {
-                if (startStationDistances.TryGetValue(item.BookingDetail.StartStationId, 
+                if (startStationDistances.TryGetValue(item.BookingDetail.StartStationId,
                     out double startStationDistance))
                 {
                     item.PrioritizedPoint += startStationDistance;

@@ -1,5 +1,4 @@
-﻿using Castle.Core.Resource;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -213,9 +212,9 @@ namespace ViGo.Services
                 throw new ApplicationException("ID không tồn tại!");
             }
 
-                if (reportAdminUpdate.ReviewerNote != null) currentReport.ReviewerNote = reportAdminUpdate.ReviewerNote;
-                if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status.Value;
-                //if (reportAdminUpdate.IsDeleted != null) currentReport.IsDeleted = (bool)reportAdminUpdate.IsDeleted;
+            if (reportAdminUpdate.ReviewerNote != null) currentReport.ReviewerNote = reportAdminUpdate.ReviewerNote;
+            if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status.Value;
+            //if (reportAdminUpdate.IsDeleted != null) currentReport.IsDeleted = (bool)reportAdminUpdate.IsDeleted;
 
             await work.Reports.UpdateAsync(currentReport);
 
@@ -256,7 +255,7 @@ namespace ViGo.Services
 
             await work.SaveChangesAsync(cancellationToken);
 
-            if (bookingDetail != null && !string.IsNullOrEmpty(title) 
+            if (bookingDetail != null && !string.IsNullOrEmpty(title)
                 && !string.IsNullOrEmpty(description))
             {
                 Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
@@ -297,7 +296,7 @@ namespace ViGo.Services
                             driverNotification, driverFcm, dataToSend, cancellationToken);
                     }
                 }
-                
+
 
                 // Send to customer
                 if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))

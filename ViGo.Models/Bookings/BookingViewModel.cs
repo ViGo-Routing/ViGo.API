@@ -81,7 +81,7 @@ namespace ViGo.Models.Bookings
             VehicleType vehicleType, int totalBookingDetailsCount,
             int totalAssignedBookingDetailsCount) : this(booking, customer, vehicleType)
         {
-            
+
             TotalBookingDetailsCount = totalBookingDetailsCount;
             TotalAssignedBookingDetailsCount = totalAssignedBookingDetailsCount;
         }
@@ -123,7 +123,7 @@ namespace ViGo.Models.Bookings
             StationViewModel startRouteStation,
             StationViewModel endRouteStation,
             VehicleType vehicleType, int totalBookingDetailsCount,
-            int totalAssignedBookingDetailsCount, int totalCompletedBookingDetailsCount) 
+            int totalAssignedBookingDetailsCount, int totalCompletedBookingDetailsCount)
             : this(booking, customer, customerRoute, startRouteStation, endRouteStation, vehicleType)
         {
             TotalBookingDetailsCount = totalBookingDetailsCount;

@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Drawing;
 using System.Reflection;
 using System.Text;
 
@@ -28,7 +27,7 @@ namespace ViGo.Utilities.Data
             dynamic[] boundaries = JsonConvert.DeserializeObject<dynamic[]>(data);
 
             System.Drawing.PointF[] result = (from boundary in boundaries
-                               select new System.Drawing.PointF((float)boundary[0], (float)boundary[1])).ToArray();
+                                              select new System.Drawing.PointF((float)boundary[0], (float)boundary[1])).ToArray();
 
             StringBuilder newBoundaryData = new StringBuilder();
             newBoundaryData.AppendLine("[");

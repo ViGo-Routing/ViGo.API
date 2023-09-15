@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ViGo.Models.Fares;
 using ViGo.Repository;
 using ViGo.Repository.Core;
 using ViGo.Services;
@@ -18,8 +16,8 @@ namespace ViGo.API.Controllers
         private IBackgroundTaskQueue _backgroundQueue;
         private IServiceScopeFactory _serviceScopeFactory;
 
-        public FirebaseController(ILogger<FirebaseController> logger, 
-            IBackgroundTaskQueue backgroundQueue, 
+        public FirebaseController(ILogger<FirebaseController> logger,
+            IBackgroundTaskQueue backgroundQueue,
             IServiceScopeFactory serviceScopeFactory)
         {
             _logger = logger;
@@ -59,7 +57,7 @@ namespace ViGo.API.Controllers
                         IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                         BackgroundServices backgroundServices = new BackgroundServices(unitOfWork, _logger);
 
-                        await backgroundServices.SendMessageNotificationAsync(receiver, text, token) ;
+                        await backgroundServices.SendMessageNotificationAsync(receiver, text, token);
                     }
                 });
             }

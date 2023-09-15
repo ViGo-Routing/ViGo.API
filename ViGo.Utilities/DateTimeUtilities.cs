@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using ViGo.Domain;
-using ViGo.Models.QueryString;
 
 namespace ViGo.Utilities
 {
@@ -110,7 +109,7 @@ namespace ViGo.Utilities
             DateTime startDate = new DateTime(vnNow.Year, vnNow.Month, 1);
             DateTime endDate = startDate.AddMonths(1).AddDays(-1);
             IEnumerable<DateOnly> monthDates = Enumerable.Range(
-                0, endDate.Day).Select(days => 
+                0, endDate.Day).Select(days =>
                 DateOnly.FromDateTime(startDate.AddDays(days))).OrderBy(d => d.Day);
             return monthDates;
         }

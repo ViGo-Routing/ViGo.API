@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.Analysis;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.Users;
@@ -252,7 +251,8 @@ namespace ViGo.Services
 
                 double profit = tripPickTotal - tripPickRefundTotal + cancelRefundProfit;
                 return profit;
-            } else
+            }
+            else
             {
                 return 0;
             }

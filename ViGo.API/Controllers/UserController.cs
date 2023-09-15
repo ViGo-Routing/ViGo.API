@@ -160,7 +160,7 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> GetCurrentUserAsync(CancellationToken cancellationToken)
         {
             UserViewModel? user = await userServices.GetCurrentUserAsync(cancellationToken);
-            
+
             if (user is null)
             {
                 throw new ApplicationException("Người dùng không tồn tại!");

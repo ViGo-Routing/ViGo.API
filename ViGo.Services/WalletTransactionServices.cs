@@ -143,7 +143,7 @@ namespace ViGo.Services
 
             IEnumerable<WalletTransaction> walletTransactions = await
                 work.WalletTransactions.GetAllAsync(
-                    query => query.Where(wt => wt.WalletId.Equals(wallet.Id) && wt.BookingDetailId.HasValue 
+                    query => query.Where(wt => wt.WalletId.Equals(wallet.Id) && wt.BookingDetailId.HasValue
                     && wt.BookingDetailId.Value.Equals(bookingDetailId)),
                     cancellationToken: cancellationToken);
 

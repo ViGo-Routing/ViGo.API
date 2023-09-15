@@ -84,7 +84,7 @@ namespace ViGo.Services
 
         public async Task<IEnumerable<VehiclesViewModel>> GetVehicleByUserIdAsync(Guid userId, CancellationToken cancellationToken)
         {
-            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(v => v.Where(q => q.UserId.Equals(userId)), 
+            IEnumerable<Vehicle> vehicles = await work.Vehicles.GetAllAsync(v => v.Where(q => q.UserId.Equals(userId)),
                 cancellationToken: cancellationToken);
             IEnumerable<Guid> userIds = vehicles.Select(ids => ids.UserId);
             IEnumerable<Guid> vehicleTypeIds = vehicles.Select(ids => ids.VehicleTypeId);

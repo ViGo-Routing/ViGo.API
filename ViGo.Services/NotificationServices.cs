@@ -264,7 +264,8 @@ namespace ViGo.Services
 
                     }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw;
             }

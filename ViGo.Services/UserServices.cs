@@ -189,7 +189,8 @@ namespace ViGo.Services
 
                         return user;
                     }
-                } else if (!string.IsNullOrEmpty(loginModel.FirebaseToken))
+                }
+                else if (!string.IsNullOrEmpty(loginModel.FirebaseToken))
                 {
                     FirebaseToken decodedToken = await FirebaseAuth.DefaultInstance
                     .VerifyIdTokenAsync(loginModel.FirebaseToken, checkRevoked: true,
@@ -214,7 +215,7 @@ namespace ViGo.Services
                         await work.SaveChangesAsync(cancellationToken);
                     }
                     return user;
-                    
+
                     //bool checkFirebaseUid = user.FirebaseUid.Equals(uid);
 
                     //if (checkFirebaseUid)
@@ -278,7 +279,8 @@ namespace ViGo.Services
                 maxLength: 20,
                 maxLengthErrorMessage: "Mật khẩu không được vượt quá 20 kí tự!");
 
-            } else if (!string.IsNullOrEmpty(dto.FirebaseUid))
+            }
+            else if (!string.IsNullOrEmpty(dto.FirebaseUid))
             {
                 //User checkFirebase = await work.Users.GetAsync(
                 //    u => !string.IsNullOrEmpty(u.FirebaseUid)
@@ -327,7 +329,7 @@ namespace ViGo.Services
 
             }
 
-                User newUser = new User
+            User newUser = new User
             {
                 Name = dto.Name,
                 Phone = dto.Phone,
@@ -335,8 +337,8 @@ namespace ViGo.Services
                 Role = dto.Role,
                 FirebaseUid = dto.FirebaseUid,
                 Status = dto.Role == UserRole.DRIVER
-                    ? UserStatus.PENDING
-                    : UserStatus.ACTIVE
+                ? UserStatus.PENDING
+                : UserStatus.ACTIVE
             };
 
             await work.Users.InsertAsync(newUser, isSelfCreatedEntity: true,
