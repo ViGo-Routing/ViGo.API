@@ -1091,11 +1091,20 @@ namespace ViGo.Services
             //return bookingDetails.Any(d => d.DriverId.HasValue);
         }
 
-        private async Task<bool> HasDriver(Guid bookingId, CancellationToken cancellationToken)
+        private async Task<bool> HasDriver(Guid routeId, CancellationToken cancellationToken)
         {
+            //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+            //    .GetAllAsync(query => query.Where(
+            //        d => d.BookingId.Equals(bookingId)),
+            //        cancellationToken: cancellationToken);
+            //return bookingDetails.Any(d => d.DriverId.HasValue);
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(routeId)), cancellationToken: cancellationToken);
+            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
             IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
                 .GetAllAsync(query => query.Where(
-                    d => d.BookingId.Equals(bookingId)),
+                    d => bookingIds.Contains(d.BookingId)),
                     cancellationToken: cancellationToken);
             return bookingDetails.Any(d => d.DriverId.HasValue);
         }
