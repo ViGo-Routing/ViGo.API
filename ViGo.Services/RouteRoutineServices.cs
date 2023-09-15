@@ -145,9 +145,9 @@ namespace ViGo.Services
                 }
             }
 
-            if (await HasBooking(route.Id, cancellationToken))
+            if (await HasDriver(route.Id, cancellationToken))
             {
-                throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
+                throw new ApplicationException("Hành trình đã có tài xế chọn nên không thể cập nhật thông tin!");
             }
 
             foreach (RouteRoutineListItemModel routine in model.RouteRoutines)
@@ -672,41 +672,58 @@ namespace ViGo.Services
             }
         }
 
-        private async Task<Booking?> HasBooking(Guid routeId,
-            CancellationToken cancellationToken)
+        //private async Task<Booking?> HasBooking(Guid routeId,
+        //    CancellationToken cancellationToken)
+        //{
+        //    Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
+
+        //    if (route is null)
+        //    {
+        //        throw new ApplicationException("Tuyến đường không tồn tại!!");
+        //    }
+
+        //    Guid checkRouteId = routeId;
+        //    if (route.Type == RouteType.ROUND_TRIP
+        //        && !route.RoundTripRouteId.HasValue)
+        //    {
+        //        // The roundtrip route
+        //        // Get the main route
+        //        Route mainRoute = await work.Routes.GetAsync(
+        //            r => r.RoundTripRouteId.HasValue &&
+        //            r.RoundTripRouteId.Value.Equals(routeId), cancellationToken: cancellationToken);
+        //        checkRouteId = mainRoute.Id;
+        //    }
+
+        //    Booking? booking = await work.Bookings.GetAsync(
+        //            b => b.CustomerRouteId.Equals(checkRouteId)
+        //            && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
+
+        //    return booking;
+        //    //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+        //    //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+        //    //    .GetAllAsync(query => query.Where(
+        //    //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
+
+        //    //return bookingDetails.Any(d => d.DriverId.HasValue);
+        //}
+
+        private async Task<bool> HasDriver(Guid routeId, CancellationToken cancellationToken)
         {
-            Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
-
-            if (route is null)
-            {
-                throw new ApplicationException("Tuyến đường không tồn tại!!");
-            }
-
-            Guid checkRouteId = routeId;
-            if (route.Type == RouteType.ROUND_TRIP
-                && !route.RoundTripRouteId.HasValue)
-            {
-                // The roundtrip route
-                // Get the main route
-                Route mainRoute = await work.Routes.GetAsync(
-                    r => r.RoundTripRouteId.HasValue &&
-                    r.RoundTripRouteId.Value.Equals(routeId), cancellationToken: cancellationToken);
-                checkRouteId = mainRoute.Id;
-            }
-
-            Booking? booking = await work.Bookings.GetAsync(
-                    b => b.CustomerRouteId.Equals(checkRouteId)
-                    && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
-
-            return booking;
-            //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
             //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
             //    .GetAllAsync(query => query.Where(
-            //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
-
+            //        d => d.BookingId.Equals(bookingId)),
+            //        cancellationToken: cancellationToken);
             //return bookingDetails.Any(d => d.DriverId.HasValue);
+            IEnumerable<Booking> bookings = await work.Bookings
+                .GetAllAsync(query => query.Where(
+                    b => b.CustomerRouteId.Equals(routeId)), cancellationToken: cancellationToken);
+            IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => bookingIds.Contains(d.BookingId)),
+                    cancellationToken: cancellationToken);
+            return bookingDetails.Any(d => d.DriverId.HasValue);
         }
-
         #endregion
     }
 }
