@@ -193,7 +193,7 @@ namespace ViGo.Services
             BookingDetailServices bookingDetailServices = new BookingDetailServices(work, _logger);
             IPagedEnumerable<BookingDetailViewModel> availableBookingDetailModels
                 = await bookingDetailServices.GetDriverAvailableBookingDetailsAsync(driverId,
-                null, new PaginationParameter(1, -1), new BookingDetailFilterParameters(),
+                null, new PaginationParameter(1, -1), bookingDetailFilters,
                 context, cancellationToken);
 
             IEnumerable<BookingDetailViewModel> availableBookingDetails = availableBookingDetailModels.Data;
