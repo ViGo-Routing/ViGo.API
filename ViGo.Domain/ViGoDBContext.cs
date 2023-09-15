@@ -15,11 +15,11 @@ namespace ViGo.Domain
 
         public virtual DbSet<Booking> Bookings { get; set; } = null!;
         public virtual DbSet<BookingDetail> BookingDetails { get; set; } = null!;
-        public virtual DbSet<Event> Events { get; set; } = null!;
+        //public virtual DbSet<Event> Events { get; set; } = null!;
         public virtual DbSet<Fare> Fares { get; set; } = null!;
         public virtual DbSet<FarePolicy> FarePolicies { get; set; } = null!;
         public virtual DbSet<Notification> Notifications { get; set; } = null!;
-        public virtual DbSet<Promotion> Promotions { get; set; } = null!;
+        //public virtual DbSet<Promotion> Promotions { get; set; } = null!;
         public virtual DbSet<Report> Reports { get; set; } = null!;
         public virtual DbSet<Route> Routes { get; set; } = null!;
         public virtual DbSet<RouteRoutine> RouteRoutines { get; set; } = null!;
@@ -74,10 +74,10 @@ namespace ViGo.Domain
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Booking_Route");
 
-                entity.HasOne(d => d.Promotion)
-                    .WithMany(p => p.Bookings)
-                    .HasForeignKey(d => d.PromotionId)
-                    .HasConstraintName("FK_Booking_Promotion");
+                //entity.HasOne(d => d.Promotion)
+                //    .WithMany(p => p.Bookings)
+                //    .HasForeignKey(d => d.PromotionId)
+                //    .HasConstraintName("FK_Booking_Promotion");
 
                 //entity.HasOne(d => d.StartRouteStation)
                 //    .WithMany(p => p.BookingStartRouteStations)
@@ -159,22 +159,22 @@ namespace ViGo.Domain
                     .HasConstraintName("FK_BookingDetail_StartStation");
             });
 
-            modelBuilder.Entity<Event>(entity =>
-            {
-                entity.ToTable("Event");
+            //modelBuilder.Entity<Event>(entity =>
+            //{
+            //    entity.ToTable("Event");
 
-                entity.Property(e => e.Id).ValueGeneratedNever();
+            //    entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Title).HasMaxLength(255);
+            //    entity.Property(e => e.Title).HasMaxLength(255);
 
-                entity.Property(e => e.EndDate).HasColumnType("date");
+            //    entity.Property(e => e.EndDate).HasColumnType("date");
 
-                entity.Property(e => e.StartDate).HasColumnType("date");
+            //    entity.Property(e => e.StartDate).HasColumnType("date");
 
-                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+            //    entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
-            });
+            //    entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
+            //});
 
             modelBuilder.Entity<Fare>(entity =>
             {
@@ -224,52 +224,52 @@ namespace ViGo.Domain
 
                 entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.Event)
-                    .WithMany(p => p.Notifications)
-                    .HasForeignKey(d => d.EventId)
-                    .HasConstraintName("FK_Notification_Event");
+                //entity.HasOne(d => d.Event)
+                //    .WithMany(p => p.Notifications)
+                //    .HasForeignKey(d => d.EventId)
+                //    .HasConstraintName("FK_Notification_Event");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Notifications)
                     .HasForeignKey(d => d.UserId);
             });
 
-            modelBuilder.Entity<Promotion>(entity =>
-            {
-                entity.ToTable("Promotion");
+            //modelBuilder.Entity<Promotion>(entity =>
+            //{
+            //    entity.ToTable("Promotion");
 
-                entity.Property(e => e.Id).ValueGeneratedNever();
+            //    entity.Property(e => e.Id).ValueGeneratedNever();
 
-                entity.Property(e => e.Code).HasMaxLength(15);
+            //    entity.Property(e => e.Code).HasMaxLength(15);
 
-                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
+            //    entity.Property(e => e.CreatedTime).HasColumnType("datetime");
 
-                entity.Property(e => e.Description).HasMaxLength(500);
+            //    entity.Property(e => e.Description).HasMaxLength(500);
 
-                entity.Property(e => e.ExpireTime).HasColumnType("datetime");
+            //    entity.Property(e => e.ExpireTime).HasColumnType("datetime");
 
-                entity.Property(e => e.IsPercentage)
-                    .IsRequired()
-                    .HasDefaultValueSql("((1))");
+            //    entity.Property(e => e.IsPercentage)
+            //        .IsRequired()
+            //        .HasDefaultValueSql("((1))");
 
-                entity.Property(e => e.Name).HasMaxLength(50);
+            //    entity.Property(e => e.Name).HasMaxLength(50);
 
-                entity.Property(e => e.StartTime).HasColumnType("datetime");
+            //    entity.Property(e => e.StartTime).HasColumnType("datetime");
 
-                entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
+            //    entity.Property(e => e.UpdatedTime).HasColumnType("datetime");
 
-                entity.HasOne(d => d.VehicleType)
-                    .WithMany(p => p.Promotions)
-                    .HasForeignKey(d => d.VehicleTypeId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Promotion_VehicleType");
+            //    entity.HasOne(d => d.VehicleType)
+            //        .WithMany(p => p.Promotions)
+            //        .HasForeignKey(d => d.VehicleTypeId)
+            //        .OnDelete(DeleteBehavior.ClientSetNull)
+            //        .HasConstraintName("FK_Promotion_VehicleType");
 
-                entity.HasOne(d => d.Event)
-                    .WithMany(p => p.Promotions)
-                    .HasForeignKey(d => d.EventId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_Promotion_Event");
-            });
+            //    entity.HasOne(d => d.Event)
+            //        .WithMany(p => p.Promotions)
+            //        .HasForeignKey(d => d.EventId)
+            //        .OnDelete(DeleteBehavior.ClientSetNull)
+            //        .HasConstraintName("FK_Promotion_Event");
+            //});
 
             modelBuilder.Entity<Report>(entity =>
             {

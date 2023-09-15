@@ -10,7 +10,7 @@ namespace ViGo.Domain
         public string Description { get; set; } = null!;
         public NotificationType Type { get; set; }
         public Guid? UserId { get; set; }
-        public Guid? EventId { get; set; }
+        //public Guid? EventId { get; set; }
         public NotificationStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
         public Guid CreatedBy { get; set; }
@@ -18,8 +18,8 @@ namespace ViGo.Domain
         public Guid UpdatedBy { get; set; }
         public bool IsDeleted { get; set; }
 
-        [JsonIgnore]
-        public virtual Event? Event { get; set; }
+        //[JsonIgnore]
+        //public virtual Event? Event { get; set; }
         [JsonIgnore]
         public virtual User? User { get; set; }
     }

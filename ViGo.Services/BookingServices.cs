@@ -422,52 +422,54 @@ namespace ViGo.Services
                 throw new ApplicationException("Loại phương tiện di chuyển không hợp lệ!!");
             }
 
-            Promotion? promotion = null;
-            if (model.PromotionId.HasValue)
-            {
-                promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
-                    cancellationToken: cancellationToken);
-                if (promotion is null ||
-                    promotion.Status == PromotionStatus.UNAVAILABLE ||
-                    (promotion.ExpireTime.HasValue && promotion.ExpireTime < DateTimeUtilities.GetDateTimeVnNow())
-                    || (promotion.StartTime > DateTimeUtilities.GetDateTimeVnNow())
-                    )
-                {
-                    throw new ApplicationException("Thông tin khuyến mãi không hợp lệ hoặc đã hết hạn sử dụng!");
-                }
+            #region Promotion
+            //Promotion? promotion = null;
+            //if (model.PromotionId.HasValue)
+            //{
+            //    promotion = await work.Promotions.GetAsync(model.PromotionId.Value,
+            //        cancellationToken: cancellationToken);
+            //    if (promotion is null ||
+            //        promotion.Status == PromotionStatus.UNAVAILABLE ||
+            //        (promotion.ExpireTime.HasValue && promotion.ExpireTime < DateTimeUtilities.GetDateTimeVnNow())
+            //        || (promotion.StartTime > DateTimeUtilities.GetDateTimeVnNow())
+            //        )
+            //    {
+            //        throw new ApplicationException("Thông tin khuyến mãi không hợp lệ hoặc đã hết hạn sử dụng!");
+            //    }
 
-                if (!promotion.VehicleTypeId.Equals(vehicleType.Id))
-                {
-                    throw new ApplicationException("Loại phương tiện và thông tin khuyến mãi không hợp lệ!!");
-                }
-                if (promotion.MinTotalPrice.HasValue &&
-                    promotion.MinTotalPrice < model.TotalPrice)
-                {
-                    throw new ApplicationException("Booking chuyến đi chưa đạt giá trị tối thiểu để áp dụng khuyến mãi!!");
-                }
+            //    if (!promotion.VehicleTypeId.Equals(vehicleType.Id))
+            //    {
+            //        throw new ApplicationException("Loại phương tiện và thông tin khuyến mãi không hợp lệ!!");
+            //    }
+            //    if (promotion.MinTotalPrice.HasValue &&
+            //        promotion.MinTotalPrice < model.TotalPrice)
+            //    {
+            //        throw new ApplicationException("Booking chuyến đi chưa đạt giá trị tối thiểu để áp dụng khuyến mãi!!");
+            //    }
 
-                // Check Max Usage per user
-                if (promotion.UsagePerUser.HasValue)
-                {
-                    int usageCount = (await work.Bookings
-                        .GetAllAsync(query => query.Where(
-                            b => b.CustomerId.Equals(user.Id)
-                            && b.PromotionId.Equals(promotion.Id)),
-                            cancellationToken: cancellationToken)).Count();
-                    if (usageCount > promotion.UsagePerUser.Value)
-                    {
-                        throw new ApplicationException("Mã khuyến mãi đã vượt quá số lần sử dụng!!");
-                    }
-                }
-                if (promotion.MaxTotalUsage.HasValue)
-                {
-                    if (promotion.TotalUsage == promotion.MaxTotalUsage)
-                    {
-                        throw new ApplicationException("Mã khuyến mãi đã vượt quá số lượt sử dụng!!");
-                    }
-                }
+            //    // Check Max Usage per user
+            //    if (promotion.UsagePerUser.HasValue)
+            //    {
+            //        int usageCount = (await work.Bookings
+            //            .GetAllAsync(query => query.Where(
+            //                b => b.CustomerId.Equals(user.Id)
+            //                && b.PromotionId.Equals(promotion.Id)),
+            //                cancellationToken: cancellationToken)).Count();
+            //        if (usageCount > promotion.UsagePerUser.Value)
+            //        {
+            //            throw new ApplicationException("Mã khuyến mãi đã vượt quá số lần sử dụng!!");
+            //        }
+            //    }
+            //    if (promotion.MaxTotalUsage.HasValue)
+            //    {
+            //        if (promotion.TotalUsage == promotion.MaxTotalUsage)
+            //        {
+            //            throw new ApplicationException("Mã khuyến mãi đã vượt quá số lượt sử dụng!!");
+            //        }
+            //    }
 
-            }
+            //}
+            #endregion
 
             //TODO Code
             // Check Start Date and End Date
@@ -553,7 +555,7 @@ namespace ViGo.Services
                 IsShared = model.IsShared,
                 Duration = Math.Round(model.Duration, 2),
                 Distance = model.Distance,
-                PromotionId = model.PromotionId,
+                //PromotionId = model.PromotionId,
                 VehicleTypeId = model.VehicleTypeId,
                 Type = route.Type == RouteType.ONE_WAY
                     ? BookingType.ONE_WAY
@@ -697,11 +699,11 @@ namespace ViGo.Services
             }
 
 
-            if (promotion != null)
-            {
-                promotion.TotalUsage += 1;
-                await work.Promotions.UpdateAsync(promotion);
-            }
+            //if (promotion != null)
+            //{
+            //    promotion.TotalUsage += 1;
+            //    await work.Promotions.UpdateAsync(promotion);
+            //}
 
             await work.SaveChangesAsync(cancellationToken);
             return booking;

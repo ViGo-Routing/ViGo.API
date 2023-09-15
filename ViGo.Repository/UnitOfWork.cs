@@ -13,11 +13,11 @@ namespace ViGo.Repository
         #region Repositories
         public IRepository<Booking> Bookings { get; }
         public IRepository<BookingDetail> BookingDetails { get; }
-        public IRepository<Event> Events { get; }
+        //public IRepository<Event> Events { get; }
         public IRepository<Fare> Fares { get; }
         public IRepository<FarePolicy> FarePolicies { get; }
         public IRepository<Notification> Notifications { get; }
-        public IRepository<Promotion> Promotions { get; }
+        //public IRepository<Promotion> Promotions { get; }
         public IRepository<Report> Reports { get; }
         public IRepository<Route> Routes { get; }
         public IRepository<RouteRoutine> RouteRoutines { get; }
@@ -38,11 +38,11 @@ namespace ViGo.Repository
             ViGoDBContext context,
             IRepository<Booking> bookings,
             IRepository<BookingDetail> bookingDetails,
-            IRepository<Event> events,
+            //IRepository<Event> events,
             IRepository<Fare> fares,
             IRepository<FarePolicy> farePolicies,
             IRepository<Notification> notifications,
-            IRepository<Promotion> promotions,
+            //IRepository<Promotion> promotions,
             IRepository<Report> reports,
             IRepository<Route> routes,
             IRepository<RouteRoutine> routeRoutines,
@@ -59,11 +59,11 @@ namespace ViGo.Repository
             this.context = context;
             Bookings = bookings;
             BookingDetails = bookingDetails;
-            Events = events;
+            //Events = events;
             Fares = fares;
             FarePolicies = farePolicies;
             Notifications = notifications;
-            Promotions = promotions;
+            //Promotions = promotions;
             Reports = reports;
             Routes = routes;
             RouteRoutines = routeRoutines;
@@ -83,11 +83,11 @@ namespace ViGo.Repository
             context = serviceProvider.GetRequiredService<ViGoDBContext>();
             Bookings = serviceProvider.GetRequiredService<IRepository<Booking>>();
             BookingDetails = serviceProvider.GetRequiredService<IRepository<BookingDetail>>(); ;
-            Events = serviceProvider.GetRequiredService<IRepository<Event>>();
+            //Events = serviceProvider.GetRequiredService<IRepository<Event>>();
             Fares = serviceProvider.GetRequiredService<IRepository<Fare>>();
             FarePolicies = serviceProvider.GetRequiredService<IRepository<FarePolicy>>();
             Notifications = serviceProvider.GetRequiredService<IRepository<Notification>>();
-            Promotions = serviceProvider.GetRequiredService<IRepository<Promotion>>();
+            //Promotions = serviceProvider.GetRequiredService<IRepository<Promotion>>();
             Reports = serviceProvider.GetRequiredService<IRepository<Report>>();
             Routes = serviceProvider.GetRequiredService<IRepository<Route>>();
             RouteRoutines = serviceProvider.GetRequiredService<IRepository<RouteRoutine>>();
@@ -124,11 +124,11 @@ namespace ViGo.Repository
             // Save changes to redis
             await Bookings.SaveChangesToRedisAsync(cancellationToken);
             await BookingDetails.SaveChangesToRedisAsync(cancellationToken);
-            await Events.SaveChangesToRedisAsync(cancellationToken);
+            //await Events.SaveChangesToRedisAsync(cancellationToken);
             await Fares.SaveChangesToRedisAsync(cancellationToken);
             await FarePolicies.SaveChangesToRedisAsync(cancellationToken);
             await Notifications.SaveChangesToRedisAsync(cancellationToken);
-            await Promotions.SaveChangesToRedisAsync(cancellationToken);
+            //await Promotions.SaveChangesToRedisAsync(cancellationToken);
             await Reports.SaveChangesToRedisAsync(cancellationToken);
             await Routes.SaveChangesToRedisAsync(cancellationToken);
             await RouteRoutines.SaveChangesToRedisAsync(cancellationToken);
@@ -148,11 +148,11 @@ namespace ViGo.Repository
         {
             await Bookings.RemoveFromRedisAsync(cancellationToken);
             await BookingDetails.RemoveFromRedisAsync(cancellationToken);
-            await Events.RemoveFromRedisAsync(cancellationToken);
+            //await Events.RemoveFromRedisAsync(cancellationToken);
             await Fares.RemoveFromRedisAsync(cancellationToken);
             await FarePolicies.RemoveFromRedisAsync(cancellationToken);
             await Notifications.RemoveFromRedisAsync(cancellationToken);
-            await Promotions.RemoveFromRedisAsync(cancellationToken);
+            //await Promotions.RemoveFromRedisAsync(cancellationToken);
             await Reports.RemoveFromRedisAsync(cancellationToken);
             await Routes.RemoveFromRedisAsync(cancellationToken);
             await RouteRoutines.RemoveFromRedisAsync(cancellationToken);

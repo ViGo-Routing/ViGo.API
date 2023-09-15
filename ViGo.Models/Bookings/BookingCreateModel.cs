@@ -18,7 +18,7 @@
         public bool IsShared { get; set; }
         public double Duration { get; set; }
         public double Distance { get; set; }
-        public Guid? PromotionId { get; set; }
+        //public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         //public BookingType Type { get; set; } = BookingType.ONE_WAY;
         public double? RoundTripTotalPrice { get; set; }

@@ -9,11 +9,11 @@ namespace ViGo.Repository.Core
         #region Repositories
         IRepository<Booking> Bookings { get; }
         IRepository<BookingDetail> BookingDetails { get; }
-        IRepository<Event> Events { get; }
+        //IRepository<Event> Events { get; }
         IRepository<Fare> Fares { get; }
         IRepository<FarePolicy> FarePolicies { get; }
         IRepository<Notification> Notifications { get; }
-        IRepository<Promotion> Promotions { get; }
+        //IRepository<Promotion> Promotions { get; }
         IRepository<Report> Reports { get; }
         IRepository<Route> Routes { get; }
         IRepository<RouteRoutine> RouteRoutines { get; }
