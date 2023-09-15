@@ -145,7 +145,7 @@ namespace ViGo.Services
                 }
             }
 
-            if (await HasDriver(route.Id, cancellationToken))
+            if (await HasBooking(route.Id, cancellationToken))
             {
                 throw new ApplicationException("Tuyến đường đã được Booking! Không thể cập nhật thông tin tuyến đường");
             }
@@ -707,14 +707,6 @@ namespace ViGo.Services
             //return bookingDetails.Any(d => d.DriverId.HasValue);
         }
 
-        private async Task<bool> HasDriver(Guid bookingId, CancellationToken cancellationToken)
-        {
-            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
-                .GetAllAsync(query => query.Where(
-                    d => d.BookingId.Equals(bookingId)),
-                    cancellationToken: cancellationToken);
-            return bookingDetails.Any(d => d.DriverId.HasValue);
-        }
         #endregion
     }
 }

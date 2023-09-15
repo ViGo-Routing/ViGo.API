@@ -87,7 +87,7 @@ namespace ViGo.Services
             //            b.CustomerId.Equals(userId.Value)
             //            : true), cancellationToken: cancellationToken);
 
-            bookings = await FilterBookings(bookings, filters, null, cancellationToken);
+            bookings = await FilterBookings(bookings, filters, cancellationToken);
 
             bookings = bookings.Sort(sorting.OrderBy);
 
@@ -203,7 +203,7 @@ namespace ViGo.Services
                 .GetAllAsync(query => query.Where(
                     b => bookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
 
-            bookings = await FilterBookings(bookings, filters, bookingDetailFilters, cancellationToken);
+            bookings = await FilterBookings(bookings, filters, cancellationToken);
 
             bookings = bookings.Sort(sorting.OrderBy);
 
@@ -1771,7 +1771,7 @@ namespace ViGo.Services
 
         private async Task<IEnumerable<Booking>> FilterBookings(IEnumerable<Booking> bookings,
             BookingFilterParameters filters,
-            BookingDetailFilterParameters? bookingDetailFilters, CancellationToken cancellationToken)
+             CancellationToken cancellationToken)
         {
             bookings = bookings.Where(
                 b =>
@@ -1783,115 +1783,7 @@ namespace ViGo.Services
                     && (!filters.MaxEndDate.HasValue || DateOnly.FromDateTime(b.EndDate) >= filters.MaxEndDate.Value);
                 });
 
-            if (bookingDetailFilters != null)
-            {
-                IEnumerable<Booking> filteredBookings = new List<Booking>();
-
-                foreach (Booking booking in bookings)
-                {
-                    IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
-                        .GetAllAsync(query => query.Where(d => d.BookingId.Equals(booking.Id)),
-                        cancellationToken: cancellationToken);
-
-                    bookingDetails = await FilterBookingDetailsAsync(bookingDetails,
-                        bookingDetailFilters, cancellationToken);
-
-                    if (bookingDetails.Any())
-                    {
-                        filteredBookings = filteredBookings.Append(booking);
-                    }
-                }
-
-                bookings = filteredBookings;
-            }
-
             return bookings;
-        }
-
-        private async Task<IEnumerable<BookingDetail>> FilterBookingDetailsAsync(IEnumerable<BookingDetail> bookingDetails,
-            BookingDetailFilterParameters filters, CancellationToken cancellationToken)
-        {
-            bookingDetails = bookingDetails.Where(
-                d =>
-                {
-                    return
-                    (!filters.MinDate.HasValue || DateOnly.FromDateTime(d.Date) >= filters.MinDate.Value)
-                    && (!filters.MaxDate.HasValue || DateOnly.FromDateTime(d.Date) <= filters.MaxDate.Value)
-                    && (!filters.MinPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MinPickupTime.Value)
-                    && (!filters.MaxPickupTime.HasValue || TimeOnly.FromTimeSpan(d.CustomerDesiredPickupTime) >= filters.MaxPickupTime.Value);
-                });
-
-            // Filter for Status
-            if (filters.Status != null && !string.IsNullOrWhiteSpace(filters.Status))
-            {
-                IEnumerable<BookingDetailStatus> bookingDetailStatuses = new List<BookingDetailStatus>();
-
-                var statuses = filters.Status.Split(",");
-                foreach (string status in statuses)
-                {
-                    if (Enum.TryParse(typeof(BookingDetailStatus), status.Trim(),
-                        true, out object? result))
-                    {
-                        if (result != null)
-                        {
-                            bookingDetailStatuses = bookingDetailStatuses.Append((BookingDetailStatus)result);
-                        }
-                    }
-                }
-
-                if (bookingDetailStatuses.Any())
-                {
-                    bookingDetails = bookingDetails.Where(b => bookingDetailStatuses.Contains(b.Status));
-                }
-            }
-
-            IEnumerable<Guid> removedBookingDetailIds = new List<Guid>();
-
-            foreach (BookingDetail bookingDetail in bookingDetails)
-            {
-                if (filters.StartLocationLat.HasValue && filters.StartLocationLng.HasValue
-                && filters.StartLocationRadius.HasValue)
-                {
-                    Station startStation = await work.Stations.GetAsync(
-                        bookingDetail.StartStationId, cancellationToken: cancellationToken);
-                    GoogleMapPoint startPoint = new GoogleMapPoint(startStation.Latitude, startStation.Longitude);
-                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.StartLocationLat.Value,
-                        filters.StartLocationLng.Value);
-
-                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, cancellationToken);
-
-                    if (distance > filters.StartLocationRadius.Value)
-                    {
-                        // Outside of radius
-                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
-                    }
-                }
-
-                if (filters.EndLocationLat.HasValue && filters.EndLocationLng.HasValue
-                    && filters.EndLocationRadius.HasValue)
-                {
-                    Station endStation = await work.Stations.GetAsync(
-                        bookingDetail.EndStationId, cancellationToken: cancellationToken);
-                    GoogleMapPoint startPoint = new GoogleMapPoint(endStation.Latitude, endStation.Longitude);
-                    GoogleMapPoint conditionPoint = new GoogleMapPoint(filters.EndLocationLat.Value,
-                        filters.EndLocationLng.Value);
-
-                    double distance = await GoogleMapsApiUtilities.GetDistanceBetweenTwoPointsAsync(
-                        conditionPoint, startPoint, cancellationToken);
-
-                    if (distance > filters.EndLocationRadius.Value)
-                    {
-                        // Outside of radius
-                        removedBookingDetailIds = removedBookingDetailIds.Append(bookingDetail.Id);
-                    }
-                }
-            }
-
-            removedBookingDetailIds = removedBookingDetailIds.Distinct();
-            bookingDetails = bookingDetails.Where(d => !removedBookingDetailIds.Contains(d.Id));
-
-            return bookingDetails;
         }
 
         private async Task<(int, int, int)> CountBookingDetailsAsync(Guid bookingId,
