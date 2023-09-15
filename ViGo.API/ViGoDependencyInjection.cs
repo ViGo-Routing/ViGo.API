@@ -55,11 +55,11 @@ namespace ViGo.API
             #region Repositories
             services.AddScoped<IRepository<Booking>, EntityRepository<Booking>>();
             services.AddScoped<IRepository<BookingDetail>, EntityRepository<BookingDetail>>();
-            services.AddScoped<IRepository<Event>, EntityRepository<Event>>();
+            //services.AddScoped<IRepository<Event>, EntityRepository<Event>>();
             services.AddScoped<IRepository<Fare>, EntityRepository<Fare>>();
             services.AddScoped<IRepository<FarePolicy>, EntityRepository<FarePolicy>>();
             services.AddScoped<IRepository<Notification>, EntityRepository<Notification>>();
-            services.AddScoped<IRepository<Promotion>, EntityRepository<Promotion>>();
+            //services.AddScoped<IRepository<Promotion>, EntityRepository<Promotion>>();
             services.AddScoped<IRepository<Report>, EntityRepository<Report>>();
             services.AddScoped<IRepository<ViGo.Domain.Route>, EntityRepository<ViGo.Domain.Route>>();
             services.AddScoped<IRepository<RouteRoutine>, EntityRepository<RouteRoutine>>();

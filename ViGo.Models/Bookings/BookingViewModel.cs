@@ -29,7 +29,7 @@ namespace ViGo.Models.Bookings
         public bool IsShared { get; set; }
         public double Duration { get; set; }
         public double Distance { get; set; }
-        public Guid? PromotionId { get; set; }
+        //public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public string VehicleName { get; set; }
         public BookingType Type { get; set; }
@@ -64,7 +64,7 @@ namespace ViGo.Models.Bookings
             IsShared = booking.IsShared;
             Duration = booking.Duration;
             Distance = booking.Distance;
-            PromotionId = booking.PromotionId;
+            //PromotionId = booking.PromotionId;
             VehicleTypeId = booking.VehicleTypeId;
             VehicleName = vehicleType.Name.Trim() + " - " +
                 vehicleType.Slot + " chỗ";
@@ -81,7 +81,7 @@ namespace ViGo.Models.Bookings
             VehicleType vehicleType, int totalBookingDetailsCount,
             int totalAssignedBookingDetailsCount) : this(booking, customer, vehicleType)
         {
-            
+
             TotalBookingDetailsCount = totalBookingDetailsCount;
             TotalAssignedBookingDetailsCount = totalAssignedBookingDetailsCount;
         }
@@ -123,7 +123,7 @@ namespace ViGo.Models.Bookings
             StationViewModel startRouteStation,
             StationViewModel endRouteStation,
             VehicleType vehicleType, int totalBookingDetailsCount,
-            int totalAssignedBookingDetailsCount, int totalCompletedBookingDetailsCount) 
+            int totalAssignedBookingDetailsCount, int totalCompletedBookingDetailsCount)
             : this(booking, customer, customerRoute, startRouteStation, endRouteStation, vehicleType)
         {
             TotalBookingDetailsCount = totalBookingDetailsCount;

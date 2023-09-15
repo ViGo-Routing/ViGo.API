@@ -1,10 +1,5 @@
 ﻿using Google.Cloud.Firestore;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ViGo.Utilities.Configuration;
 
 namespace ViGo.Utilities.Google.Firebase
@@ -18,11 +13,11 @@ namespace ViGo.Utilities.Google.Firebase
         {
             get
             {
-                lock(dbLock)
+                lock (dbLock)
                 {
                     if (firestoreDb is null)
                     {
-                        System.Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "vigo-a7754-firebase-adminsdk-93go8-a26b571de1.json");                        firestoreDb = FirestoreDb.Create(ViGoConfiguration.FirebaseProjectId);
+                        System.Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "vigo-a7754-firebase-adminsdk-93go8-a26b571de1.json"); firestoreDb = FirestoreDb.Create(ViGoConfiguration.FirebaseProjectId);
                     }
                     return firestoreDb;
                 }

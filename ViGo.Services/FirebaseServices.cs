@@ -58,7 +58,7 @@ namespace ViGo.Services
             return userRecord.Uid;
         }
 
-        public async Task<string> GenerateFirebaseToken(string phone, 
+        public async Task<string> GenerateFirebaseToken(string phone,
             UserRole role,
             CancellationToken cancellationToken)
         {

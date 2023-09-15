@@ -1,5 +1,4 @@
-﻿using Castle.Core.Resource;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
@@ -170,7 +169,7 @@ namespace ViGo.API.Controllers
         public async Task<IActionResult> AdminUpdateReport(Guid reportID, [FromBody] ReportAdminUpdateModel reportAdminUpdate,
             CancellationToken cancellationToken)
         {
-            (ReportViewModel reportView, Guid? customerId) 
+            (ReportViewModel reportView, Guid? customerId)
                 = await reportServices.AdminUpdateReport(reportID, reportAdminUpdate, cancellationToken);
 
             if (reportView != null && reportView.BookingDetail != null && customerId.HasValue)

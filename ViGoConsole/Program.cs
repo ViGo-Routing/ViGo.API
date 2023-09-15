@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System.Text;
-using ViGo.Utilities;
 using ViGo.Utilities.Configuration;
-using ViGo.Utilities.ImageUtilities;
 
 namespace ViGoConsole
 {

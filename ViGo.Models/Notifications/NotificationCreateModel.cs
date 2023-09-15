@@ -8,7 +8,7 @@ namespace ViGo.Models.Notifications
         public string Description { get; set; } = null!;
         public NotificationType Type { get; set; } = NotificationType.SPECIFIC_USER;
         public Guid? UserId { get; set; }
-        public Guid? EventId { get; set; }
+        //public Guid? EventId { get; set; }
         public bool IsSentToUser { get; set; } = true;
     }
 }

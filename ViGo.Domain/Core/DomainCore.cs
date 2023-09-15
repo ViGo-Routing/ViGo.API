@@ -16,11 +16,11 @@ namespace ViGo.Domain
 
     }
 
-    public partial class Event
-        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
-    {
+    //public partial class Event
+    //    : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
+    //{
 
-    }
+    //}
 
     public partial class Fare
         : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
@@ -40,11 +40,11 @@ namespace ViGo.Domain
 
     }
 
-    public partial class Promotion
-        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
-    {
+    //public partial class Promotion
+    //    : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
+    //{
 
-    }
+    //}
 
     public partial class Report
         : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity

@@ -28,7 +28,7 @@ namespace ViGo.Domain
         public double Duration { get; set; }
         public double Distance { get; set; }
         public BookingType Type { get; set; } = BookingType.ONE_WAY;
-        public Guid? PromotionId { get; set; }
+        //public Guid? PromotionId { get; set; }
         public Guid VehicleTypeId { get; set; }
         public BookingStatus Status { get; set; }
         public DateTime CreatedTime { get; set; }
@@ -41,8 +41,8 @@ namespace ViGo.Domain
         public virtual User Customer { get; set; } = null!;
         //[JsonIgnore]
         //public virtual RouteStation EndRouteStation { get; set; } = null!;
-        [JsonIgnore]
-        public virtual Promotion? Promotion { get; set; }
+        //[JsonIgnore]
+        //public virtual Promotion? Promotion { get; set; }
         //[JsonIgnore]
         //public virtual RouteStation StartRouteStation { get; set; } = null!;
         [JsonIgnore]

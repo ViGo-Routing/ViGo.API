@@ -9,7 +9,7 @@ namespace ViGo.Domain
         {
             Bookings = new HashSet<Booking>();
             Fares = new HashSet<Fare>();
-            Promotions = new HashSet<Promotion>();
+            //Promotions = new HashSet<Promotion>();
             Vehicles = new HashSet<Vehicle>();
         }
 
@@ -27,8 +27,8 @@ namespace ViGo.Domain
         public virtual ICollection<Booking> Bookings { get; set; }
         [JsonIgnore]
         public virtual ICollection<Fare> Fares { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<Promotion> Promotions { get; set; }
+        //[JsonIgnore]
+        //public virtual ICollection<Promotion> Promotions { get; set; }
         [JsonIgnore]
         public virtual ICollection<Vehicle> Vehicles { get; set; }
     }

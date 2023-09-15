@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using ViGo.Models.GoogleMaps;
+﻿using ViGo.Models.GoogleMaps;
 using ViGo.Utilities.Data;
 
 namespace ViGo.Utilities

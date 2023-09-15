@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.QueryString.Pagination;
@@ -197,7 +196,7 @@ namespace ViGo.Services
                     }
                 }
             }
-            
+
 
             //if (routineToDelete.Count > 0)
             //{
@@ -357,7 +356,7 @@ namespace ViGo.Services
         public async Task CheckRouteRoutinesAsync(RouteRoutineCheckModel checkModel,
             CancellationToken cancellationToken)
         {
-            Route? route = await work.Routes.GetAsync(checkModel.RouteId, 
+            Route? route = await work.Routes.GetAsync(checkModel.RouteId,
                 cancellationToken: cancellationToken);
             if (route == null)
             {
@@ -393,7 +392,7 @@ namespace ViGo.Services
 
             if (routinesModel.Any())
             {
-                await IsValidRoutines(routinesModel.ToList(), route, 
+                await IsValidRoutines(routinesModel.ToList(), route,
                     checkForRoundTripRoutines: true, isUpdate: isUpdate, cancellationToken);
             }
 

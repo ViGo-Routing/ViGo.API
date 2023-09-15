@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
-using ViGo.Models.Events;
 using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
@@ -46,21 +45,21 @@ namespace ViGo.Services
             notifications = notifications.ToPagedEnumerable(pagination.PageNumber,
                 pagination.PageSize).Data;
 
-            IEnumerable<Guid> eventIds = notifications.Where(n => n.EventId.HasValue)
-                .Select(n => n.EventId.Value).Distinct();
-            IEnumerable<Event> events = await work.Events.GetAllAsync(query => query.Where(
-                e => eventIds.Contains(e.Id)), cancellationToken: cancellationToken);
+            //IEnumerable<Guid> eventIds = notifications.Where(n => n.EventId.HasValue)
+            //    .Select(n => n.EventId.Value).Distinct();
+            //IEnumerable<Event> events = await work.Events.GetAllAsync(query => query.Where(
+            //    e => eventIds.Contains(e.Id)), cancellationToken: cancellationToken);
 
             IList<NotificationViewModel> models = new List<NotificationViewModel>();
             foreach (Domain.Notification notification in notifications)
             {
-                EventViewModel? eventModel = null;
-                if (notification.EventId.HasValue)
-                {
-                    Event notiEvent = events.SingleOrDefault(e => e.Id.Equals(notification.EventId.Value));
-                    eventModel = new EventViewModel(notiEvent);
-                }
-                models.Add(new NotificationViewModel(notification, eventModel));
+                //EventViewModel? eventModel = null;
+                //if (notification.EventId.HasValue)
+                //{
+                //    Event notiEvent = events.SingleOrDefault(e => e.Id.Equals(notification.EventId.Value));
+                //    eventModel = new EventViewModel(notiEvent);
+                //}
+                models.Add(new NotificationViewModel(notification));
             }
 
             return models.ToPagedEnumerable(pagination.PageNumber,
@@ -97,20 +96,20 @@ namespace ViGo.Services
             }
 
             UserViewModel? notiUser = null;
-            EventViewModel? notiEvent = null;
+            //EventViewModel? notiEvent = null;
 
             if (notification.UserId.HasValue)
             {
                 User user = await work.Users.GetAsync(notification.UserId.Value, cancellationToken: cancellationToken);
                 notiUser = new UserViewModel(user);
             }
-            if (notification.EventId.HasValue)
-            {
-                Event ev = await work.Events.GetAsync(notification.EventId.Value, cancellationToken: cancellationToken);
-                notiEvent = new EventViewModel(ev);
-            }
+            //if (notification.EventId.HasValue)
+            //{
+            //    Event ev = await work.Events.GetAsync(notification.EventId.Value, cancellationToken: cancellationToken);
+            //    notiEvent = new EventViewModel(ev);
+            //}
 
-            NotificationViewModel model = new NotificationViewModel(notification, notiEvent, notiUser);
+            NotificationViewModel model = new NotificationViewModel(notification, notiUser);
             return model;
         }
 
@@ -180,14 +179,14 @@ namespace ViGo.Services
                     throw new ApplicationException("Thông tin người dùng không hợp lệ!!");
                 }
             }
-            if (model.EventId.HasValue)
-            {
-                Event? checkEvent = await work.Events.GetAsync(model.EventId.Value, cancellationToken: cancellationToken);
-                if (checkEvent is null)
-                {
-                    throw new ApplicationException("Thông tin sự kiện không hợp lệ!!");
-                }
-            }
+            //if (model.EventId.HasValue)
+            //{
+            //    Event? checkEvent = await work.Events.GetAsync(model.EventId.Value, cancellationToken: cancellationToken);
+            //    if (checkEvent is null)
+            //    {
+            //        throw new ApplicationException("Thông tin sự kiện không hợp lệ!!");
+            //    }
+            //}
 
             Domain.Notification notification = new Domain.Notification
             {
@@ -195,7 +194,7 @@ namespace ViGo.Services
                 Description = model.Description,
                 Type = model.Type,
                 UserId = model.UserId,
-                EventId = model.EventId,
+                //EventId = model.EventId,
                 Status = NotificationStatus.ACTIVE,
             };
             await work.Notifications.InsertAsync(notification, cancellationToken: cancellationToken);
@@ -234,7 +233,7 @@ namespace ViGo.Services
                     Description = model.Description,
                     Type = model.Type,
                     UserId = model.UserId,
-                    EventId = model.EventId,
+                    //EventId = model.EventId,
                     Status = NotificationStatus.ACTIVE,
                     CreatedBy = model.UserId.Value,
                     UpdatedBy = model.UserId.Value
@@ -265,7 +264,8 @@ namespace ViGo.Services
 
                     }
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 throw;
             }

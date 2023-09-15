@@ -109,7 +109,7 @@ namespace ViGo.Models.WalletTransactions
         public IEnumerable<WalletTransactionViewModel> Transactions { get; set; }
         public double TotalAmount { get; set; }
 
-        public BookingDetailTransactions(Guid bookingDetailId, 
+        public BookingDetailTransactions(Guid bookingDetailId,
             IEnumerable<WalletTransactionViewModel> transactions,
             double totalAmount)
         {

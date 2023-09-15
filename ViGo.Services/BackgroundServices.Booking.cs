@@ -668,7 +668,8 @@ namespace ViGo.Services
                 }
 
                 _logger.LogInformation("====== DONE TASK - SEND NOTIFICATION FOR NEW TRIPS ======");
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "An error has occured: {0}", ex.GeneratorErrorMessage());
             }
