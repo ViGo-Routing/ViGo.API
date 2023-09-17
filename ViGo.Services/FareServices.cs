@@ -105,7 +105,8 @@ namespace ViGo.Services
                 int policyCount = fareCalculationModel.FarePolicies.Count;
                 double subDistance = fareModel.Distance - fareCalculationModel.MinimumBaseDistance;
 
-                int policyDistanceIndex = PolicyDistanceFindIndex(fareModel.Distance, fareCalculationModel.MinimumBaseDistance, fareCalculationModel.FarePolicies);
+                int policyDistanceIndex = PolicyDistanceFindIndex(fareModel.Distance, 
+                    fareCalculationModel.MinimumBaseDistance, fareCalculationModel.FarePolicies);
                 if (policyDistanceIndex < 0)
                 {
                     throw new ApplicationException("Thông tin khoảng cách và giá tiền không hợp lệ!");
@@ -257,37 +258,98 @@ namespace ViGo.Services
             //responseModel.FinalFare += responseModel.AdditionalFare;
 
             // Discount on Total Number of Tickets
-            Setting? settingTotalTicket = null;
-            if (fareModel.TotalNumberOfTickets >= 50)
+            //Setting? settingTotalTicket = null;
+            //if (fareModel.TotalNumberOfTickets >= 50)
+            //{
+            //    settingTotalTicket = await work.Settings.GetAsync(
+            //                s => s.Key.Equals(SettingKeys.TicketsDiscount_50_Key),
+            //                cancellationToken: cancellationToken);
+            //}
+            //else if (fareModel.TotalNumberOfTickets >= 25)
+            //{
+            //    settingTotalTicket = await work.Settings.GetAsync(
+            //                s => s.Key.Equals(SettingKeys.TicketsDiscount_25_Key),
+            //                cancellationToken: cancellationToken);
+            //}
+            //else if (fareModel.TotalNumberOfTickets >= 10)
+            //{
+            //    settingTotalTicket = await work.Settings.GetAsync(
+            //                s => s.Key.Equals(SettingKeys.TicketsDiscount_10_Key),
+            //                cancellationToken: cancellationToken);
+            //}
+            //if (settingTotalTicket != null)
+            //{
+            //    double discountPercent = double.Parse(settingTotalTicket.Value);
+            //    responseModel.NumberTicketsDiscount = FareUtilities.RoundToThousands(
+            //        responseModel.OriginalFare * discountPercent);
+
+            //    //responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
+
+            //    if (fareModel.TripType == BookingType.ROUND_TRIP)
+            //    {
+            //        responseModel.RoundTripNumberTicketsDiscount = FareUtilities.RoundToThousands(
+            //            responseModel.RoundTripOriginalFare * discountPercent);
+            //    }
+            //}
+            // Discount on routine type
+            //if (fareModel.)
+            Setting? discountRoutineSetting = null;
+            if (fareModel.RoutineType == RoutineType.WEEKLY)
             {
-                settingTotalTicket = await work.Settings.GetAsync(
-                            s => s.Key.Equals(SettingKeys.TicketsDiscount_50_Key),
+                if (fareModel.EachWeekTripsCount >= 4 
+                    && fareModel.TotalNumberOfTickets > fareModel.EachWeekTripsCount)
+                {
+                    if (fareModel.TotalFrequencyCount >= 2)
+                    {
+                        discountRoutineSetting = await work.Settings
+                            .GetAsync(s => s.Key.Equals(SettingKeys.WeeklyTicketsDiscount_2_Key),
                             cancellationToken: cancellationToken);
-            }
-            else if (fareModel.TotalNumberOfTickets >= 25)
-            {
-                settingTotalTicket = await work.Settings.GetAsync(
-                            s => s.Key.Equals(SettingKeys.TicketsDiscount_25_Key),
+                    }
+                    else if (fareModel.TotalFrequencyCount >= 5)
+                    {
+                        discountRoutineSetting = await work.Settings
+                            .GetAsync(s => s.Key.Equals(SettingKeys.WeeklyTicketsDiscount_5_Key),
                             cancellationToken: cancellationToken);
-            }
-            else if (fareModel.TotalNumberOfTickets >= 10)
+                    }
+                }
+                
+            } else if (fareModel.RoutineType == RoutineType.MONTHLY)
             {
-                settingTotalTicket = await work.Settings.GetAsync(
-                            s => s.Key.Equals(SettingKeys.TicketsDiscount_10_Key),
+                if (fareModel.EachWeekTripsCount >= 4
+                    && fareModel.TotalNumberOfTickets > fareModel.EachWeekTripsCount)
+                {
+                    if (fareModel.TotalFrequencyCount >= 2)
+                    {
+                        discountRoutineSetting = await work.Settings
+                            .GetAsync(s => s.Key.Equals(SettingKeys.MonthlyTicketsDiscount_2_Key),
                             cancellationToken: cancellationToken);
+                    }
+                    else if (fareModel.TotalFrequencyCount >= 4)
+                    {
+                        discountRoutineSetting = await work.Settings
+                            .GetAsync(s => s.Key.Equals(SettingKeys.MonthlyTicketsDiscount_4_Key),
+                            cancellationToken: cancellationToken);
+                    }
+                    else if (fareModel.TotalFrequencyCount >= 6)
+                    {
+                        discountRoutineSetting = await work.Settings
+                            .GetAsync(s => s.Key.Equals(SettingKeys.MonthlyTicketsDiscount_6_Key),
+                            cancellationToken: cancellationToken);
+                    }
+                }
             }
-            if (settingTotalTicket != null)
+            if (discountRoutineSetting != null)
             {
-                double discountPercent = double.Parse(settingTotalTicket.Value);
-                responseModel.NumberTicketsDiscount = FareUtilities.RoundToThousands(
-                    responseModel.OriginalFare * discountPercent);
+                double discountPercent = double.Parse(discountRoutineSetting.Value);
+                responseModel.RoutineTypeDiscount = 
+                    responseModel.OriginalFare * discountPercent;
 
                 //responseModel.FinalFare -= responseModel.NumberTicketsDiscount;
 
                 if (fareModel.TripType == BookingType.ROUND_TRIP)
                 {
-                    responseModel.RoundTripNumberTicketsDiscount = FareUtilities.RoundToThousands(
-                        responseModel.RoundTripOriginalFare * discountPercent);
+                    responseModel.RoundTripRoutineTypeDiscount = 
+                        responseModel.RoundTripOriginalFare * discountPercent;
                 }
             }
 
@@ -302,19 +364,25 @@ namespace ViGo.Services
                 totalTickets = fareModel.TotalNumberOfTickets / 2;
             }
 
-            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare) * totalTickets;
-            responseModel.NumberTicketsDiscount *= totalTickets;
-            responseModel.AdditionalFare *= totalTickets;
-            responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare - responseModel.NumberTicketsDiscount;
+            responseModel.OriginalFare = FareUtilities.RoundToThousands(responseModel.OriginalFare  * totalTickets);
+            responseModel.NumberTicketsDiscount = FareUtilities.RoundToThousands(responseModel.NumberTicketsDiscount * totalTickets);
+            responseModel.RoutineTypeDiscount = FareUtilities.RoundToThousands(responseModel.RoutineTypeDiscount * totalTickets);
+            responseModel.AdditionalFare = FareUtilities.RoundToThousands(responseModel.AdditionalFare * totalTickets);
+            responseModel.FinalFare = responseModel.OriginalFare + responseModel.AdditionalFare 
+                - responseModel.NumberTicketsDiscount
+                - responseModel.RoutineTypeDiscount;
 
             if (fareModel.TripType == BookingType.ROUND_TRIP)
             {
                 responseModel.RoundTripOriginalFare = FareUtilities.RoundToThousands(
-                    responseModel.RoundTripOriginalFare) * totalTickets;
-                responseModel.RoundTripNumberTicketsDiscount *= totalTickets;
-                responseModel.RoundTripAdditionalFare *= totalTickets;
+                    responseModel.RoundTripOriginalFare * totalTickets);
+                responseModel.RoundTripNumberTicketsDiscount = FareUtilities.RoundToThousands(responseModel.RoundTripNumberTicketsDiscount * totalTickets);
+                responseModel.RoundTripRoutineTypeDiscount = FareUtilities.RoundToThousands(responseModel.RoundTripRoutineTypeDiscount * totalTickets);
+                responseModel.RoundTripAdditionalFare = FareUtilities.RoundToThousands(responseModel.RoundTripAdditionalFare * totalTickets);
                 responseModel.RoundTripFinalFare = responseModel.RoundTripOriginalFare
-                    + responseModel.RoundTripAdditionalFare - responseModel.RoundTripNumberTicketsDiscount;
+                    + responseModel.RoundTripAdditionalFare 
+                    - responseModel.RoundTripNumberTicketsDiscount
+                    - responseModel.RoundTripRoutineTypeDiscount;
             }
 
             //responseModel.FinalFare = FareUtilities.RoundToThousands(responseModel.FinalFare);

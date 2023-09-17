@@ -9,7 +9,9 @@ namespace ViGo.Models.Fares
         public double Duration { get; set; }
         public double Distance { get; set; }
         public int TotalNumberOfTickets { get; set; }
-        public RoutineType? RoutineType { get; set; }
+        public RoutineType RoutineType { get; set; }
+        public int EachWeekTripsCount { get; set; }
+        public int TotalFrequencyCount { get; set; }
         public BookingType TripType { get; set; } = BookingType.ONE_WAY;
         public TimeOnly? RoundTripBeginTime { get; set; } = null;
     }
@@ -20,11 +22,12 @@ namespace ViGo.Models.Fares
         public double AdditionalFare { get; set; }
         public double FinalFare { get; set; }
         public double NumberTicketsDiscount { get; set; }
+        public double RoutineTypeDiscount { get; set; }
 
         public double RoundTripOriginalFare { get; set; }
         public double RoundTripAdditionalFare { get; set; }
         public double RoundTripFinalFare { get; set; }
         public double RoundTripNumberTicketsDiscount { get; set; }
-        public double RoutineTypeDiscount { get; set; }
+        public double RoundTripRoutineTypeDiscount { get; set; }
     }
 }
