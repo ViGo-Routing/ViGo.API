@@ -2430,6 +2430,7 @@ namespace ViGo.Services
             return schedules;
         }
 
+
         #region Private
         private async Task<IList<DriverTripsOfDate>> GetDriverSchedulesAsync(Guid driverId,
             CancellationToken cancellationToken)
