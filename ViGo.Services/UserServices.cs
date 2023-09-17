@@ -452,7 +452,7 @@ namespace ViGo.Services
 
                     if (checkEmail != null)
                     {
-                        throw new ApplicationException("Email đã có được sử dụng!");
+                        throw new ApplicationException("Email đã được sử dụng!");
                     }
 
                     currentUser.Email = userUpdate.Email;
