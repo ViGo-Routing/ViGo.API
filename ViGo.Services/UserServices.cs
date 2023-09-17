@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.DTOs.Users;
+using ViGo.Models.GoogleMaps;
 using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
 using ViGo.Models.QueryString.Pagination;
@@ -12,6 +13,7 @@ using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Utilities.Extensions;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -665,6 +667,113 @@ namespace ViGo.Services
             return null;
         }
 
+        public async Task<IEnumerable<UserViewModel>> GetAvailableDriversForTrip(
+            Guid bookingDetailId, CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new ApplicationException("Chuyến đi không tồn tại!!");
+            }
+
+            IEnumerable<User> drivers = await work.Users.GetAllAsync(query => query.Where(
+                u => u.Role == UserRole.DRIVER && u.Status == UserStatus.ACTIVE),
+                cancellationToken: cancellationToken);
+
+            IEnumerable<UserViewModel> availableDrivers = new List<UserViewModel>();
+            if (!drivers.Any())
+            {
+                return availableDrivers;
+            }
+
+                    // Has trips in day
+            Booking booking = await work.Bookings.GetAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
+            TimeSpan bookingDetailEndTime = DateTimeUtilities.CalculateTripEndTime(
+                        bookingDetail.CustomerDesiredPickupTime, booking.Duration);
+
+            Station startStation = await work.Stations.GetAsync(bookingDetail.StartStationId,
+                cancellationToken: cancellationToken);
+            Station endStation = await work.Stations.GetAsync(bookingDetail.EndStationId,
+                cancellationToken: cancellationToken);
+
+            DriverTrip addedTrip = new DriverTrip
+            {
+                Id = bookingDetail.Id,
+                BeginTime = bookingDetail.CustomerDesiredPickupTime,
+                EndTime = bookingDetailEndTime,
+                StartLocation = new GoogleMapPoint
+                {
+                    Latitude = startStation.Latitude,
+                    Longitude = startStation.Longitude
+                },
+                EndLocation = new GoogleMapPoint
+                {
+                    Latitude = endStation.Latitude,
+                    Longitude = endStation.Longitude
+                }
+            };
+
+            foreach (User driver in drivers)
+            {
+                DriverTripsOfDate driverTripsOfDate = await GetDriverSchedulesInDateAsync(
+                    driver.Id, bookingDetail.Date, cancellationToken);
+                if (driverTripsOfDate.Trips.Count == 0)
+                {
+                    // No trips
+                    // Driver is free to be assigned
+                    availableDrivers = availableDrivers.Append(new UserViewModel(driver));
+                } else
+                {
+                   
+                    IEnumerable<DriverTrip> addedTrips = driverTripsOfDate.Trips.Append(addedTrip)
+                        .OrderBy(t => t.BeginTime);
+                    LinkedList<DriverTrip> addedTripsAsLinkedList = new LinkedList<DriverTrip>(addedTrips);
+                    LinkedListNode<DriverTrip> addedTripAsNode = addedTripsAsLinkedList.Find(addedTrip);
+
+                    DriverTrip? previousTrip = addedTripAsNode.Previous?.Value;
+                    DriverTrip? nextTrip = addedTripAsNode.Next?.Value;
+
+                    try
+                    {
+                        if (previousTrip != null)
+                        {
+                            if (addedTripAsNode.Value.BeginTime <= previousTrip.EndTime)
+                            {
+                                // Invalid
+                                throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                    $"Bạn đang chọn chuyến đi có thời gian bắt đầu ({addedTripAsNode.Value.BeginTime}) " +
+                                    $"sớm hơn so với thời gian dự kiến bạn sẽ kết thúc một chuyến đi bạn đã chọn trước đó ({previousTrip.EndTime})");
+                            }
+                        }
+
+                        if (nextTrip != null)
+                        {
+                            // Has Next Trip
+                            if (addedTripAsNode.Value.EndTime >= nextTrip.BeginTime)
+                            {
+                                throw new ApplicationException($"Thời gian của chuyến đi bạn chọn không phù hợp với lịch trình của bạn! \n" +
+                                    $"Bạn đang chọn chuyến đi có thời gian kết thúc dự kiến ({addedTripAsNode.Value.EndTime}) " +
+                                    $"trễ hơn so với thời gian bạn phải bắt đầu một chuyến đi bạn đã chọn trước đó ({nextTrip.BeginTime})");
+                            }
+                        }
+
+                        // No exception thrown, driver is available
+                        availableDrivers = availableDrivers.Append(new UserViewModel(driver));
+
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Invalid Driver Schedules: {0}", ex.GeneratorErrorMessage());
+                    }
+                    
+                }
+            }
+
+            return availableDrivers;
+        }
 
         #region Private
         private IEnumerable<User> FilterUsers(IEnumerable<User> users,
@@ -694,6 +803,75 @@ namespace ViGo.Services
             }
 
             return users;
+        }
+
+        private async Task<DriverTripsOfDate> GetDriverSchedulesInDateAsync(Guid driverId,
+            DateTime date,
+            CancellationToken cancellationToken)
+        {
+            // Get driver current schedules
+            //IList<DriverTripsOfDate> driverTrips = new List<DriverTripsOfDate>();
+            //DateTime dateTime = date.ToDateTime(TimeOnly.MinValue);
+
+            IEnumerable<BookingDetail> driverBookingDetails = await
+                work.BookingDetails.GetAllAsync(query => query.Where(
+                    bd => bd.DriverId.HasValue &&
+                        bd.DriverId.Value.Equals(driverId)
+                        && bd.Status != BookingDetailStatus.CANCELLED
+                        && bd.Date == date), cancellationToken: cancellationToken);
+
+            if (driverBookingDetails.Any())
+            {
+                IEnumerable<Guid> driverBookingIds = driverBookingDetails.Select(d => d.BookingId).Distinct();
+                IEnumerable<Booking> driverBookings = await work.Bookings.GetAllAsync(
+                    query => query.Where(b => driverBookingIds.Contains(b.Id)), cancellationToken: cancellationToken);
+
+                IEnumerable<Guid> driverStationIds = driverBookingDetails.Select(
+                    b => b.StartStationId).Concat(driverBookingDetails.Select(b => b.EndStationId))
+                    .Distinct();
+                IEnumerable<Station> driverStations = await work.Stations.GetAllAsync(
+                    query => query.Where(s => driverStationIds.Contains(s.Id)), includeDeleted: true,
+                    cancellationToken: cancellationToken);
+
+                IEnumerable<DriverTrip> trips = from detail in driverBookingDetails
+                                                join booking in driverBookings
+                                                    on detail.BookingId equals booking.Id
+                                                join startStation in driverStations
+                                                    on detail.StartStationId equals startStation.Id
+                                                join endStation in driverStations
+                                                    on detail.EndStationId equals endStation.Id
+                                                select new DriverTrip()
+                                                {
+                                                    Id = detail.Id,
+                                                    BeginTime = detail.CustomerDesiredPickupTime,
+                                                    EndTime = DateTimeUtilities.CalculateTripEndTime(detail.CustomerDesiredPickupTime, booking.Duration),
+                                                    StartLocation = new GoogleMapPoint()
+                                                    {
+                                                        Latitude = startStation.Latitude,
+                                                        Longitude = startStation.Longitude
+                                                    },
+                                                    EndLocation = new GoogleMapPoint()
+                                                    {
+                                                        Latitude = endStation.Latitude,
+                                                        Longitude = endStation.Longitude
+                                                    }
+                                                };
+
+                trips = trips.OrderBy(t => t.BeginTime);
+
+                DriverTripsOfDate tripsOfDate = new DriverTripsOfDate
+                {
+                    Date = DateOnly.FromDateTime(date),
+                    Trips = trips.ToList()
+                };
+                return tripsOfDate;
+                   }
+            return new DriverTripsOfDate
+            {
+                Date = DateOnly.FromDateTime(date),
+                Trips = new List<DriverTrip>()
+            };
+
         }
         #endregion
 

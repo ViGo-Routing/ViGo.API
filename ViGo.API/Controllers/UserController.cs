@@ -338,5 +338,32 @@ namespace ViGo.API.Controllers
 
             return StatusCode(200, analysisModel);
         }
+
+        /// <summary>
+        /// Get available drivers for a trip
+        /// </summary>
+        /// <remarks>Admin only
+        /// </remarks>
+        /// <returns>
+        /// List of available drivers
+        /// </returns>
+        /// <response code="400">Some information has gone wrong</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="200">Get list of available drivers successfully</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("Available/{bookingDetailId}")]
+        [ProducesResponseType(typeof(IEnumerable<UserViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetAvailableDrivers(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            IEnumerable<UserViewModel> drivers = await userServices.GetAvailableDriversForTrip(bookingDetailId,
+                cancellationToken);
+
+            return StatusCode(200, drivers);
+        }
     }
 }
