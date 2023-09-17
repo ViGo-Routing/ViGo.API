@@ -815,7 +815,7 @@ namespace ViGo.Services
 
                 foreach (BookingDetail detail in currentDetails)
                 {
-                    await work.BookingDetails.DeleteAsync(detail, false,
+                    await work.BookingDetails.DeleteAsync(detail, isSoftDelete: true,
                          cancellationToken);
                 }
 

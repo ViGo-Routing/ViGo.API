@@ -11,7 +11,7 @@ namespace ViGo.Domain
     }
 
     public partial class BookingDetail
-        : BaseEntity, ITrackingCreated, ITrackingUpdated
+        : BaseEntity, ITrackingCreated, ITrackingUpdated, ISoftDeletedEntity
     {
 
     }

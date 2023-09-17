@@ -156,7 +156,7 @@ namespace ViGo.Repository
                 .SingleOrDefaultAsync(predicate, cancellationToken);
             if (entity != null)
             {
-                await DeleteAsync(entity, isSoftDelete);
+                await DeleteAsync(entity, isSoftDelete, cancellationToken: cancellationToken);
             }
         }
 

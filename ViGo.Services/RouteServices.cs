@@ -693,12 +693,12 @@ namespace ViGo.Services
                         foreach (var routine in routines)
                         {
                             await work.RouteRoutines.DeleteAsync(routine,
-                                isSoftDelete: false,
+                                isSoftDelete: true,
                                 cancellationToken);
                         }
                     }
                     await work.Routes.DeleteAsync(roundTrip,
-                        isSoftDelete: false,
+                        isSoftDelete: true,
                         cancellationToken);
                 }
                 else if (updateDto.Type == RouteType.ROUND_TRIP)
