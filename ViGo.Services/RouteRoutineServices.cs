@@ -188,7 +188,7 @@ namespace ViGo.Services
                         await work.RouteRoutines.DetachAsync(oldRoutine);
 
                         //routineToDelete.Add(oldRoutine.Id);
-                        await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: false, cancellationToken: cancellationToken);
+                        await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: true, cancellationToken: cancellationToken);
                     }
                     else
                     {

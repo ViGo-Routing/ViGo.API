@@ -41,6 +41,7 @@ namespace ViGo.Models.BookingDetails
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
+        public bool IsDeleted { get; set; }
 
         public BookingDetailViewModel(BookingDetail bookingDetail)
         {
@@ -67,6 +68,7 @@ namespace ViGo.Models.BookingDetails
             CanceledUserId = bookingDetail.CanceledUserId;
             //Driver = driver;
             Type = bookingDetail.Type;
+            IsDeleted = bookingDetail.IsDeleted;
         }
 
         public BookingDetailViewModel(BookingDetail bookingDetail,

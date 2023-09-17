@@ -39,6 +39,7 @@ namespace ViGo.Domain
         public Guid CreatedBy { get; set; }
         public DateTime UpdatedTime { get; set; }
         public Guid UpdatedBy { get; set; }
+        public bool IsDeleted { get; set; }
 
         [JsonIgnore]
         //[System.Text.Json.Serialization.JsonIgnore]
