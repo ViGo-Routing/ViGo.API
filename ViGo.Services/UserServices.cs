@@ -445,17 +445,20 @@ namespace ViGo.Services
                 {
                     userUpdate.Email.IsEmail("Email không hợp lệ!");
 
-                    User? checkEmail = (await work.Users
+                    if (!userUpdate.Email.Equals(currentUser.Email))
+                    {
+                        User? checkEmail = (await work.Users
                         .GetAllAsync(query => query.Where(
                             u => !string.IsNullOrEmpty(u.Email)
                              && u.Email.Equals(userUpdate.Email)))).FirstOrDefault();
 
-                    if (checkEmail != null)
-                    {
-                        throw new ApplicationException("Email đã được sử dụng!");
-                    }
+                        if (checkEmail != null)
+                        {
+                            throw new ApplicationException("Email đã được sử dụng!");
+                        }
 
-                    currentUser.Email = userUpdate.Email;
+                        currentUser.Email = userUpdate.Email;
+                    }
                 }
                 if (userUpdate.Password != null
                     && !string.IsNullOrEmpty(userUpdate.Password)
