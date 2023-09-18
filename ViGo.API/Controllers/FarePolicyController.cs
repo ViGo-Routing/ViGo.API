@@ -73,7 +73,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">List of fare policies are fetched successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("Fare/{fareId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(IEnumerable<FarePolicyViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]

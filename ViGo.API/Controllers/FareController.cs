@@ -62,7 +62,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get List of fares successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(IEnumerable<FareViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -96,7 +96,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get fare successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("{fareId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(FareViewModel), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
@@ -125,7 +125,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get fare successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("VehicleType/{vehicleTypeId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(FareViewModel), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]

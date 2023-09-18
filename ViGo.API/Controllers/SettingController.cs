@@ -34,7 +34,7 @@ namespace ViGo.API.Controllers
         /// <response code="200">Get List of settings successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,CUSTOMER")]
         [ProducesResponseType(typeof(IEnumerable<SettingViewModel>), 200)]
         [ProducesResponseType(403)]
         [ProducesResponseType(401)]
