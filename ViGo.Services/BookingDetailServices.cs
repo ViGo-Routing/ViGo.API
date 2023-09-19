@@ -1513,7 +1513,6 @@ namespace ViGo.Services
         }
 
         public async Task<(BookingDetail, Guid?, bool, bool, Guid?)> CancelBookingDetailAsync(Guid bookingDetailId,
-
             CancellationToken cancellationToken)
         {
             BookingDetail? bookingDetail = await work.BookingDetails
@@ -1694,8 +1693,8 @@ namespace ViGo.Services
                     if (bookingDetail.DriverId.HasValue)
                     {
                         Wallet driverWallet = await work.Wallets.GetAsync(
-                        w => w.UserId.Equals(bookingDetail.DriverId.Value),
-                        cancellationToken: cancellationToken);
+                            w => w.UserId.Equals(bookingDetail.DriverId.Value),
+                            cancellationToken: cancellationToken);
 
                         if (chargeFee == 1)
                         {
@@ -1706,10 +1705,14 @@ namespace ViGo.Services
                         }
                         else
                         {
-                            WalletTransaction driverPickDetailTransaction = await work.WalletTransactions
-                                .GetAsync(t => t.WalletId.Equals(driverWallet.Id)
+                            IEnumerable<WalletTransaction> driverPickDetailTransactions = await work.WalletTransactions
+                                .GetAllAsync(query => query.Where(t => t.WalletId.Equals(driverWallet.Id)
                                 && t.BookingDetailId.Equals(bookingDetail.Id)
-                                && t.Type == WalletTransactionType.TRIP_PICK, cancellationToken: cancellationToken);
+                                && t.Type == WalletTransactionType.TRIP_PICK), cancellationToken: cancellationToken);
+
+                            driverPickDetailTransactions = driverPickDetailTransactions.OrderByDescending(
+                                t => t.CreatedTime);
+                            WalletTransaction driverPickDetailTransaction = driverPickDetailTransactions.First();
 
                             double pickFee = driverPickDetailTransaction.Amount;
                             WalletTransaction driverPickRefundTransaction = new WalletTransaction()
