@@ -490,7 +490,8 @@ namespace ViGo.Services
                 }
                 if (userUpdate.DateOfBirth != null)
                 {
-                    userUpdate.DateOfBirth.Value.DateTimeValidate(maximum: DateTimeUtilities.GetDateTimeVnNow(), maxErrorMessage: "Ngày sinh không hợp lệ!");
+                    userUpdate.DateOfBirth.Value.DateTimeValidate(maximum: 
+                        DateTimeUtilities.GetDateTimeVnNow().AddYears(-12), maxErrorMessage: "Ngày sinh không hợp lệ! Người dùng phải ít nhất 12 tuổi!");
                     currentUser.DateOfBirth = userUpdate.DateOfBirth;
                 }
                 if (userUpdate.AvatarUrl != null)
