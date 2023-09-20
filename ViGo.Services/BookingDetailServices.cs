@@ -535,6 +535,18 @@ namespace ViGo.Services
                     //    throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
                     //}
                 }
+
+                IEnumerable<Report> reports = await work.Reports
+                    .GetAllAsync(query => query.Where(
+                        r => r.BookingDetailId.Equals(updateDto.BookingDetailId)
+                            && (r.Type == ReportType.BOOKER_NOT_COMING ||
+                             r.Type == ReportType.DRIVER_NOT_COMING)),
+                        cancellationToken: cancellationToken);
+
+                if (reports.Any())
+                {
+                    throw new ApplicationException("Chuyến đi đã bị báo cáo! Không thể cập nhật chuyến đi");
+                }
             }
 
             if (!bookingDetail.DriverId.HasValue)
