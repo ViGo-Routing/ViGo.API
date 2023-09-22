@@ -368,10 +368,10 @@ namespace ViGo.Services
 
         public async Task<UserViewModel?> GetUserByIdAsync(Guid id)
         {
-            if (!IdentityUtilities.IsAdmin())
-            {
-                id = IdentityUtilities.GetCurrentUserId();
-            }
+            //if (!IdentityUtilities.IsAdmin())
+            //{
+            //    id = IdentityUtilities.GetCurrentUserId();
+            //}
 
             User? user = await work.Users.GetAsync(id);
 
