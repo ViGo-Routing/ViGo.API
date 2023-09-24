@@ -85,6 +85,48 @@ namespace ViGo.Services
 
         }
 
+        public async Task<IPagedEnumerable<WalletTransactionViewModel>> GetSystemWalletTransactionsAsync(
+            PaginationParameter pagination,
+            HttpContext context, CancellationToken cancellationToken)
+        {
+            Wallet wallet = await work.Wallets.GetAsync(w => w.Type == WalletType.SYSTEM, 
+                cancellationToken: cancellationToken);
+            if (!IdentityUtilities.IsAdmin())
+            {
+                //if (!wallet.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                //{
+                    throw new AccessDeniedException("Bạn không thể thực hiện hành động này!!");
+                //}
+            }
+
+            IEnumerable<WalletTransaction> walletTransactions = await
+                work.WalletTransactions.GetAllAsync(
+                    query => query.Where(wt => wt.WalletId.Equals(wallet.Id)),
+                    cancellationToken: cancellationToken);
+
+            walletTransactions = walletTransactions.OrderBy(t => t.CreatedTime);
+
+            int totalRecords = walletTransactions.Count();
+            if (totalRecords == 0)
+            {
+                return (new List<WalletTransactionViewModel>()).ToPagedEnumerable(
+                    pagination.PageNumber, pagination.PageSize, totalRecords, context, true);
+            }
+
+            walletTransactions = walletTransactions.OrderByDescending(w => w.CreatedTime)
+                .ToPagedEnumerable(pagination.PageNumber, pagination.PageSize).Data;
+            
+            IEnumerable<WalletTransactionViewModel> walletTransactionViewModels 
+                = from walletTransaction in walletTransactions
+                        //join walletView in walletViewModels
+                        //on walletTransaction.WalletId equals walletView.Id
+                    select new WalletTransactionViewModel(walletTransaction/*, walletView*/);
+
+            return walletTransactionViewModels
+                .ToPagedEnumerable(pagination.PageNumber, pagination.PageSize, totalRecords, context);
+
+        }
+
         public async Task<WalletTransactionViewModel> GetTransactionAsync(Guid walletTransactionId,
             CancellationToken cancellationToken)
         {
