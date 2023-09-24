@@ -48,6 +48,32 @@ namespace ViGo.API.Controllers
         }
 
         /// <summary>
+        /// Get list of System Wallet Transactions
+        /// </summary>
+        /// <response code="401">Login failed</response>
+        /// <response code="400">Some information is invalid</response>
+        /// <response code="200">Get list of System Wallet Transactions successfully</response>
+        /// <response code="500">Server error</response>
+        [ProducesResponseType(typeof(IPagedEnumerable<WalletTransactionViewModel>), 200)]
+        [ProducesResponseType(401)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(500)]
+        [Authorize(Roles = "ADMIN")]
+        [HttpGet("System")]
+        public async Task<IActionResult> GetSystemWalletTransactionsAsync(
+            [FromQuery] PaginationParameter pagination, CancellationToken cancellationToken)
+        {
+            //if (pagination is null)
+            //{
+            //    pagination = PaginationParameter.Default;
+            //}
+            IPagedEnumerable<WalletTransactionViewModel> walletTransactions = await
+                walletTransactionServices.GetSystemWalletTransactionsAsync(
+                    pagination, HttpContext, cancellationToken);
+            return StatusCode(200, walletTransactions);
+        }
+
+        /// <summary>
         /// Get list of Wallet Transactions of a Booking Detail
         /// </summary>
         /// <response code="401">Login failed</response>
