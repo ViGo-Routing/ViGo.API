@@ -139,10 +139,10 @@ namespace ViGo.Services
             if (!IdentityUtilities.IsAdmin()
                 && !IdentityUtilities.IsStaff())
             {
-                if (!route.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
-                {
-                    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
-                }
+                //if (!route.UserId.Equals(IdentityUtilities.GetCurrentUserId()))
+                //{
+                //    throw new AccessDeniedException("Bạn không được phép thực hiện hành động này!");
+                //}
             }
 
             if (await HasDriver(route.Id, cancellationToken))
