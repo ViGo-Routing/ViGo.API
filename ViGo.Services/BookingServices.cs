@@ -542,10 +542,10 @@ namespace ViGo.Services
             //}
             DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
 
-            if ((model.StartDate - vnNow).TotalHours < 24)
-            {
-                throw new ApplicationException("Các hành trình phải được đặt trước ít nhất 24 tiếng trước so với ngày bắt đầu!");
-            }
+            //if ((model.StartDate - vnNow).TotalHours < 24)
+            //{
+            //    throw new ApplicationException("Các hành trình phải được đặt trước ít nhất 24 tiếng trước so với ngày bắt đầu!");
+            //}
 
             // All is valid
             Booking booking = new Booking()
