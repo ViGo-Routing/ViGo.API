@@ -4,6 +4,10 @@
     {
         public static readonly string UPCOMING_TRIP_NOTIFICATION_JOBKEY = "UpcomingTripNotification";
         public static readonly string UPCOMING_TRIP_NOTIFICATION_TRIGGER_ID = "UpcomingTripNotification_Trigger";
+        public static readonly string UPCOMING_TRIP_PENDING_ASSIGN_NOTIFICATION_JOBKEY = "UpcomingTripPendingAssignNotification";
+        public static readonly string UPCOMING_TRIP_PENDING_ASSIGN_NOTIFICATION_TRIGGER_ID = "UpcomingTripPendingAssignNotification_Trigger";
+        public static readonly string UPCOMING_TRIP_NO_DRIVER_NOTIFICATION_JOBKEY = "UpcomingTripNoDriverNotification";
+        public static readonly string UPCOMING_TRIP_NO_DRIVER_NOTIFICATION_TRIGGER_ID = "UpcomingTripNoDriverNotification_Trigger";
         public static readonly string CHECK_TRANSACTION_STATUS_JOBKEY = "CheckTransactionStatus";
         public static readonly string CHECK_TRANSACTION_STATUS_TRIGGER_ID = "CheckTransactionStatus_Trigger";
         public static readonly string RESET_WEEKLY_CANCEL_RATE_JOBKEY = "ResetWeeklyCancelRate";
