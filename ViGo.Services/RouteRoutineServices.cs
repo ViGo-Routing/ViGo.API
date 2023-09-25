@@ -408,10 +408,10 @@ namespace ViGo.Services
 
             DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
             startDateTime.DateTimeValidate(
-                minimum: vnNow,
-                //minimum: vnNow.AddHours(24),
-                minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
-                //minErrorMessage: $"Thời gian bắt đầu lịch trình phải trước ít nhất 24 tiếng (ngày: " +
+                //minimum: vnNow,
+                minimum: vnNow.AddHours(24),
+                //minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
+                minErrorMessage: $"Thời gian bắt đầu lịch trình phải trước ít nhất 24 tiếng (ngày: " +
                 $"{routine.RoutineDate.ToShortDateString()}, " +
                 $"giờ: {routine.PickupTime.ToShortTimeString()})"
                 //maximum: endDateTime,
