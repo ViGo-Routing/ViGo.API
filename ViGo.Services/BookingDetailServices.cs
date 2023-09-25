@@ -531,10 +531,10 @@ namespace ViGo.Services
                     }
 
                     // Constraint for starting trips
-                    //if ((updateDto.Time.Value - bookingDetail.PickUpDateTime()).TotalHours > 1.5)
-                    //{
-                    //    throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
-                    //}
+                    if ((updateDto.Time.Value - bookingDetail.PickUpDateTime()).TotalHours > 1.5)
+                    {
+                        throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
+                    }
                 }
 
                 IEnumerable<Report> reports = await work.Reports
