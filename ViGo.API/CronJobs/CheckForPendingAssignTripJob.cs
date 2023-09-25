@@ -1,18 +1,19 @@
 ﻿using Quartz;
-using ViGo.Repository;
 using ViGo.Repository.Core;
+using ViGo.Repository;
 using ViGo.Services;
 using ViGo.Utilities.CronJobs;
 using ViGo.Utilities.Extensions;
 
 namespace ViGo.API.CronJobs
 {
-    public class TripReminderJob : IJob
+    public class CheckForPendingAssignTripJob : IJob
     {
         private IServiceScopeFactory _serviceScopeFactory;
         private ILogger<ResetWeeklyCancelRateJob> _logger;
 
-        public TripReminderJob(IServiceScopeFactory serviceScopeFactory, ILogger<ResetWeeklyCancelRateJob> logger)
+        public CheckForPendingAssignTripJob(IServiceScopeFactory serviceScopeFactory,
+            ILogger<ResetWeeklyCancelRateJob> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
@@ -21,7 +22,7 @@ namespace ViGo.API.CronJobs
         public async Task Execute(IJobExecutionContext context)
         {
             _logger.LogInformation("========= BEGIN CRON JOBS =========");
-            _logger.LogInformation("========= Trip Reminder =========");
+            _logger.LogInformation("========= Trip Check for Pending Assign =========");
 
             try
             {
@@ -33,7 +34,7 @@ namespace ViGo.API.CronJobs
                     IUnitOfWork unitOfWork = new UnitOfWork(scope.ServiceProvider);
                     CronJobServices cronJobServices = new CronJobServices(unitOfWork, _logger);
 
-                    await cronJobServices.RemindForTripAsync(bookingDetailId, context.CancellationToken);
+                    await cronJobServices.CheckForDriverAssignedTripAsync(bookingDetailId, context.CancellationToken);
 
                 }
 
@@ -51,18 +52,16 @@ namespace ViGo.API.CronJobs
         }
     }
 
-
-
-    public static class TripReminderJobConfiguration
+    public static class CheckPendingAssignTripJobConfiguration
     {
-        public static IServiceCollectionQuartzConfigurator ConfigureTripReminderJob(
+        public static IServiceCollectionQuartzConfigurator ConfigurePendingTripJob(
             this IServiceCollectionQuartzConfigurator quartzConfigurator)
         {
-            JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+            JobKey pendingTripJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_PENDING_ASSIGN_NOTIFICATION_JOBKEY);
             quartzConfigurator.AddJob<TripReminderJob>(options =>
-                options.WithIdentity(tripReminderJobKey)
+                options.WithIdentity(pendingTripJobKey)
                     .StoreDurably()
-                    .WithDescription("Send notification to user about upcoming trip")
+                    .WithDescription("Send notification to user about pending assign trip")
             );
 
             return quartzConfigurator;
