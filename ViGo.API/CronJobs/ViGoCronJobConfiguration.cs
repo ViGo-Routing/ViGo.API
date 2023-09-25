@@ -32,6 +32,8 @@ namespace ViGo.API.CronJobs
                 if (!env.IsDevelopment())
                 {
                     q.ConfigureTripReminderJob();
+                    q.ConfigurePendingTripJob();
+                    q.ConfigureNoDriverTripJob();
 
                 }
 
