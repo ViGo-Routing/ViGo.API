@@ -98,6 +98,109 @@ namespace ViGo.Services
 
         }
 
+        public async Task CheckForDriverAssignedTripAsync(Guid bookingDetailId,
+            CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new Exception("Booking Detail does not exist, Id: " + bookingDetailId);
+            }
+
+            if (bookingDetail.Status != BookingDetailStatus.PENDING_ASSIGN
+                && bookingDetail.Status != BookingDetailStatus.ASSIGNED)
+            {
+                throw new Exception("Booking Detail Status is not valid! Id: " + bookingDetailId
+                    + "; Status: " + bookingDetail.Status.ToString());
+            }
+
+            if (bookingDetail.Status == BookingDetailStatus.PENDING_ASSIGN)
+            {
+                Booking booking = await work.Bookings
+                .GetAsync(bookingDetail.BookingId, cancellationToken: cancellationToken);
+
+                // Send notification to Customer
+                Guid customerId = booking.CustomerId;
+                User customer = await work.Users.GetAsync(customerId, cancellationToken: cancellationToken);
+                string? customerFcm = customer.FcmToken;
+
+                Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+                {
+                    NotificationCreateModel customerNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Title = "Chuyến đi chưa có tài xế",
+                        Description = $"ViGo sẽ cố gắng tìm tài xế thích hợp cho bạn sớm nhất có thể!\n" +
+                        $"Chuyến đi vào lúc {bookingDetail.CustomerDesiredPickupTime.ToString(@"hh\:mm")} " +
+                        $"ngày {bookingDetail.Date.ToString("dd/MM/yyyy")}",
+                        Type = NotificationType.SPECIFIC_USER
+                    };
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        customerNotification, customerFcm, dataToSend, cancellationToken);
+                }
+            }
+            
+        }
+
+        public async Task NotifyForNoDriverTripAsync(Guid bookingDetailId,
+           CancellationToken cancellationToken)
+        {
+            BookingDetail bookingDetail = await work.BookingDetails
+                .GetAsync(bookingDetailId, cancellationToken: cancellationToken);
+            if (bookingDetail is null)
+            {
+                throw new Exception("Booking Detail does not exist, Id: " + bookingDetailId);
+            }
+
+            if (bookingDetail.Status != BookingDetailStatus.PENDING_ASSIGN
+                && bookingDetail.Status != BookingDetailStatus.ASSIGNED)
+            {
+                throw new Exception("Booking Detail Status is not valid! Id: " + bookingDetailId
+                    + "; Status: " + bookingDetail.Status.ToString());
+            }
+
+            if (bookingDetail.Status == BookingDetailStatus.PENDING_ASSIGN)
+            {
+                Booking booking = await work.Bookings
+                .GetAsync(bookingDetail.BookingId, cancellationToken: cancellationToken);
+
+                // Send notification to Customer
+                Guid customerId = booking.CustomerId;
+                User customer = await work.Users.GetAsync(customerId, cancellationToken: cancellationToken);
+                string? customerFcm = customer.FcmToken;
+
+                Dictionary<string, string> dataToSend = new Dictionary<string, string>()
+            {
+                {"action", NotificationAction.BookingDetail },
+                { "bookingDetailId", bookingDetail.Id.ToString() },
+            };
+
+                if (customerFcm != null && !string.IsNullOrEmpty(customerFcm))
+                {
+                    NotificationCreateModel customerNotification = new NotificationCreateModel()
+                    {
+                        UserId = customer.Id,
+                        Title = "Chuyến đi chưa có tài xế",
+                        Description = $"Rất tiếc chuyến đi của bạn vẫn chưa có tài xế! Các QTV sẽ cố gắng tìm " +
+                        $"tài xế thích hợp cho bạn sớm nhất có thể nhé!\n" +
+                        $"Chuyến đi vào lúc {bookingDetail.CustomerDesiredPickupTime.ToString(@"hh\:mm")} " +
+                        $"ngày {bookingDetail.Date.ToString("dd/MM/yyyy")}",
+                        Type = NotificationType.SPECIFIC_USER
+                    };
+                    await notificationServices.CreateFirebaseNotificationAsync(
+                        customerNotification, customerFcm, dataToSend, cancellationToken);
+                }
+            }
+
+        }
+
         public async Task CheckForTopupTransactionStatus(Guid transactionId,
             string clientIpAddress, IBackgroundTaskQueue backgroundTaskQueue,
             IServiceScopeFactory serviceScopeFactory,

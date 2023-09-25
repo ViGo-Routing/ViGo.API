@@ -517,13 +517,17 @@ namespace ViGo.Services
                 }
 
                 JobKey tripReminderJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NOTIFICATION_JOBKEY);
+                JobKey pendingAssignTripJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_PENDING_ASSIGN_NOTIFICATION_JOBKEY);
+                JobKey noDriverAssignTripJobKey = new JobKey(CronJobIdentities.UPCOMING_TRIP_NO_DRIVER_NOTIFICATION_JOBKEY);
 
                 foreach (BookingDetail bookingDetail in bookingDetails)
                 {
                     _logger.LogInformation("Trying to schedule for BookingDetail: ID: " +
                         bookingDetail.Id + "; Pickup Time: " + bookingDetail.PickUpDateTimeString());
 
+                    DateTimeOffset pendingAssignDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-4);
                     DateTimeOffset scheduleDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-2);
+                    DateTimeOffset noDriverDatetimeOffset = bookingDetail.PickUpDateTimeOffset().AddHours(-1);
 
                     ITrigger trigger = TriggerBuilder.Create()
                         .ForJob(tripReminderJobKey)
@@ -534,6 +538,26 @@ namespace ViGo.Services
                         .Build();
 
                     await scheduler.ScheduleJob(trigger);
+
+                    ITrigger pendingTrigger = TriggerBuilder.Create()
+                        .ForJob(pendingAssignTripJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_PENDING_ASSIGN_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about pending assign trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(pendingAssignDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(pendingTrigger);
+
+                    ITrigger noDriverTrigger = TriggerBuilder.Create()
+                        .ForJob(noDriverAssignTripJobKey)
+                        .WithIdentity(CronJobIdentities.UPCOMING_TRIP_NO_DRIVER_NOTIFICATION_TRIGGER_ID + "_" + bookingDetail.Id)
+                        .WithDescription("Send notification to user about no driver trip")
+                        .UsingJobData(CronJobIdentities.BOOKING_DETAIL_ID_JOB_DATA, bookingDetail.Id)
+                        .StartAt(noDriverDatetimeOffset)
+                        .Build();
+
+                    await scheduler.ScheduleJob(noDriverTrigger);
 
                     _logger.LogInformation("Scheduled for BookingDetail: ID: " +
                         bookingDetail.Id + "; Schedule Time: " + scheduleDatetimeOffset);
