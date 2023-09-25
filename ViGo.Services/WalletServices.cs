@@ -244,6 +244,7 @@ namespace ViGo.Services
                     {
                         BookingDetail bookingDetail = await work.BookingDetails
                             .GetAsync(cancel.BookingDetailId.Value,
+                            includeDeleted: true,
                             cancellationToken: cancellationToken);
                         cancelRefundProfit += bookingDetail.Price.Value - cancel.Amount;
                     }
