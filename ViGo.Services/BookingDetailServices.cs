@@ -547,7 +547,7 @@ namespace ViGo.Services
                         throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước" + maxStartTime + " tiếng! Vui lòng thử lại sau.");
 
                     }
-
+                }
                     IEnumerable<Report> reports = await work.Reports
                     .GetAllAsync(query => query.Where(
                         r => r.BookingDetailId.Equals(updateDto.BookingDetailId)
