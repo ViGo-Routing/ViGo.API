@@ -87,7 +87,7 @@ namespace ViGo.Services
             IEnumerable<RouteRoutine> currentRoutines = await work.RouteRoutines
                 .GetAllAsync(query => query.Where(
                     r => r.RouteId.Equals(model.RouteId)), cancellationToken: cancellationToken);
-            if (currentRoutines.Any())
+            if (currentRoutines.Any() && (await HasBooking(model.RouteId, cancellationToken) != null))
             {
                 throw new ApplicationException("Tuyến đường này đã được thiết lập lịch trình từ trước! " +
                     "Vui lòng dùng tính năng cập nhật lịch trình!");
@@ -99,6 +99,35 @@ namespace ViGo.Services
             }
 
             await IsValidRoutines(model.RouteRoutines, route, cancellationToken: cancellationToken);
+
+            if (currentRoutines.Any())
+            {
+                currentRoutines = currentRoutines.OrderBy(r => r.RoutineDate)
+                .ThenBy(r => r.PickupTime);
+                //IList<RouteRoutineListItemModel> newRoutines = new List<RouteRoutineListItemModel>();
+
+                IList<Guid> routineToDelete = new List<Guid>();
+                foreach (RouteRoutine oldRoutine in currentRoutines)
+                {
+                    RouteRoutineListItemModel routineModel = new RouteRoutineListItemModel(oldRoutine);
+                    if (!model.RouteRoutines.Contains(routineModel))
+                    {
+                        // New Routine does not exist in the database
+                        // Need to check for validity and need to delete
+                        //newRoutines.Add(routineModel);
+
+                        await work.RouteRoutines.DetachAsync(oldRoutine);
+
+                        //routineToDelete.Add(oldRoutine.Id);
+                        await work.RouteRoutines.DeleteAsync(oldRoutine, isSoftDelete: true, cancellationToken: cancellationToken);
+                    }
+                    else
+                    {
+                        model.RouteRoutines.Remove(routineModel);
+                    }
+                }
+            }
+
             IList<RouteRoutine> routeRoutines =
                 (from routine in model.RouteRoutines
                  select new RouteRoutine
@@ -108,6 +137,7 @@ namespace ViGo.Services
                      PickupTime = routine.PickupTime.ToTimeSpan(),
                      Status = RouteRoutineStatus.ACTIVE
                  }).ToList();
+
             await work.RouteRoutines.InsertAsync(routeRoutines, cancellationToken: cancellationToken);
             await work.SaveChangesAsync(cancellationToken);
             routeRoutines = routeRoutines.OrderBy(r => r.RoutineDate)
@@ -526,16 +556,16 @@ namespace ViGo.Services
                             }
                             DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
                             DateTime roundTripPickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)).AddMinutes(30);
+                                .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            if (pickupDateTime > roundTripPickupDateTime)
-                            {
-                                // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
-                                    $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
-                                    $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
-                            }
+                            //if (pickupDateTime > roundTripPickupDateTime)
+                            //{
+                            //    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
+                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                            //        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
+                            //        $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
+                            //        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
+                            //}
                             if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
                             {
                                 throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
@@ -600,16 +630,16 @@ namespace ViGo.Services
 
                             DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
                             DateTime mainRoutePickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)).AddMinutes(30);
+                                .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            if (pickupDateTime < mainRoutePickupDateTime)
-                            {
-                                // Newly setup pickup time is earlier than the main route pickup + 30 minutes
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
-                                    $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
-                                    $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
-                            }
+                            //if (pickupDateTime < mainRoutePickupDateTime)
+                            //{
+                            //    // Newly setup pickup time is earlier than the main route pickup + 30 minutes
+                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                            //        $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
+                            //        $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
+                            //        $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
+                            //}
 
                             if ((pickupDateTime - mainRoutePickupDateTime).TotalMinutes <= travelTime + 10)
                             {
@@ -724,40 +754,40 @@ namespace ViGo.Services
             }
         }
 
-        //private async Task<Booking?> HasBooking(Guid routeId,
-        //    CancellationToken cancellationToken)
-        //{
-        //    Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
+        private async Task<Booking?> HasBooking(Guid routeId,
+            CancellationToken cancellationToken)
+        {
+            Route? route = await work.Routes.GetAsync(routeId, cancellationToken: cancellationToken);
 
-        //    if (route is null)
-        //    {
-        //        throw new ApplicationException("Tuyến đường không tồn tại!!");
-        //    }
+            if (route is null)
+            {
+                throw new ApplicationException("Tuyến đường không tồn tại!!");
+            }
 
-        //    Guid checkRouteId = routeId;
-        //    if (route.Type == RouteType.ROUND_TRIP
-        //        && !route.RoundTripRouteId.HasValue)
-        //    {
-        //        // The roundtrip route
-        //        // Get the main route
-        //        Route mainRoute = await work.Routes.GetAsync(
-        //            r => r.RoundTripRouteId.HasValue &&
-        //            r.RoundTripRouteId.Value.Equals(routeId), cancellationToken: cancellationToken);
-        //        checkRouteId = mainRoute.Id;
-        //    }
+            Guid checkRouteId = routeId;
+            if (route.Type == RouteType.ROUND_TRIP
+                && !route.RoundTripRouteId.HasValue)
+            {
+                // The roundtrip route
+                // Get the main route
+                Route mainRoute = await work.Routes.GetAsync(
+                    r => r.RoundTripRouteId.HasValue &&
+                    r.RoundTripRouteId.Value.Equals(routeId), cancellationToken: cancellationToken);
+                checkRouteId = mainRoute.Id;
+            }
 
-        //    Booking? booking = await work.Bookings.GetAsync(
-        //            b => b.CustomerRouteId.Equals(checkRouteId)
-        //            && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
+            Booking? booking = await work.Bookings.GetAsync(
+                    b => b.CustomerRouteId.Equals(checkRouteId)
+                    && b.Status == BookingStatus.CONFIRMED, cancellationToken: cancellationToken);
 
-        //    return booking;
-        //    //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
-        //    //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
-        //    //    .GetAllAsync(query => query.Where(
-        //    //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
+            return booking;
+            //IEnumerable<Guid> bookingIds = bookings.Select(b => b.Id);
+            //IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+            //    .GetAllAsync(query => query.Where(
+            //        d => bookingIds.Contains(d.Id)), cancellationToken: cancellationToken);
 
-        //    //return bookingDetails.Any(d => d.DriverId.HasValue);
-        //}
+            //return bookingDetails.Any(d => d.DriverId.HasValue);
+        }
 
         private async Task<bool> HasDriver(Guid routeId, CancellationToken cancellationToken)
         {
