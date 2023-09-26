@@ -1198,7 +1198,7 @@ namespace ViGo.Services
 
             if (driverWallet.Balance < pickingFee)
             {
-                throw new ApplicationException("Số dư ví không đủ để thực hiện chọn chuyến đi!");
+                throw new ApplicationException($"Số dư ví không đủ để thực hiện chọn chuyến đi ({driverWallet.Balance.VndFormat()})!");
             }
 
             WalletTransaction pickingTransaction = new WalletTransaction
@@ -1387,7 +1387,7 @@ namespace ViGo.Services
 
             if (driverWallet.Balance < totalPickingFee)
             {
-                throw new ApplicationException("Số dư ví không đủ để thực hiện chọn chuyến đi!");
+                throw new ApplicationException($"Số dư ví không đủ để thực hiện chọn chuyến đi ({driverWallet.Balance.VndFormat()})!");
             }
 
             foreach (BookingDetail bookingDetail in bookingDetails)
