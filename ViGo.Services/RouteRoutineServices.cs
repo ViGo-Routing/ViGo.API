@@ -556,16 +556,16 @@ namespace ViGo.Services
                             }
                             DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
                             DateTime roundTripPickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)).AddMinutes(30);
+                                .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            if (pickupDateTime > roundTripPickupDateTime)
-                            {
-                                // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
-                                    $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
-                                    $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
-                            }
+                            //if (pickupDateTime > roundTripPickupDateTime)
+                            //{
+                            //    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
+                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                            //        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
+                            //        $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
+                            //        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
+                            //}
                             if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
                             {
                                 throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
@@ -630,16 +630,16 @@ namespace ViGo.Services
 
                             DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
                             DateTime mainRoutePickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)).AddMinutes(30);
+                                .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            if (pickupDateTime < mainRoutePickupDateTime)
-                            {
-                                // Newly setup pickup time is earlier than the main route pickup + 30 minutes
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
-                                    $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
-                                    $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
-                            }
+                            //if (pickupDateTime < mainRoutePickupDateTime)
+                            //{
+                            //    // Newly setup pickup time is earlier than the main route pickup + 30 minutes
+                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                            //        $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
+                            //        $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
+                            //        $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
+                            //}
 
                             if ((pickupDateTime - mainRoutePickupDateTime).TotalMinutes <= travelTime + 10)
                             {
