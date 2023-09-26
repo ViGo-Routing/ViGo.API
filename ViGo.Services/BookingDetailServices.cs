@@ -530,14 +530,25 @@ namespace ViGo.Services
                         throw new ApplicationException("Chuyến đi trong quá khứ, không thể cập nhật trạng thái!");
                     }
 
-                    // Constraint for starting trips
-                    if ((bookingDetail.PickUpDateTime() - updateDto.Time.Value).TotalHours >= 1.5)
-                    {
-                        throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước 1.5 tiếng! Vui lòng thử lại sau.");
-                    }
-                }
+                    Setting pickupTimeSetting = await work.Settings.GetAsync(
+                        s => s.Key.Equals(SettingKeys.TripMustStartBefore_Key),
+                        cancellationToken: cancellationToken);
 
-                IEnumerable<Report> reports = await work.Reports
+                    double maxStartTime = double.Parse(pickupTimeSetting.Value);
+
+                    // Constraint for starting trips
+                    if ((bookingDetail.PickUpDateTime() - updateDto.Time.Value).TotalHours >= maxStartTime)
+                    {
+                        if (maxStartTime < 1)
+                        {
+                            throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước" + maxStartTime * 60 + " phút! Vui lòng thử lại sau.");
+
+                        }
+                        throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước" + maxStartTime + " tiếng! Vui lòng thử lại sau.");
+
+                    }
+
+                    IEnumerable<Report> reports = await work.Reports
                     .GetAllAsync(query => query.Where(
                         r => r.BookingDetailId.Equals(updateDto.BookingDetailId)
                             && (r.Type == ReportType.BOOKER_NOT_COMING ||
