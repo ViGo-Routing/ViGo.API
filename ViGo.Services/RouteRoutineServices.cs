@@ -8,6 +8,7 @@ using ViGo.Repository.Core;
 using ViGo.Services.Core;
 using ViGo.Utilities;
 using ViGo.Utilities.Exceptions;
+using ViGo.Utilities.Google;
 using ViGo.Utilities.Validator;
 
 namespace ViGo.Services
@@ -483,6 +484,24 @@ namespace ViGo.Services
                             r => r.RouteId.Equals(roundTripRoute.Id)), cancellationToken: cancellationToken))
                             .OrderBy(r => r.RoutineDate);
 
+                    Station mainTripEndStation = await work.Stations
+                        .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
+                    Station roundTripStartStation = await work.Stations
+                        .GetAsync(roundTripRoute.StartStationId, cancellationToken: cancellationToken);
+
+                    double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                        new Models.GoogleMaps.GoogleMapPoint
+                        {
+                            Latitude = mainTripEndStation.Latitude,
+                            Longitude = mainTripEndStation.Longitude
+                        },
+                        new Models.GoogleMaps.GoogleMapPoint
+                        {
+                            Latitude = roundTripStartStation.Latitude,
+                            Longitude = roundTripStartStation.Longitude
+                        },
+                        cancellationToken);
+
                     if (roundTripRoutines.Any())
                     {
                         // RoundTrip rountines have been configured
@@ -517,6 +536,12 @@ namespace ViGo.Services
                                     $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
                                     $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
                             }
+                            if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
+                            {
+                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                                    $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
+                                    $"thiết lập lịch trình với thời gian đón phù hợp!");
+                            }
                         }
                     }
                 }
@@ -532,6 +557,24 @@ namespace ViGo.Services
                         .GetAllAsync(query => query.Where(
                             r => r.RouteId.Equals(mainRoute.Id)), cancellationToken: cancellationToken))
                             .OrderBy(r => r.RoutineDate);
+
+                    Station mainTripEndStation = await work.Stations
+                        .GetAsync(mainRoute.EndStationId, cancellationToken: cancellationToken);
+                    Station roundTripStartStation = await work.Stations
+                        .GetAsync(route.StartStationId, cancellationToken: cancellationToken);
+
+                    double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                        new Models.GoogleMaps.GoogleMapPoint
+                        {
+                            Latitude = mainTripEndStation.Latitude,
+                            Longitude = mainTripEndStation.Longitude
+                        },
+                        new Models.GoogleMaps.GoogleMapPoint
+                        {
+                            Latitude = roundTripStartStation.Latitude,
+                            Longitude = roundTripStartStation.Longitude
+                        },
+                        cancellationToken);
 
                     if (mainRouteRoutines.Any())
                     {
@@ -566,6 +609,13 @@ namespace ViGo.Services
                                     $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
                                     $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
                                     $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
+                            }
+
+                            if ((pickupDateTime - mainRoutePickupDateTime).TotalMinutes <= travelTime + 10)
+                            {
+                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                                    $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
+                                    $"thiết lập lịch trình với thời gian đón phù hợp!");
                             }
                         }
                     }
