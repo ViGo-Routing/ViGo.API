@@ -531,7 +531,7 @@ namespace ViGo.Services
                     }
 
                     // Constraint for starting trips
-                    if ((updateDto.Time.Value - bookingDetail.PickUpDateTime()).TotalHours > 1.5)
+                    if ((bookingDetail.PickUpDateTime() - updateDto.Time.Value).TotalHours > 1.5)
                     {
                         throw new ApplicationException("Quá sớm để bắt đầu chuyến đi! Vui lòng thử lại sau.");
                     }
