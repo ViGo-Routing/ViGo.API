@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace ViGo.Utilities
 {
@@ -13,6 +14,12 @@ namespace ViGo.Utilities
         {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str.ToLower());
 
+        }
+
+        public static string VndFormat(this double number)
+        {
+            Regex regex = new Regex("/(\\d)(?=(\\d{3})+(?!\\d))/g");
+            return regex.Replace(number.ToString(),"$1,");
         }
     }
 }

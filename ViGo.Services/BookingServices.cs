@@ -578,7 +578,7 @@ namespace ViGo.Services
             // TODO Code
             if (customerWallet.Balance < model.TotalPrice)
             {
-                throw new ApplicationException("Số dư ví không đủ để thực hiện tạo hành trình! Vui lòng nạp thêm tiền");
+                throw new ApplicationException($"Số dư ví không đủ để thực hiện tạo hành trình ({customerWallet.Balance.VndFormat()})! Vui lòng nạp thêm tiền");
             }
 
             //if (customerWallet.Balance >= model.TotalPrice)
@@ -951,7 +951,7 @@ namespace ViGo.Services
 
                     if (difference > 0 && customerWallet.Balance < difference)
                     {
-                        throw new ApplicationException("Số dư ví không đủ để thực hiện chỉnh sửa hành trình! Vui lòng nạp thêm tiền");
+                        throw new ApplicationException($"Số dư ví không đủ để thực hiện chỉnh sửa hành trình ({customerWallet.Balance.VndFormat()})! Vui lòng nạp thêm tiền");
                     }
 
                     //if (customerWallet.Balance >= model.TotalPrice)
