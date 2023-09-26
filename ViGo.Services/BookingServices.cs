@@ -809,11 +809,11 @@ namespace ViGo.Services
                     $"({currentRange.StartDateTime.Date} - {currentRange.EndDateTime.Date}");
             }
 
-            DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
-            if ((bookingUpdate.StartDate - vnNow).TotalHours < 24)
-            {
-                throw new ApplicationException("Các hành trình phải được đặt trước ít nhất 24 tiếng trước so với ngày bắt đầu!");
-            }
+            //DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
+            //if ((bookingUpdate.StartDate - vnNow).TotalHours < 24)
+            //{
+            //    throw new ApplicationException("Các hành trình phải được đặt trước ít nhất 24 tiếng trước so với ngày bắt đầu!");
+            //}
 
             #endregion
 
