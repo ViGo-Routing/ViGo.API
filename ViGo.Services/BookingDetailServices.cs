@@ -544,7 +544,7 @@ namespace ViGo.Services
                             throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước" + maxStartTime * 60 + " phút! Vui lòng thử lại sau.");
 
                         }
-                        throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước" + maxStartTime + " tiếng! Vui lòng thử lại sau.");
+                        throw new ApplicationException("Quá sớm để bắt đầu chuyến đi, chỉ được bắt đầu sớm nhất trước " + maxStartTime + " tiếng! Vui lòng thử lại sau.");
 
                     }
                 }
