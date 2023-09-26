@@ -705,7 +705,7 @@ namespace ViGo.Services
                         DateTimeRange current = finalRanges[i];
                         DateTimeRange added = finalRanges[i + 1];
 
-                        if (currentRanges.Contains(added))
+                        if (currentRanges.Any(r => r.StartDateTime == added.StartDateTime && r.EndDateTime == added.EndDateTime))
                         {
                             // finalRanges[i + 1] is current
                             current = finalRanges[i + 1];
