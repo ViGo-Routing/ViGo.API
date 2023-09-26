@@ -27,7 +27,8 @@ namespace ViGo.Services
             { SettingKeys.MonthlyTicketsDiscount_4_Key, SettingKeys.MonthlyTicketsDiscount_4_Description },
             { SettingKeys.MonthlyTicketsDiscount_6_Key, SettingKeys.MonthlyTicketsDiscount_6_Description },
             //{ SettingKeys.QuarterlyTicketsDiscount_2_Key, SettingKeys.QuarterlyTicketsDiscount_2_Description },
-            { SettingKeys.DriverWagePercent_Key, SettingKeys.DriverWagePercent_Description }
+            { SettingKeys.DriverWagePercent_Key, SettingKeys.DriverWagePercent_Description },
+            { SettingKeys.TripMustStartBefore_Key, SettingKeys.TripMustStartBefore_Description }
         };
 
         public SettingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
