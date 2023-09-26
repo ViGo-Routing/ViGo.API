@@ -58,6 +58,7 @@ namespace ViGo.Models.Users
         public UserSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(User.CreatedTime), SortingType.DESC),
                 new SortingCriteria(nameof(User.Role), SortingType.DESC),
                 new SortingCriteria(nameof(User.Status), SortingType.DESC));
         }

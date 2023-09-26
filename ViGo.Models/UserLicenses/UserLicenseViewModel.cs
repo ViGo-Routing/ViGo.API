@@ -56,6 +56,7 @@ namespace ViGo.Models.UserLicenses
         public UserLicenseSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(UserLicense.CreatedTime), SortingType.DESC),
                 new SortingCriteria(nameof(UserLicense.UserId)),
                 new SortingCriteria(nameof(UserLicense.Status)));
         }
