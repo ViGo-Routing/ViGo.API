@@ -46,7 +46,8 @@ namespace ViGo.Services
                 pagination.PageSize, totalRecords, context);
         }
 
-        public async Task<IEnumerable<UserLicenseViewModel>> GetAllUserLicensesByUserID(Guid userId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<UserLicenseViewModel>> GetAllUserLicensesByUserID(Guid userId, 
+            CancellationToken cancellationToken)
         {
             if (!IdentityUtilities.IsAdmin())
             {
