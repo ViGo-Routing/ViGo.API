@@ -147,6 +147,7 @@ namespace ViGo.Models.Bookings
         public BookingSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
+                new SortingCriteria(nameof(Booking.CreatedTime), SortingType.DESC),
                 new SortingCriteria(nameof(Booking.StartDate)));
         }
     }
