@@ -465,9 +465,7 @@ namespace ViGo.Services
             //{
             //    IsValidRoutine(routine);
             //}
-
-            Route roundTripRoute = await work.Routes.GetAsync(
-                route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+           
 
             IEnumerable<RouteRoutineListItemModel> routines = checkModel.RouteRoutines;
             IEnumerable<RouteRoutineListItemModel> roundTripRoutines = checkModel.RoundRouteRoutines;
@@ -490,6 +488,9 @@ namespace ViGo.Services
             }
             else
             {
+                Route roundTripRoute = await work.Routes.GetAsync(
+               route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
                 Station mainTripEndStation = await work.Stations
                   .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
                 Station roundTripStartStation = await work.Stations
