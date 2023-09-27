@@ -192,11 +192,11 @@ namespace ViGo.Services
                             s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike_Key),
                             cancellationToken: cancellationToken);
                         break;
-                    case VehicleSubType.VI_CAR:
-                        settingNightTrip = await work.Settings.GetAsync(
-                            s => s.Key.Equals(SettingKeys.NightTripExtraFeeCar_Key),
-                            cancellationToken: cancellationToken);
-                        break;
+                    //case VehicleSubType.VI_CAR:
+                    //    settingNightTrip = await work.Settings.GetAsync(
+                    //        s => s.Key.Equals(SettingKeys.NightTripExtraFeeCar_Key),
+                    //        cancellationToken: cancellationToken);
+                    //    break;
 
                 }
                 if (settingNightTrip != null)
@@ -235,11 +235,11 @@ namespace ViGo.Services
                                 s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike_Key),
                                 cancellationToken: cancellationToken);
                             break;
-                        case VehicleSubType.VI_CAR:
-                            settingNightTrip = await work.Settings.GetAsync(
-                                s => s.Key.Equals(SettingKeys.NightTripExtraFeeCar_Key),
-                                cancellationToken: cancellationToken);
-                            break;
+                        //case VehicleSubType.VI_CAR:
+                        //    settingNightTrip = await work.Settings.GetAsync(
+                        //        s => s.Key.Equals(SettingKeys.NightTripExtraFeeCar_Key),
+                        //        cancellationToken: cancellationToken);
+                        //    break;
 
                     }
                     if (settingNightTrip != null)
