@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
+using ViGo.Models.GoogleMaps;
 using ViGo.Models.QueryString.Pagination;
 using ViGo.Models.RouteRoutines;
 using ViGo.Repository.Core;
@@ -239,7 +240,7 @@ namespace ViGo.Services
             if (routinesModel.Any())
             {
                 await IsValidRoutines(routinesModel.ToList(), route,
-                    checkForRoundTripRoutines: checkForRoundTripRoutines, isUpdate: true, cancellationToken);
+                    checkForRoundTripRoutines: checkForRoundTripRoutines, isUpdate: true, null, null, cancellationToken);
                 routeRoutines =
                     (from routine in routinesModel
                      select new RouteRoutine
@@ -424,10 +425,129 @@ namespace ViGo.Services
             if (routinesModel.Any())
             {
                 await IsValidRoutines(routinesModel.ToList(), route,
-                    checkForRoundTripRoutines: true, isUpdate: isUpdate, cancellationToken);
+                    checkForRoundTripRoutines: true, isUpdate: isUpdate, startPoint: checkModel.StartPoint,
+                    endPoint: checkModel.EndPoint, cancellationToken: cancellationToken);
             }
 
         }
+
+        public async Task CheckRoundRouteRoutinesAsync(RoundRouteRoutineCheckModel checkModel,
+            CancellationToken cancellationToken)
+        {
+            Route? route = await work.Routes.GetAsync(checkModel.RouteId,
+                cancellationToken: cancellationToken);
+            if (route == null)
+            {
+                throw new ApplicationException("Tuyến đường không tồn tại!!");
+            }
+
+            if (route.Type != RouteType.ROUND_TRIP)
+            {
+                throw new ApplicationException("Loại tuyến đường không phù hợp!!");
+            }
+
+            if (!route.RoundTripRouteId.HasValue)
+            {
+                // Not the main route
+                throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
+            }
+
+            if (checkModel.RouteRoutines.Count == 0 || checkModel.RoundRouteRoutines.Count == 0)
+            {
+                throw new ApplicationException("Lịch trình đi chưa được thiết lập!!");
+            }
+
+            //foreach (RouteRoutineListItemModel routine in checkModel.RouteRoutines)
+            //{
+            //    IsValidRoutine(routine);
+            //}
+            //foreach (RouteRoutineListItemModel routine in checkModel.RoundRouteRoutines)
+            //{
+            //    IsValidRoutine(routine);
+            //}
+
+            Route roundTripRoute = await work.Routes.GetAsync(
+                route.RoundTripRouteId.Value, cancellationToken: cancellationToken);
+
+            IEnumerable<RouteRoutineListItemModel> routines = checkModel.RouteRoutines;
+            IEnumerable<RouteRoutineListItemModel> roundTripRoutines = checkModel.RoundRouteRoutines;
+            // RoundTrip rountines have been configured
+            if (roundTripRoutines.Count() != routines.Count())
+            {
+                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                    $"Tuyến đường chiều về có tổng cộng {roundTripRoutines.Count()} lịch trình, trong khi lịch trình " +
+                    $"cho tuyến đường chiều đi sắp được thiết lập có {routines.Count()} lịch trình!");
+            }
+
+            double travelTime = 0;
+
+            if (checkModel.StartPoint != null && checkModel.EndPoint != null)
+            {
+                travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                   checkModel.StartPoint,
+                   checkModel.EndPoint,
+                   cancellationToken);
+            }
+            else
+            {
+                Station mainTripEndStation = await work.Stations
+                  .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
+                Station roundTripStartStation = await work.Stations
+                    .GetAsync(roundTripRoute.StartStationId, cancellationToken: cancellationToken);
+
+                travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = mainTripEndStation.Latitude,
+                        Longitude = mainTripEndStation.Longitude
+                    },
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = roundTripStartStation.Latitude,
+                        Longitude = roundTripStartStation.Longitude
+                    },
+                    cancellationToken);
+            }
+
+
+            foreach (RouteRoutineListItemModel roundTripRoutine in roundTripRoutines)
+            {
+                DateOnly routineDate = roundTripRoutine.RoutineDate;
+
+                var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
+                    ));
+
+                if (routine is null)
+                {
+                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
+                        $"lịch trình cho tuyến đường chiều đi cho ngày này!!");
+                }
+
+                DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
+                DateTime roundTripPickupDateTime = routineDate
+                    .ToDateTime(roundTripRoutine.PickupTime)/*.AddMinutes(30)*/;
+
+
+
+                //if (pickupDateTime > roundTripPickupDateTime)
+                //{
+                //    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
+                //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                //        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
+                //        $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
+                //        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
+                //}
+                if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
+                {
+                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+                        $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
+                        $"thiết lập lịch trình với thời gian đón phù hợp!");
+                }
+            }
+
+        }
+
         #region Validation
 
         private void IsValidRoutine(RouteRoutineListItemModel routine)
@@ -454,7 +574,9 @@ namespace ViGo.Services
 
         private async Task IsValidRoutines(IList<RouteRoutineListItemModel> routines,
             Route route, bool checkForRoundTripRoutines = true,
-            bool isUpdate = false, CancellationToken cancellationToken = default)
+            bool isUpdate = false, GoogleMapPoint? startPoint = null,
+            GoogleMapPoint? endPoint = null,
+            CancellationToken cancellationToken = default)
         {
             if (route == null)
             {
@@ -476,6 +598,34 @@ namespace ViGo.Services
                 }
             }
 
+            double checkTravelTime = 0;
+            if (startPoint != null && endPoint != null)
+            {
+                checkTravelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                   startPoint,
+                   endPoint,
+                   cancellationToken);
+            }
+            else
+            {
+                Station startStation = await work.Stations
+                   .GetAsync(route.StartStationId, cancellationToken: cancellationToken);
+                Station endStation = await work.Stations
+                    .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
+
+                checkTravelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = startStation.Latitude,
+                        Longitude = startStation.Longitude
+                    },
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = endStation.Latitude,
+                        Longitude = endStation.Longitude
+                    },
+                    cancellationToken);
+            }
             IList<DateTimeRange> routineRanges = new List<DateTimeRange>();
 
             foreach (RouteRoutineListItemModel routine in routines)
@@ -484,7 +634,7 @@ namespace ViGo.Services
                  DateTimeUtilities
                  .ToDateTime(routine.RoutineDate, routine.PickupTime),
                      DateTimeUtilities.
-                 ToDateTime(routine.RoutineDate, routine.PickupTime).AddMinutes(30)
+                 ToDateTime(routine.RoutineDate, routine.PickupTime).AddMinutes(checkTravelTime + 10)
                  ));
             }
 
@@ -500,157 +650,157 @@ namespace ViGo.Services
             //}
 
             // Check for RoundTrip
-            if (!isUpdate && checkForRoundTripRoutines && route.Type == RouteType.ROUND_TRIP)
-            {
-                if (route.RoundTripRouteId.HasValue)
-                {
-                    // The main route
+            //if (!isUpdate && checkForRoundTripRoutines && route.Type == RouteType.ROUND_TRIP)
+            //{
+            //    if (route.RoundTripRouteId.HasValue)
+            //    {
+            //        // The main route
 
-                    // Get The roundtrip route
-                    Route roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
-                        cancellationToken: cancellationToken);
-                    IEnumerable<RouteRoutine> roundTripRoutines = (await work.RouteRoutines
-                        .GetAllAsync(query => query.Where(
-                            r => r.RouteId.Equals(roundTripRoute.Id)), cancellationToken: cancellationToken))
-                            .OrderBy(r => r.RoutineDate);
+            //        // Get The roundtrip route
+            //        Route roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
+            //            cancellationToken: cancellationToken);
+            //        IEnumerable<RouteRoutine> roundTripRoutines = (await work.RouteRoutines
+            //            .GetAllAsync(query => query.Where(
+            //                r => r.RouteId.Equals(roundTripRoute.Id)), cancellationToken: cancellationToken))
+            //                .OrderBy(r => r.RoutineDate);
 
-                    Station mainTripEndStation = await work.Stations
-                        .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
-                    Station roundTripStartStation = await work.Stations
-                        .GetAsync(roundTripRoute.StartStationId, cancellationToken: cancellationToken);
+            //        Station mainTripEndStation = await work.Stations
+            //            .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
+            //        Station roundTripStartStation = await work.Stations
+            //            .GetAsync(roundTripRoute.StartStationId, cancellationToken: cancellationToken);
 
-                    double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
-                        new Models.GoogleMaps.GoogleMapPoint
-                        {
-                            Latitude = mainTripEndStation.Latitude,
-                            Longitude = mainTripEndStation.Longitude
-                        },
-                        new Models.GoogleMaps.GoogleMapPoint
-                        {
-                            Latitude = roundTripStartStation.Latitude,
-                            Longitude = roundTripStartStation.Longitude
-                        },
-                        cancellationToken);
+            //        double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+            //            new Models.GoogleMaps.GoogleMapPoint
+            //            {
+            //                Latitude = mainTripEndStation.Latitude,
+            //                Longitude = mainTripEndStation.Longitude
+            //            },
+            //            new Models.GoogleMaps.GoogleMapPoint
+            //            {
+            //                Latitude = roundTripStartStation.Latitude,
+            //                Longitude = roundTripStartStation.Longitude
+            //            },
+            //            cancellationToken);
 
-                    if (roundTripRoutines.Any())
-                    {
-                        // RoundTrip rountines have been configured
-                        if (roundTripRoutines.Count() != routines.Count)
-                        {
-                            throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                $"Tuyến đường chiều về có tổng cộng {roundTripRoutines.Count()} lịch trình, trong khi lịch trình " +
-                                $"cho tuyến đường chiều đi sắp được thiết lập có {routines.Count} lịch trình!");
-                        }
+            //        if (roundTripRoutines.Any())
+            //        {
+            //            // RoundTrip rountines have been configured
+            //            if (roundTripRoutines.Count() != routines.Count)
+            //            {
+            //                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                    $"Tuyến đường chiều về có tổng cộng {roundTripRoutines.Count()} lịch trình, trong khi lịch trình " +
+            //                    $"cho tuyến đường chiều đi sắp được thiết lập có {routines.Count} lịch trình!");
+            //            }
 
-                        foreach (RouteRoutine roundTripRoutine in roundTripRoutines)
-                        {
-                            DateOnly routineDate = DateOnly.FromDateTime(roundTripRoutine.RoutineDate);
-                            var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
-                                ));
+            //            foreach (RouteRoutine roundTripRoutine in roundTripRoutines)
+            //            {
+            //                DateOnly routineDate = DateOnly.FromDateTime(roundTripRoutine.RoutineDate);
+            //                var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
+            //                    ));
 
-                            if (routine is null)
-                            {
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
-                                    $"lịch trình cho tuyến đường chiều đi cho ngày này!!");
-                            }
-                            DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
-                            DateTime roundTripPickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime))/*.AddMinutes(30)*/;
+            //                if (routine is null)
+            //                {
+            //                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
+            //                        $"lịch trình cho tuyến đường chiều đi cho ngày này!!");
+            //                }
+            //                DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
+            //                DateTime roundTripPickupDateTime = routineDate
+            //                    .ToDateTime(TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            //if (pickupDateTime > roundTripPickupDateTime)
-                            //{
-                            //    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
-                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                            //        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
-                            //        $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
-                            //        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
-                            //}
-                            if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
-                            {
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
-                                    $"thiết lập lịch trình với thời gian đón phù hợp!");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // The RoundTrip route
+            //                //if (pickupDateTime > roundTripPickupDateTime)
+            //                //{
+            //                //    // Newly setup pickup time is later than the roundtrip pickup + 30 minutes
+            //                //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                //        $"Tuyến đường chiều về có lịch trình cho ngày {routineDate} vào lúc " +
+            //                //        $"{TimeOnly.FromTimeSpan(roundTripRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều đi cho ngày này " +
+            //                //        $"lại được xếp trễ hơn quá 30 phút ({routine.PickupTime})!!");
+            //                //}
+            //                if ((roundTripPickupDateTime - pickupDateTime).TotalMinutes <= travelTime + 10)
+            //                {
+            //                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                        $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
+            //                        $"thiết lập lịch trình với thời gian đón phù hợp!");
+            //                }
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        // The RoundTrip route
 
-                    // Get the main route
-                    Route mainRoute = await work.Routes.GetAsync(r => r.RoundTripRouteId.HasValue &&
-                        r.RoundTripRouteId.Value.Equals(route.Id),
-                        cancellationToken: cancellationToken);
-                    IEnumerable<RouteRoutine> mainRouteRoutines = (await work.RouteRoutines
-                        .GetAllAsync(query => query.Where(
-                            r => r.RouteId.Equals(mainRoute.Id)), cancellationToken: cancellationToken))
-                            .OrderBy(r => r.RoutineDate);
+            //        // Get the main route
+            //        Route mainRoute = await work.Routes.GetAsync(r => r.RoundTripRouteId.HasValue &&
+            //            r.RoundTripRouteId.Value.Equals(route.Id),
+            //            cancellationToken: cancellationToken);
+            //        IEnumerable<RouteRoutine> mainRouteRoutines = (await work.RouteRoutines
+            //            .GetAllAsync(query => query.Where(
+            //                r => r.RouteId.Equals(mainRoute.Id)), cancellationToken: cancellationToken))
+            //                .OrderBy(r => r.RoutineDate);
 
-                    Station mainTripEndStation = await work.Stations
-                        .GetAsync(mainRoute.EndStationId, cancellationToken: cancellationToken);
-                    Station roundTripStartStation = await work.Stations
-                        .GetAsync(route.StartStationId, cancellationToken: cancellationToken);
+            //        Station mainTripEndStation = await work.Stations
+            //            .GetAsync(mainRoute.EndStationId, cancellationToken: cancellationToken);
+            //        Station roundTripStartStation = await work.Stations
+            //            .GetAsync(route.StartStationId, cancellationToken: cancellationToken);
 
-                    double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
-                        new Models.GoogleMaps.GoogleMapPoint
-                        {
-                            Latitude = mainTripEndStation.Latitude,
-                            Longitude = mainTripEndStation.Longitude
-                        },
-                        new Models.GoogleMaps.GoogleMapPoint
-                        {
-                            Latitude = roundTripStartStation.Latitude,
-                            Longitude = roundTripStartStation.Longitude
-                        },
-                        cancellationToken);
+            //        double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+            //            new Models.GoogleMaps.GoogleMapPoint
+            //            {
+            //                Latitude = mainTripEndStation.Latitude,
+            //                Longitude = mainTripEndStation.Longitude
+            //            },
+            //            new Models.GoogleMaps.GoogleMapPoint
+            //            {
+            //                Latitude = roundTripStartStation.Latitude,
+            //                Longitude = roundTripStartStation.Longitude
+            //            },
+            //            cancellationToken);
 
-                    if (mainRouteRoutines.Any())
-                    {
-                        // Main Route rountines have been configured
-                        if (mainRouteRoutines.Count() != routines.Count)
-                        {
-                            throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                $"Tuyến đường chiều đi có tổng cộng {mainRouteRoutines.Count()} lịch trình, trong khi lịch trình " +
-                                $"cho tuyến đường chiều về sắp được thiết lập có {routines.Count} lịch trình!");
-                        }
+            //        if (mainRouteRoutines.Any())
+            //        {
+            //            // Main Route rountines have been configured
+            //            if (mainRouteRoutines.Count() != routines.Count)
+            //            {
+            //                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                    $"Tuyến đường chiều đi có tổng cộng {mainRouteRoutines.Count()} lịch trình, trong khi lịch trình " +
+            //                    $"cho tuyến đường chiều về sắp được thiết lập có {routines.Count} lịch trình!");
+            //            }
 
-                        foreach (RouteRoutine mainRouteRoutine in mainRouteRoutines)
-                        {
-                            DateOnly routineDate = DateOnly.FromDateTime(mainRouteRoutine.RoutineDate);
-                            var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
-                                ));
-                            if (routine is null)
-                            {
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
-                                    $"lịch trình cho tuyến đường chiều về cho ngày này!!");
-                            }
+            //            foreach (RouteRoutine mainRouteRoutine in mainRouteRoutines)
+            //            {
+            //                DateOnly routineDate = DateOnly.FromDateTime(mainRouteRoutine.RoutineDate);
+            //                var routine = routines.SingleOrDefault(r => r.RoutineDate.Equals(routineDate
+            //                    ));
+            //                if (routine is null)
+            //                {
+            //                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                        $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} nhưng không tìm thấy " +
+            //                        $"lịch trình cho tuyến đường chiều về cho ngày này!!");
+            //                }
 
-                            DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
-                            DateTime mainRoutePickupDateTime = routineDate
-                                .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime))/*.AddMinutes(30)*/;
+            //                DateTime pickupDateTime = routineDate.ToDateTime(routine.PickupTime);
+            //                DateTime mainRoutePickupDateTime = routineDate
+            //                    .ToDateTime(TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime))/*.AddMinutes(30)*/;
 
-                            //if (pickupDateTime < mainRoutePickupDateTime)
-                            //{
-                            //    // Newly setup pickup time is earlier than the main route pickup + 30 minutes
-                            //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                            //        $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
-                            //        $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
-                            //        $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
-                            //}
+            //                //if (pickupDateTime < mainRoutePickupDateTime)
+            //                //{
+            //                //    // Newly setup pickup time is earlier than the main route pickup + 30 minutes
+            //                //    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                //        $"Tuyến đường chiều đi có lịch trình cho ngày {routineDate} vào lúc " +
+            //                //        $"{TimeOnly.FromTimeSpan(mainRouteRoutine.PickupTime)} nhưng lịch trình cho tuyến đường chiều về cho ngày này " +
+            //                //        $"lại được xếp sớm hơn quá 30 phút ({routine.PickupTime})!!");
+            //                //}
 
-                            if ((pickupDateTime - mainRoutePickupDateTime).TotalMinutes <= travelTime + 10)
-                            {
-                                throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
-                                    $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
-                                    $"thiết lập lịch trình với thời gian đón phù hợp!");
-                            }
-                        }
-                    }
-                }
-            }
+            //                if ((pickupDateTime - mainRoutePickupDateTime).TotalMinutes <= travelTime + 10)
+            //                {
+            //                    throw new ApplicationException($"Thiết lập lịch trình cho tuyến khứ hồi không thành công! " +
+            //                        $"Thời gian di chuyến giữa chuyến đi và về ước tính {Math.Round(travelTime, 0) + 10} phút, vui lòng " +
+            //                        $"thiết lập lịch trình với thời gian đón phù hợp!");
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
 
             IEnumerable<Route> routes = await work.Routes
                 .GetAllAsync(query => query.Where(
@@ -661,6 +811,28 @@ namespace ViGo.Services
             if (isUpdate)
             {
                 routeIds = routeIds.Where(r => !r.Equals(route.Id));
+                if (route.Type == RouteType.ROUND_TRIP && checkForRoundTripRoutines)
+                {
+                    if (route.RoundTripRouteId.HasValue)
+                    {
+                        // The main route
+
+                        // Get The roundtrip route
+                        Route roundTripRoute = await work.Routes.GetAsync(route.RoundTripRouteId.Value,
+                            cancellationToken: cancellationToken);
+                        routeIds = routeIds.Where(r => !r.Equals(roundTripRoute.Id));
+                    }
+                    else
+                    {
+                        // The RoundTrip route
+
+                        // Get the main route
+                        Route mainRoute = await work.Routes.GetAsync(r => r.RoundTripRouteId.HasValue &&
+                            r.RoundTripRouteId.Value.Equals(route.Id),
+                            cancellationToken: cancellationToken);
+                        routeIds = routeIds.Where(r => !r.Equals(mainRoute.Id));
+                    }
+                }
             }
 
             if (!routeIds.Any())
@@ -675,6 +847,24 @@ namespace ViGo.Services
 
             if (currentRouteRoutines.Any())
             {
+                Station startStation = await work.Stations
+                   .GetAsync(route.StartStationId, cancellationToken: cancellationToken);
+                Station endStation = await work.Stations
+                    .GetAsync(route.EndStationId, cancellationToken: cancellationToken);
+
+                double travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = startStation.Latitude,
+                        Longitude = startStation.Longitude
+                    },
+                    new Models.GoogleMaps.GoogleMapPoint
+                    {
+                        Latitude = endStation.Latitude,
+                        Longitude = endStation.Longitude
+                    },
+                    cancellationToken);
+
                 Dictionary<Guid, double> routeDurations = new Dictionary<Guid, double>();
                 //foreach (Route routeCalDuration in routes)
                 //{
@@ -686,7 +876,7 @@ namespace ViGo.Services
                     DateTimeUtilities
                  .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.PickupTime)),
                     DateTimeUtilities
-                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.PickupTime)).AddMinutes(30)
+                 .ToDateTime(DateOnly.FromDateTime(routine.RoutineDate), TimeOnly.FromTimeSpan(routine.PickupTime)).AddMinutes(travelTime + 10)
                 );
                 currentRanges = currentRanges.OrderBy(r => r.StartDateTime);
 
@@ -713,7 +903,7 @@ namespace ViGo.Services
                         }
                         current.IsOverlap(added,
                             $"Hai khoảng thời gian lịch trình đã bị trùng lặp với lịch trình " +
-                            $"đã được lưu trước đó (phải cách nhau ít nhất 30 phút) " +
+                            $"đã được lưu trước đó " +
                             $"(Lịch trình đã được lưu trước đó: {current.StartDateTime} và " +
                             $"lịch trình mới: {added.StartDateTime})");
                     }
