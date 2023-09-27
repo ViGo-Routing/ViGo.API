@@ -19,7 +19,7 @@ namespace ViGo.Utilities
         public static string VndFormat(this double number)
         {
             Regex regex = new Regex("/(\\d)(?=(\\d{3})+(?!\\d))/g");
-            return regex.Replace(number.ToString(),"$1,");
+            return regex.Replace(number.ToString(),"$1,") + "đ";
         }
     }
 }
