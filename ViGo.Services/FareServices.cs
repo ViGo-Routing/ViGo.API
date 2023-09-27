@@ -92,7 +92,7 @@ namespace ViGo.Services
             if (fareModel.Distance <= fareCalculationModel.MinimumBaseDistance)
             {
                 responseModel.OriginalFare = fareCalculationModel.MinimumBasePrice;
-                responseModel.RoundTripOriginalFare = fareCalculationModel.MinimumBasePrice;
+                //responseModel.RoundTripOriginalFare = fareCalculationModel.MinimumBasePrice;
                 //responseModel.FinalFare = fareCalculationModel.MinimumBasePrice;
             }
             else
