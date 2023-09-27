@@ -50,7 +50,7 @@ namespace ViGo.Models.Reports
         public ReportSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
-                new SortingCriteria(nameof(Report.CreatedTime)),
+                new SortingCriteria(nameof(Report.CreatedTime), SortingType.DESC),
                 new SortingCriteria(nameof(Report.Status)));
         }
     }

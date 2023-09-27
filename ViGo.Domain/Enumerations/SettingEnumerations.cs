@@ -33,8 +33,8 @@
 
     public static class SettingKeys
     {
-        public static string NightTripExtraFeeCar_Key = "NightTripExtraFeeCar";
-        public static string NightTripExtraFeeCar_Description = "Phụ phí ban đêm - Xe hơi";
+        //public static string NightTripExtraFeeCar_Key = "NightTripExtraFeeCar";
+        //public static string NightTripExtraFeeCar_Description = "Phụ phí ban đêm - Xe hơi";
         public static string NightTripExtraFeeBike_Key = "NightTripExtraFeeBike";
         public static string NightTripExtraFeeBike_Description = "Phụ phí ban đêm - Xe máy";
 
