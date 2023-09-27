@@ -212,6 +212,10 @@ namespace ViGo.Services
                 throw new ApplicationException("ID không tồn tại!");
             }
 
+            if (reportAdminUpdate.Status != ReportStatus.PENDING)
+            {
+                throw new ApplicationException("Trạng thái không phù hợp!!");
+            }
             if (reportAdminUpdate.ReviewerNote != null) currentReport.ReviewerNote = reportAdminUpdate.ReviewerNote;
             if (reportAdminUpdate.Status != null) currentReport.Status = reportAdminUpdate.Status.Value;
             //if (reportAdminUpdate.IsDeleted != null) currentReport.IsDeleted = (bool)reportAdminUpdate.IsDeleted;
