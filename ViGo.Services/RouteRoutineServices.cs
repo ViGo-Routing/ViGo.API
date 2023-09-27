@@ -441,12 +441,12 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-            if (route.Type != RouteType.ROUND_TRIP || (checkModel.StartPoint == null && checkModel.EndPoint == null))
+            if (route.Type != RouteType.ROUND_TRIP && (checkModel.StartPoint == null || checkModel.EndPoint == null))
             {
                 throw new ApplicationException("Loại tuyến đường không phù hợp!!");
             }
 
-            if (!route.RoundTripRouteId.HasValue || (checkModel.StartPoint == null && checkModel.EndPoint == null))
+            if (!route.RoundTripRouteId.HasValue && (checkModel.StartPoint == null || checkModel.EndPoint == null))
             {
                 // Not the main route
                 throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
