@@ -16,7 +16,7 @@ namespace ViGo.Services
 
         private IDictionary<string, string> settingKeys = new Dictionary<string, string>
         {
-            { SettingKeys.NightTripExtraFeeCar_Key, SettingKeys.NightTripExtraFeeCar_Description },
+            //{ SettingKeys.NightTripExtraFeeCar_Key, SettingKeys.NightTripExtraFeeCar_Description },
             { SettingKeys.NightTripExtraFeeBike_Key, SettingKeys.NightTripExtraFeeBike_Description },
             //{ SettingKeys.TicketsDiscount_10_Key, SettingKeys.TicketsDiscount_10_Description },
             //{ SettingKeys.TicketsDiscount_25_Key, SettingKeys.TicketsDiscount_25_Description },
