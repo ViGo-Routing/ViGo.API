@@ -441,12 +441,12 @@ namespace ViGo.Services
                 throw new ApplicationException("Tuyến đường không tồn tại!!");
             }
 
-            if (route.Type != RouteType.ROUND_TRIP)
+            if (route.Type != RouteType.ROUND_TRIP || (checkModel.StartPoint == null && checkModel.EndPoint == null))
             {
                 throw new ApplicationException("Loại tuyến đường không phù hợp!!");
             }
 
-            if (!route.RoundTripRouteId.HasValue)
+            if (!route.RoundTripRouteId.HasValue || (checkModel.StartPoint == null && checkModel.EndPoint == null))
             {
                 // Not the main route
                 throw new ApplicationException("Thông tin tuyến đường không hợp lệ!!");
@@ -484,8 +484,8 @@ namespace ViGo.Services
             if (checkModel.StartPoint != null && checkModel.EndPoint != null)
             {
                 travelTime = await GoogleMapsApiUtilities.GetDurationBetweenTwoPointsAsync(
-                   checkModel.StartPoint,
                    checkModel.EndPoint,
+                   checkModel.StartPoint,
                    cancellationToken);
             }
             else
@@ -870,6 +870,9 @@ namespace ViGo.Services
                 //{
 
                 //}
+                currentRouteRoutines = currentRouteRoutines.OrderBy(r => r.RoutineDate)
+                    .ThenBy(r => r.PickupTime);
+
                 IEnumerable<DateTimeRange> currentRanges =
                 from routine in currentRouteRoutines
                 select new DateTimeRange(
