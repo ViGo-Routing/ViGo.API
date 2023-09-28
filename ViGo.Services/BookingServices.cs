@@ -5,6 +5,7 @@ using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.BookingDetails;
 using ViGo.Models.Bookings;
+using ViGo.Models.Fares;
 using ViGo.Models.GoogleMaps;
 using ViGo.Models.Notifications;
 using ViGo.Models.QueryString;
@@ -624,20 +625,29 @@ namespace ViGo.Services
             //}
 
             // Generate BookingDetails
-            double mainTripPrice = model.TotalPrice;
+
+            FareServices fareServices = new FareServices(work, _logger);
+
+            double mainTripPrice = model.TotalPrice - model.AdditionalFare;
             double roundTripPrice = 0;
             if (booking.Type == BookingType.ROUND_TRIP)
             {
-                roundTripPrice = model.RoundTripTotalPrice.Value;
-                mainTripPrice = model.TotalPrice - model.RoundTripTotalPrice.Value;
+                roundTripPrice = model.RoundTripTotalPrice.Value - model.RoundTripAdditionalFare.Value;
+                mainTripPrice = model.TotalPrice - model.AdditionalFare - model.RoundTripTotalPrice.Value;
             }
 
-            double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
-            double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+            double mainTripAdditionalFareEachTrip = model.AdditionalFare / routeRoutines.Count();
+            double roundTripAdditionalFareEachTrip = 0;
 
-            double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0);
+            if (booking.Type == BookingType.ROUND_TRIP)
+            {
+                roundTripAdditionalFareEachTrip = model.RoundTripAdditionalFare.Value / roundTripRoutines.Count();
+            }
 
-            FareServices fareServices = new FareServices(work, _logger);
+            double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0) + mainTripAdditionalFareEachTrip;
+            double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0) + mainTripAdditionalFareEachTrip;
+
+            double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0) + roundTripAdditionalFareEachTrip;
 
             foreach (RouteRoutine routeRoutine in routeRoutines)
             {
@@ -1027,10 +1037,18 @@ namespace ViGo.Services
                     mainTripPrice = bookingUpdate.TotalPrice - bookingUpdate.RoundTripTotalPrice.Value;
                 }
 
-                double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
-                double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0);
+                double mainTripAdditionalFareEachTrip = bookingUpdate.AdditionalFare / routeRoutines.Count();
+                double roundTripAdditionalFareEachTrip = 0;
 
-                double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0);
+                if (booking.Type == BookingType.ROUND_TRIP)
+                {
+                    roundTripAdditionalFareEachTrip = bookingUpdate.RoundTripAdditionalFare.Value / roundTripRoutines.Count();
+                }
+
+                double priceEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0) + mainTripAdditionalFareEachTrip;
+                double priceAfterDiscountEachTrip = Math.Round(mainTripPrice / routeRoutines.Count(), 0) + mainTripAdditionalFareEachTrip;
+
+                double priceEachRoundTrip = Math.Round(roundTripPrice / roundTripRoutines.Count(), 0) + roundTripAdditionalFareEachTrip;
 
                 FareServices fareServices = new FareServices(work, _logger);
 
