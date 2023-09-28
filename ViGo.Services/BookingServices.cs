@@ -633,7 +633,7 @@ namespace ViGo.Services
             if (booking.Type == BookingType.ROUND_TRIP)
             {
                 roundTripPrice = model.RoundTripTotalPrice.Value - model.RoundTripAdditionalFare.Value;
-                mainTripPrice = model.TotalPrice - model.AdditionalFare - model.RoundTripTotalPrice.Value;
+                mainTripPrice = model.TotalPrice - model.RoundTripTotalPrice.Value - model.AdditionalFare;
             }
 
             double mainTripAdditionalFareEachTrip = model.AdditionalFare / routeRoutines.Count();
@@ -1029,12 +1029,12 @@ namespace ViGo.Services
                 //}
 
                 // Generate BookingDetails
-                double mainTripPrice = bookingUpdate.TotalPrice;
+                double mainTripPrice = bookingUpdate.TotalPrice - bookingUpdate.AdditionalFare;
                 double roundTripPrice = 0;
                 if (booking.Type == BookingType.ROUND_TRIP)
                 {
-                    roundTripPrice = bookingUpdate.RoundTripTotalPrice.Value;
-                    mainTripPrice = bookingUpdate.TotalPrice - bookingUpdate.RoundTripTotalPrice.Value;
+                    roundTripPrice = bookingUpdate.RoundTripTotalPrice.Value - bookingUpdate.RoundTripAdditionalFare.Value;
+                    mainTripPrice = bookingUpdate.TotalPrice - bookingUpdate.RoundTripTotalPrice.Value - bookingUpdate.AdditionalFare;
                 }
 
                 double mainTripAdditionalFareEachTrip = bookingUpdate.AdditionalFare / routeRoutines.Count();
