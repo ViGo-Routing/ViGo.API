@@ -687,7 +687,7 @@ namespace ViGo.Services
         private static TimeOnly NextDayMorningBoundary = new TimeOnly(0, 0, 0, 0);
         private static TimeOnly NightTripMaxBoundary = new TimeOnly(5, 59, 59, 999);
 
-        private static bool IsNightTrip(TimeOnly startTime,
+        public static bool IsNightTrip(TimeOnly startTime,
             TimeOnly endTime)
         {
             if ((startTime.IsBetween(NightTripMinBoundary, NextDayNightBoundary)
