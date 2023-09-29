@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 using ViGo.Domain;
 using ViGo.Domain.Enumerations;
 using ViGo.Models.GoogleMaps;
@@ -96,7 +97,7 @@ namespace ViGo.Services
 
             foreach (RouteRoutineListItemModel routine in model.RouteRoutines)
             {
-                IsValidRoutine(routine);
+             await   IsValidRoutine(routine, cancellationToken);
             }
 
             await IsValidRoutines(model.RouteRoutines, route, cancellationToken: cancellationToken);
@@ -184,7 +185,7 @@ namespace ViGo.Services
 
             foreach (RouteRoutineListItemModel routine in model.RouteRoutines)
             {
-                IsValidRoutine(routine);
+                await IsValidRoutine(routine, cancellationToken);
             }
 
             // Check for existing Routines
@@ -287,7 +288,7 @@ namespace ViGo.Services
                 Status = model.Status
             };
 
-            IsValidRoutine(itemModel);
+            await IsValidRoutine(itemModel, cancellationToken);
 
             Route route = await work.Routes.GetAsync(routeRoutine.RouteId, cancellationToken: cancellationToken);
             IEnumerable<RouteRoutine> currentRoutines = await work.RouteRoutines
@@ -402,7 +403,7 @@ namespace ViGo.Services
 
             foreach (RouteRoutineListItemModel routine in checkModel.RouteRoutines)
             {
-                IsValidRoutine(routine);
+                await IsValidRoutine(routine, cancellationToken);
             }
 
             // Check for existing Routines
@@ -551,19 +552,26 @@ namespace ViGo.Services
 
         #region Validation
 
-        private void IsValidRoutine(RouteRoutineListItemModel routine)
+        private async Task IsValidRoutine(RouteRoutineListItemModel routine,
+            CancellationToken cancellationToken)
         {
             DateTime startDateTime = DateTimeUtilities
             .ToDateTime(routine.RoutineDate, routine.PickupTime);
             //DateTime endDateTime = DateTimeUtilities.
             //    ToDateTime(routine.RoutineDate, routine.StartTime.AddMinutes(30));
 
+            Setting bookedSetting = await work.Settings.GetAsync(
+                        s => s.Key.Equals(SettingKeys.TripMustBeBookedBefore_Key),
+                        cancellationToken: cancellationToken);
+
+            double maxBookTime = double.Parse(bookedSetting.Value);
+
             DateTime vnNow = DateTimeUtilities.GetDateTimeVnNow();
             startDateTime.DateTimeValidate(
                 //minimum: vnNow,
-                minimum: vnNow.AddHours(24),
+                minimum: vnNow.AddHours(maxBookTime),
                 //minErrorMessage: $"Thời gian bắt đầu lịch trình ở quá khứ (ngày: " +
-                minErrorMessage: $"Thời gian bắt đầu lịch trình phải trước ít nhất 24 tiếng (ngày: " +
+                minErrorMessage: $"Thời gian bắt đầu lịch trình phải trước ít nhất {maxBookTime} tiếng (ngày: " +
                 $"{routine.RoutineDate.ToShortDateString()}, " +
                 $"giờ: {routine.PickupTime.ToShortTimeString()})"
                 //maximum: endDateTime,

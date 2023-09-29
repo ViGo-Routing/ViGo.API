@@ -62,5 +62,8 @@
         public static string DriverWagePercent_Description = "Phần trăm chiết khấu dành cho tài xế";
         public static string TripMustStartBefore_Key = "TripMustStartBefore";
         public static string TripMustStartBefore_Description = "Thời gian sớm nhất mà tài xế có thể bắt đầu chuyến đi";
+
+        public static string TripMustBeBookedBefore_Key = "TripMustBeBookedBefore";
+        public static string TripMustBeBookedBefore_Description = "Thời gian sớm nhất mà khách hàng có thể đặt trước chuyến đi";
     }
 }
