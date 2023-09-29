@@ -161,4 +161,10 @@ namespace ViGo.Models.BookingDetails
         public string? Status { get; set; }
         public string? Type { get; set; }
     }
+
+    public class BookingDetailPrice
+    {
+        public double BasePrice { get; set; }
+        public double? PriceWithAdditionalFare { get; set; }
+    }
 }
