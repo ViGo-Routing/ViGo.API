@@ -548,12 +548,12 @@ namespace ViGo.Services
 
                     }
                 }
-                    IEnumerable<Report> reports = await work.Reports
-                    .GetAllAsync(query => query.Where(
-                        r => r.BookingDetailId.Equals(updateDto.BookingDetailId)
-                            && (r.Type == ReportType.BOOKER_NOT_COMING ||
-                             r.Type == ReportType.DRIVER_NOT_COMING)),
-                        cancellationToken: cancellationToken);
+                IEnumerable<Report> reports = await work.Reports
+                .GetAllAsync(query => query.Where(
+                    r => r.BookingDetailId.Equals(updateDto.BookingDetailId)
+                        && (r.Type == ReportType.BOOKER_NOT_COMING ||
+                         r.Type == ReportType.DRIVER_NOT_COMING)),
+                    cancellationToken: cancellationToken);
 
                 if (reports.Any())
                 {
@@ -655,7 +655,7 @@ namespace ViGo.Services
             await work.BookingDetails.UpdateAsync(bookingDetail);
             await work.SaveChangesAsync(cancellationToken);
 
-           
+
 
             // Send notification to Customer and Driver
             User customer = await work.Users.GetAsync(booking.CustomerId,
@@ -752,7 +752,7 @@ namespace ViGo.Services
                    }
                }, cancellationToken);
             }
-           
+
 
             return (bookingDetail, customer.Id);
         }
@@ -877,9 +877,13 @@ namespace ViGo.Services
                 throw new ApplicationException("Booking Detail không tồn tại!!");
             }
 
+            BookingDetailPrice price = await GetBookingDetailPriceAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
             FareServices fareServices = new FareServices(work, _logger);
-            double driverWage = await fareServices.CalculateDriverPickFee(bookingDetail.Price.Value, cancellationToken);
-            return driverWage;
+            double driverPickingFee = await fareServices.CalculateDriverPickFee(price.BasePrice, cancellationToken);
+
+            return driverPickingFee;
         }
 
         public async Task<IPagedEnumerable<BookingDetailViewModel>>
@@ -1192,9 +1196,11 @@ namespace ViGo.Services
             Wallet systemWallet = await work.Wallets.GetAsync(
                 w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
 
+            BookingDetailPrice price = await GetBookingDetailPriceAsync(bookingDetail.BookingId,
+                cancellationToken: cancellationToken);
+
             FareServices fareServices = new FareServices(work, _logger);
-            double pickingFee = await fareServices.CalculateDriverPickFee(
-                bookingDetail.Price.Value, cancellationToken);
+            double pickingFee = await fareServices.CalculateDriverPickFee(price.BasePrice, cancellationToken);
 
             if (driverWallet.Balance < pickingFee)
             {
@@ -1379,9 +1385,11 @@ namespace ViGo.Services
             Wallet systemWallet = await work.Wallets.GetAsync(
                 w => w.Type == WalletType.SYSTEM, cancellationToken: cancellationToken);
 
+            BookingDetailPrice price = await GetBookingDetailPriceAsync(booking.Id,
+                cancellationToken: cancellationToken);
+
             FareServices fareServices = new FareServices(work, _logger);
-            double pickingFee = await fareServices.CalculateDriverPickFee(
-                bookingDetails.First().Price.Value, cancellationToken);
+            double pickingFee = await fareServices.CalculateDriverPickFee(price.BasePrice, cancellationToken);
 
             double totalPickingFee = pickingFee * bookingDetails.Count();
 
@@ -3091,6 +3099,106 @@ namespace ViGo.Services
             return bookingDetails;
         }
 
+        private async Task<BookingDetailPrice> GetBookingDetailPriceAsync(
+            Guid bookingId, CancellationToken cancellationToken)
+        {
+            IEnumerable<BookingDetail> bookingDetails = await work.BookingDetails
+                .GetAllAsync(query => query.Where(
+                    d => d.BookingId.Equals(bookingId)),
+                    cancellationToken: cancellationToken);
+
+            IEnumerable<double> prices = bookingDetails.Select(d => d.Price.Value).Distinct()
+                .OrderBy(d => d);
+            if (prices.Any())
+            {
+                if (prices.Count() == 1)
+                {
+                    // Only one price
+
+                    // Maybe one price for base, one price for additional fare
+
+                    Booking booking = await work.Bookings.GetAsync(bookingId, cancellationToken: cancellationToken);
+
+                    //FareServices fareServices = new FareServices(work, _logger);
+
+                    IEnumerable<TimeSpan> pickupTimes = bookingDetails.Select(d => d.CustomerDesiredPickupTime)
+                        .Distinct();
+
+                    // Only one time
+                    TimeSpan endTimeSpan = DateTimeUtilities.CalculateTripEndTime(pickupTimes.First(), booking.Duration);
+                    TimeOnly endTime = TimeOnly.FromTimeSpan(endTimeSpan);
+                    if (FareServices.IsNightTrip(TimeOnly.FromTimeSpan(pickupTimes.First()), endTime))
+                    {
+                        // Night Trip
+                        VehicleType? vehicleType = await work.VehicleTypes.GetAsync(booking.VehicleTypeId,
+                            cancellationToken: cancellationToken);
+                        if (vehicleType is null)
+                        {
+                            throw new ApplicationException("Thông tin phương tiện di chuyển không hợp lệ!!");
+                        }
+                        Setting? settingNightTrip = null;
+                        switch (vehicleType.Type)
+                        {
+                            case VehicleSubType.VI_RIDE:
+                                settingNightTrip = await work.Settings.GetAsync(
+                                    s => s.Key.Equals(SettingKeys.NightTripExtraFeeBike_Key),
+                                    cancellationToken: cancellationToken);
+                                break;
+
+                        }
+
+                        if (settingNightTrip != null)
+                        {
+                            return new BookingDetailPrice
+                            {
+                                BasePrice = prices.First() - double.Parse(settingNightTrip.Value),
+                                PriceWithAdditionalFare = prices.First()
+                            };
+
+                        }
+                        else
+                        {
+                            return new BookingDetailPrice
+                            {
+                                BasePrice = prices.First(),
+                                PriceWithAdditionalFare = prices.First()
+                            };
+                        }
+                    }
+                    else
+                    {
+                        // Not night trip
+                        return new BookingDetailPrice
+                        {
+                            BasePrice = prices.First(),
+                            PriceWithAdditionalFare = prices.First()
+                        };
+                    }
+                }
+                else if (prices.Count() == 2)
+                {
+                    return new BookingDetailPrice
+                    {
+                        BasePrice = prices.First(),
+                        PriceWithAdditionalFare = prices.Last()
+                    };
+                }
+                else
+                {
+                    return new BookingDetailPrice
+                    {
+                        BasePrice = prices.First(),
+                        PriceWithAdditionalFare = 0
+                    };
+                }
+            }
+
+            return new BookingDetailPrice
+            {
+                BasePrice = 0,
+                PriceWithAdditionalFare = 0
+            };
+        }
         #endregion
     }
 }
