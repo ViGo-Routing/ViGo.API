@@ -28,7 +28,8 @@ namespace ViGo.Services
             { SettingKeys.MonthlyTicketsDiscount_6_Key, SettingKeys.MonthlyTicketsDiscount_6_Description },
             //{ SettingKeys.QuarterlyTicketsDiscount_2_Key, SettingKeys.QuarterlyTicketsDiscount_2_Description },
             { SettingKeys.DriverWagePercent_Key, SettingKeys.DriverWagePercent_Description },
-            { SettingKeys.TripMustStartBefore_Key, SettingKeys.TripMustStartBefore_Description }
+            { SettingKeys.TripMustStartBefore_Key, SettingKeys.TripMustStartBefore_Description },
+            { SettingKeys.TripMustBeBookedBefore_Key, SettingKeys.TripMustBeBookedBefore_Description }
         };
 
         public SettingServices(IUnitOfWork work, ILogger logger) : base(work, logger)
@@ -79,6 +80,7 @@ namespace ViGo.Services
                 }
             }
 
+            models = models.OrderBy(s => s.Description).ToList();
             return models;
         }
 
