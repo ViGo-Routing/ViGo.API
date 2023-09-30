@@ -82,7 +82,7 @@ namespace ViGo.Models.Routes
         public RouteSortingParameters()
         {
             OrderBy = QueryStringUtilities.ToSortingCriteria(
-                new SortingCriteria(nameof(Route.CreatedTime)));
+                new SortingCriteria(nameof(Route.CreatedTime), SortingType.DESC));
         }
     }
 }
